@@ -16,6 +16,7 @@ const DESIGN_REPOS = [
   { name: "Material UI", detail: "Sistema de componentes Material", url: "https://github.com/mui/material-ui" },
   { name: "Radix Primitives", detail: "Primitivas accesibles de interfaz", url: "https://github.com/radix-ui/primitives" },
   { name: "Chakra UI", detail: "Componentes React accesibles", url: "https://github.com/chakra-ui/chakra-ui" },
+  { name: "Astryx", detail: "149 componentes de interfaz de producto", url: "https://github.com/astryxdesign/core" },
 ];
 
 const DEFAULT_FILES = [
@@ -271,6 +272,14 @@ export default function App() {
     return () => clearTimeout(id);
   }, [inspectorOpen, flow]);
 
+  const prevDataRef = useRef(null);
+  useEffect(() => {
+    if (!flow || data === prevDataRef.current) return;
+    prevDataRef.current = data;
+    const id = setTimeout(() => flow.fitView({ padding: 0.12, duration: 380 }), 120);
+    return () => clearTimeout(id);
+  }, [data, flow]);
+
   useEffect(() => {
     window.localStorage.setItem("repo-reading-options", JSON.stringify(readingOptions));
   }, [readingOptions]);
@@ -372,13 +381,7 @@ export default function App() {
     setRelatedIds(new Set([id]));
     setSelected(meta);
     setSelectedPath(meta.files?.[0] || "");
-    const node = nodes.find((item) => item.id === id);
-    if (node && flow) {
-      const width = node.measured?.width || node.data?.width || 218;
-      const height = node.measured?.height || 54;
-      flow.setCenter(node.position.x + width / 2, node.position.y + height / 2, { zoom: 1.3, duration: 550 });
-    }
-  }, [flow, nodeMeta, nodes]);
+  }, [nodeMeta]);
 
   const selectPath = useCallback((path, isFolder = false) => {
     setSelectedPath(path);
@@ -388,11 +391,7 @@ export default function App() {
     const ids = new Set(matches.map((node) => node.id));
     setRelatedIds(ids);
     setSelected(matches[0] || null);
-    const firstNode = matches[0] && nodes.find((item) => item.id === matches[0].id);
-    if (firstNode && flow) {
-      flow.setCenter(firstNode.position.x + 109, firstNode.position.y + 27, { zoom: 1.15, duration: 550 });
-    }
-  }, [data.nodes, flow, nodes]);
+  }, [data.nodes]);
 
   const analyzeRepo = async (urlOverride) => {
     const url = (typeof urlOverride === "string" ? urlOverride : repoUrl).trim();

@@ -58,7 +58,7 @@ button { color: inherit; }
 .dropdown-chevron { display: inline-block; width: 6px; height: 6px; flex: 0 0 6px; margin: -3px 0 0 1px; border-right: 1.5px solid currentColor; border-bottom: 1.5px solid currentColor; transform: rotate(45deg); transition: transform .15s; }
 [aria-expanded="true"] > .dropdown-chevron { margin-top: 3px; transform: rotate(225deg); }
 .repo-menu-toggle:hover, .repo-menu-toggle[aria-expanded="true"] { color: #1d4ed8; background: #eaf2ff; }
-.repo-menu { position: absolute; right: 0; top: calc(100% + 7px); z-index: 40; width: 285px; padding: 7px; border: 1px solid #dbeafe; border-radius: 10px; background: #fff; box-shadow: 0 18px 45px rgba(30,64,175,.18); }
+.repo-menu { position: absolute; right: 0; top: calc(100% + 7px); z-index: 40; width: 100%; padding: 7px; border: 1px solid #dbeafe; border-radius: 10px; background: #fff; box-shadow: 0 18px 45px rgba(30,64,175,.18); }
 .repo-menu > span { display: block; padding: 5px 7px 7px; color: #6b7280; font-size: 8px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; }
 .repo-menu > button { display: block; width: 100%; padding: 8px; border: 0; border-radius: 6px; background: transparent; text-align: left; cursor: pointer; }
 .repo-menu > button:hover { background: #eff6ff; }
@@ -308,7 +308,7 @@ button { color: inherit; }
   .topbar { grid-template-columns: auto 1fr auto; }
   .brand p { display: none; }
   .repo-btn.secondary { display: none; }
-  .workspace, .workspace:has(.inspector) { grid-template-columns: min(var(--tree-width, 320px), 48vw) 7px 1fr; }
+  .workspace, .workspace:has(.inspector), .workspace.code-open:has(.inspector) { grid-template-columns: min(var(--tree-width, 320px), 48vw) 7px 1fr; }
   .inspector { position: absolute; right: 12px; top: 74px; bottom: 12px; width: 280px; z-index: 30; border: 1px solid var(--line); border-radius: 10px; box-shadow: 0 16px 45px rgba(30,25,40,.18); }
   .folder-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
 }
@@ -319,7 +319,7 @@ button { color: inherit; }
   .topbar { position: sticky; top: 0; z-index: 30; grid-template-columns: 1fr auto; gap: 10px; }
   .repo-row { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; }
   .repo-input-wrap { min-width: 0; }
-  .workspace, .workspace:has(.inspector) { display: flex; min-height: 0; flex-direction: column; }
+  .workspace, .workspace:has(.inspector), .workspace.code-open:has(.inspector) { display: flex; min-height: 0; flex-direction: column; }
   .panel-resizer, .inspector-resizer { display: none; }
   .repo-tree { height: 360px; flex: 0 0 360px; border-right: 0; border-bottom: 1px solid var(--line); }
   .visual-pane { height: 520px; flex: 0 0 520px; }
