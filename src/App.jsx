@@ -89,7 +89,7 @@ const STRINGS = {
     sub: "Tu repositorio de código explicado en lenguaje de diseño",
     repoPlaceholder: "https://github.com/usuario/repo",
     repoButton: "Mapear repositorio",
-    repoAnalyzing: "Leyendo la estructura y creando el mapa…",
+    repoAnalyzing: "Leyendo la estructura y creando el mapa, dame unos segundos…",
     resetTip: "Limpiar y volver a cmdbase",
     treeEmpty: "Introduce un repositorio de GitHub para explorar su árbol completo.",
     map: "MAPA VISUAL",
@@ -110,6 +110,57 @@ const STRINGS = {
     does: "WHAT IT DOES",
     guide: "Guide",
   },
+};
+
+const WIZARD_STEPS = {
+  es: [
+    {
+      icon: "🗺️",
+      title: "Tu código, explicado para diseñadores",
+      body: "Code Repo convierte cualquier repositorio de GitHub en un mapa visual. Verás cómo se organizan los archivos, qué hace cada parte y cómo se relacionan entre sí — sin necesidad de leer código.",
+    },
+    {
+      icon: "🔗",
+      title: "Obtén la URL del repositorio",
+      body: "Ve al repositorio en GitHub y pulsa el botón verde Code. Aparecerá un desplegable: copia la URL de la pestaña HTTPS.",
+      github: true,
+      hint: "También puedes elegir directamente uno de los sistemas de diseño conocidos desde el desplegable junto al campo.",
+    },
+    {
+      icon: "⚡",
+      title: "Pégala y pulsa Mapear repositorio",
+      body: "Pega la URL en el campo de la barra superior y pulsa el botón azul Mapear repositorio. En unos segundos verás el mapa completo.",
+    },
+    {
+      icon: "👆",
+      title: "Haz clic en cualquier pieza del mapa",
+      body: "Cada rectángulo representa una parte del proyecto. Al hacer clic, el panel de la derecha te explica qué es y para qué sirve — en lenguaje de diseño.",
+    },
+  ],
+  en: [
+    {
+      icon: "🗺️",
+      title: "Your code, explained for designers",
+      body: "Code Repo turns any GitHub repository into a visual map. See how files are organized, what each part does, and how they relate — no code reading required.",
+    },
+    {
+      icon: "🔗",
+      title: "Get the repository URL",
+      body: "Go to the repository on GitHub and click the green Code button. A dropdown appears — copy the URL from the HTTPS tab.",
+      github: true,
+      hint: "You can also pick one of the well-known design systems directly from the dropdown next to the field.",
+    },
+    {
+      icon: "⚡",
+      title: "Paste it and click Map repository",
+      body: "Paste the URL into the field in the top bar and click the blue Map repository button. The full map will appear in a few seconds.",
+    },
+    {
+      icon: "👆",
+      title: "Click on any piece of the map",
+      body: "Each rectangle represents a part of the project. Clicking one opens the right panel explaining what it is and what it does — in design language.",
+    },
+  ],
 };
 
 function styledEdge(edge, active, dimmed) {
@@ -236,6 +287,8 @@ export default function App() {
   const [explanationLevel, setExplanationLevel] = useState(0);
   const [tooltip, setTooltip] = useState(null);
   const [readingMenuOpen, setReadingMenuOpen] = useState(false);
+  const [wizardOpen, setWizardOpen] = useState(false);
+  const [wizardStep, setWizardStep] = useState(0);
   const [readingOptions, setReadingOptions] = useState(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem("repo-reading-options")) || {};
@@ -434,7 +487,13 @@ export default function App() {
     <div className={`app reading-size${readingOptions.font ? " reading-font" : ""}${readingOptions.contrast ? " reading-contrast" : ""}${readingOptions.tint ? " reading-tint" : ""}${readingOptions.focus ? " reading-focus" : ""}`} style={{ "--reading-base-size": `${readingFontSize}px` }}>
       <header className="topbar">
         <div className="brand">
-          <div><h1>{t.title}</h1><p>{t.sub}</p></div>
+          <div>
+            <h1>{t.title}</h1>
+            <p>{t.sub}</p>
+            <button className="wizard-trigger" onClick={() => { setWizardStep(0); setWizardOpen(true); }}>
+              {lang === "es" ? "Cómo empezar →" : "Getting started →"}
+            </button>
+          </div>
         </div>
         <div className="repo-row">
           <div className={"repo-input-wrap" + (map ? " has-reset" : "")}>
@@ -539,6 +598,72 @@ export default function App() {
       </main>
 
       <ProjectGuide data={data} lang={lang} selectedPath={selectedPath} open={guideOpen} onClose={() => setGuideOpen(false)} onSelectPath={selectPath} />
+
+      {wizardOpen && (() => {
+        const step = WIZARD_STEPS[lang][wizardStep];
+        const total = WIZARD_STEPS[lang].length;
+        return (
+          <div className="wizard-overlay" onClick={(e) => e.target === e.currentTarget && setWizardOpen(false)}>
+            <div className="wizard-modal" role="dialog" aria-modal="true">
+              <button className="wizard-close" aria-label={lang === "es" ? "Cerrar" : "Close"} onClick={() => setWizardOpen(false)}>×</button>
+              <div className="wizard-body">
+                <div className="wizard-icon">{step.icon}</div>
+                <h3 className="wizard-title">{step.title}</h3>
+                <p className="wizard-text">{step.body}</p>
+                {step.github && (
+                  <div className="wizard-gh-mock">
+                    <div className="wgm-topbar">
+                      <div className="wgm-avatar" />
+                      <span className="wgm-reponame">usuario / <strong>proyecto</strong></span>
+                    </div>
+                    <div className="wgm-bar">
+                      <div className="wgm-files"><span>main.jsx</span><span>package.json</span><span>README.md</span></div>
+                      <div className="wgm-code-btn">↓ Code</div>
+                    </div>
+                    <div className="wgm-popup">
+                      <div className="wgm-tabs">
+                        <span className="wgm-tab-active">HTTPS</span>
+                        <span className="wgm-tab">SSH</span>
+                        <span className="wgm-tab">CLI</span>
+                      </div>
+                      <div className="wgm-url-row">
+                        <span>https://github.com/usuario/proyecto</span>
+                        <div className="wgm-copy-icon">⎘</div>
+                      </div>
+                      <p className="wgm-caption">{lang === "es" ? "← copia esta URL" : "← copy this URL"}</p>
+                    </div>
+                  </div>
+                )}
+                {step.hint && <p className="wizard-hint">{step.hint}</p>}
+              </div>
+              <div className="wizard-footer">
+                <div className="wizard-dots">
+                  {WIZARD_STEPS[lang].map((_, i) => (
+                    <button key={i} className={"wizard-dot" + (i === wizardStep ? " active" : "")} aria-label={`Paso ${i + 1}`} onClick={() => setWizardStep(i)} />
+                  ))}
+                </div>
+                <div className="wizard-nav">
+                  {wizardStep > 0 && (
+                    <button className="wizard-btn wizard-btn-sec" onClick={() => setWizardStep((s) => s - 1)}>
+                      {lang === "es" ? "← Anterior" : "← Back"}
+                    </button>
+                  )}
+                  {wizardStep < total - 1 ? (
+                    <button className="wizard-btn wizard-btn-pri" onClick={() => setWizardStep((s) => s + 1)}>
+                      {lang === "es" ? "Siguiente →" : "Next →"}
+                    </button>
+                  ) : (
+                    <button className="wizard-btn wizard-btn-pri" onClick={() => setWizardOpen(false)}>
+                      {lang === "es" ? "Empezar →" : "Get started →"}
+                    </button>
+                  )}
+                </div>
+              </div>
+            </div>
+          </div>
+        );
+      })()}
+
       {tooltip && <div className={"global-tooltip" + (tooltip.above ? " above" : "")} role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>{tooltip.label}</div>}
     </div>
   );
