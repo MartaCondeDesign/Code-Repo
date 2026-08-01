@@ -484,7 +484,7 @@ export default function App() {
       targetCounts[tgt] = (targetCounts[tgt] || 0) + 1;
       const index = targetCounts[tgt] - 1;
       const labelOffsetY = -14 - index * 18; // offset label by 18px per overlapping edge
-      return styledEdge(edge, active, hasFocus && !active, labelOffsetY);
+      return styledEdge(edge, active, false, labelOffsetY);
     });
   }, [data.edges, relatedIds, hasFocus]);
 
