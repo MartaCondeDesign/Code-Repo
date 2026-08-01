@@ -173,7 +173,7 @@ button { color: inherit; }
 .chip { position: relative; overflow: hidden; border: 1px solid; border-radius: 7px; background: #fff; padding: 10px 12px; cursor: pointer; transition: transform .15s, opacity .15s, box-shadow .15s; }
 .chip:hover { transform: translateY(-2px); box-shadow: 0 7px 18px rgba(31,25,44,.12); }
 .chip.selected { transform: translateY(-2px); box-shadow: 0 0 0 2px var(--violet), 0 8px 24px rgba(53,36,100,.18); }
-.chip.dimmed { opacity: .22; }
+.chip.dimmed { opacity: .35; }
 .chip-top { display: flex; justify-content: space-between; align-items: flex-start; gap: 7px; }
 .chip-title { overflow-wrap: anywhere; font-size: 12px; font-weight: 800; line-height: 1.25; }
 .chip-sub { margin-top: 4px; color: var(--muted); font-size: 9px; line-height: 1.35; overflow-wrap: anywhere; }
@@ -316,7 +316,7 @@ button { color: inherit; }
 @media (max-width: 760px) {
   body { overflow: auto; }
   .app { min-height: 100vh; height: auto; }
-  .topbar { grid-template-columns: 1fr auto; gap: 10px; }
+  .topbar { position: sticky; top: 0; z-index: 30; grid-template-columns: 1fr auto; gap: 10px; }
   .repo-row { grid-column: 1 / -1; grid-row: 2; display: grid; grid-template-columns: minmax(0, 1fr) auto auto; }
   .repo-input-wrap { min-width: 0; }
   .workspace, .workspace:has(.inspector) { display: flex; min-height: 0; flex-direction: column; }

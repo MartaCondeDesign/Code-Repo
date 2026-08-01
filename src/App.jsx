@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from "react";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { Background, Controls, MarkerType, ReactFlow } from "@xyflow/react";
 import { doesFor, subFor, whatFor } from "./map-data.js";
 import { buildLayout } from "./layout.js";
@@ -261,6 +261,15 @@ export default function App() {
   useEffect(() => {
     window.localStorage.setItem("repo-inspector-width", String(inspectorWidth));
   }, [inspectorWidth]);
+
+  const inspectorOpen = Boolean(selected || (selectedPath && (map || true)));
+  const prevInspectorOpen = useRef(false);
+  useEffect(() => {
+    if (!flow || inspectorOpen === prevInspectorOpen.current) return;
+    prevInspectorOpen.current = inspectorOpen;
+    const id = setTimeout(() => flow.fitView({ padding: 0.12, duration: 380 }), 80);
+    return () => clearTimeout(id);
+  }, [inspectorOpen, flow]);
 
   useEffect(() => {
     window.localStorage.setItem("repo-reading-options", JSON.stringify(readingOptions));
