@@ -16,7 +16,7 @@ const DESIGN_REPOS = [
   { name: "Material UI", detail: "Sistema de componentes Material", url: "https://github.com/mui/material-ui" },
   { name: "Radix Primitives", detail: "Primitivas accesibles de interfaz", url: "https://github.com/radix-ui/primitives" },
   { name: "Chakra UI", detail: "Componentes React accesibles", url: "https://github.com/chakra-ui/chakra-ui" },
-  { name: "Astryx", detail: "149 componentes de interfaz de producto", url: "https://github.com/astryxdesign/core" },
+  { name: "Astryx", detail: "149 componentes de interfaz de producto", url: "https://github.com/facebook/astryx" },
 ];
 
 const DEFAULT_FILES = [
