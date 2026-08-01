@@ -46,7 +46,7 @@ npm run preview
 14. Para los archivos de documentación Markdown (`.md`), el inspector derecho no debe usar descripciones fijas genéricas; debe leer dinámicamente el contenido del archivo (`selectedCode`) para extraer y mostrar el primer encabezado `#` como título y el primer párrafo de texto como explicación detallada.
 15. En la guía del proyecto, las secciones de librerías (iconos, componentes, tokens, etc.) deben ser estrictamente condicionales y solo renderizarse si se detectan dependencias correspondientes en `README.md`, `Gemfile` o `package.json`. No se deben añadir textos por defecto o inventar nombres si el escáner no encuentra dependencias reales.
 16. El cálculo estadístico de componentes, páginas y layouts debe incluir extensiones generales y plantillas backend (`.rb`, `.erb`, `.haml`, `.html`, `.php`, `.py`, `.go`) para garantizar que la guía cuente correctamente los recursos en repositorios de cualquier tecnología (como Ruby on Rails).
-17. La pantalla de carga que indica 'Leyendo la estructura...' y su subtítulo 'dame unos segundos...' deben tener un tamaño de letra unificado e idéntico de `16px` para una óptima lectura.
+17. La pantalla de carga que indica 'Leyendo la estructura...' y su subtítulo 'dame unos segundos...' deben tener un tamaño de letra unificado e idéntico de `14px` para una óptima lectura.
 
 ## Verificación antes de entregar
 
