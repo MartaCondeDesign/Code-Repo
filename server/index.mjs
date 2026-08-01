@@ -47,7 +47,22 @@ async function cloneAndAnalyze(repoUrl, subPath) {
   const parsed = validateRepoUrl(repoUrl);
   if (!parsed) throw new Error("URL inválida: usa https://github.com/usuario/repo");
   const tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "dsmap-"));
-  const cloneUrl = `https://github.com/${parsed.owner}/${parsed.repo}.git`;
+  
+  let cloneUrl = `https://github.com/${parsed.owner}/${parsed.repo}.git`;
+  const trimmed = repoUrl.trim();
+  if (trimmed.startsWith("git@github.com") || trimmed.includes("github.com:")) {
+    cloneUrl = `git@github.com:${parsed.owner}/${parsed.repo}.git`;
+  } else {
+    try {
+      const u = new URL(trimmed);
+      if (u.username || u.password) {
+        cloneUrl = u.toString();
+      }
+    } catch {
+      // Use fallback
+    }
+  }
+
   try {
     await execFileP("git", ["clone", "--depth", "1", "--quiet", cloneUrl, tmp], { timeout: 90000 });
   } catch (err) {

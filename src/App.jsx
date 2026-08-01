@@ -88,7 +88,7 @@ const STRINGS = {
   es: {
     title: "Code Repo",
     sub: "Tu repositorio de código explicado en lenguaje de diseño",
-    repoPlaceholder: "https://github.com/usuario/repo",
+    repoPlaceholder: "https://github.com/usuario/repo (o git@github.com:...)",
     repoButton: "Mapear repositorio",
     repoAnalyzing: "Leyendo la estructura y creando el mapa,",
     repoAnalyzingSub: "dame unos segundos…",
@@ -102,7 +102,7 @@ const STRINGS = {
   en: {
     title: "Code Repo",
     sub: "Your code repo explained in design language",
-    repoPlaceholder: "https://github.com/user/repo",
+    repoPlaceholder: "https://github.com/user/repo (or git@github.com:...)",
     repoButton: "Map repository",
     repoAnalyzing: "Reading the structure and building the map,",
     repoAnalyzingSub: "give me a few seconds…",
