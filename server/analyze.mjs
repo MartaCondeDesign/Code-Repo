@@ -106,7 +106,7 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   return {
     repoName,
     repoUrl,
-    files,
+    files: files.slice(0, 4000),
     fileContents,
     layers,
     nodes,

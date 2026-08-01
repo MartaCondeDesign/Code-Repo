@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useCallback, useEffect, useLayoutEffect, useMemo, useRef, useState, startTransition } from "react";
 import { Background, Controls, MarkerType, ReactFlow } from "@xyflow/react";
 import { doesFor, subFor, whatFor } from "./map-data.js";
 import { buildLayout } from "./layout.js";
@@ -7,6 +7,7 @@ import LaneNode from "./LaneNode.jsx";
 import LabeledEdge from "./LabeledEdge.jsx";
 import RepoTree from "./RepoTree.jsx";
 import ProjectGuide from "./ProjectGuide.jsx";
+import { getFileExplanation, getFolderExplanation } from "./file-descriptions.js";
 
 const nodeTypes = { chip: ChipNode, lane: LaneNode };
 const edgeTypes = { labeled: LabeledEdge };
@@ -89,7 +90,8 @@ const STRINGS = {
     sub: "Tu repositorio de código explicado en lenguaje de diseño",
     repoPlaceholder: "https://github.com/usuario/repo",
     repoButton: "Mapear repositorio",
-    repoAnalyzing: "Leyendo la estructura y creando el mapa, dame unos segundos…",
+    repoAnalyzing: "Leyendo la estructura y creando el mapa,",
+    repoAnalyzingSub: "dame unos segundos…",
     resetTip: "Limpiar y volver a cmdbase",
     treeEmpty: "Introduce un repositorio de GitHub para explorar su árbol completo.",
     map: "MAPA VISUAL",
@@ -102,7 +104,8 @@ const STRINGS = {
     sub: "Your code repo explained in design language",
     repoPlaceholder: "https://github.com/user/repo",
     repoButton: "Map repository",
-    repoAnalyzing: "Reading the structure and building the map…",
+    repoAnalyzing: "Reading the structure and building the map,",
+    repoAnalyzingSub: "give me a few seconds…",
     resetTip: "Clear and return to cmdbase",
     treeEmpty: "Enter a GitHub repository to explore its complete tree.",
     map: "VISUAL MAP",
@@ -118,23 +121,41 @@ const WIZARD_STEPS = {
       icon: "🗺️",
       title: "Tu código, explicado para diseñadores",
       body: "Code Repo convierte cualquier repositorio de GitHub en un mapa visual. Verás cómo se organizan los archivos, qué hace cada parte y cómo se relacionan entre sí — sin necesidad de leer código.",
+      target: null,
     },
     {
       icon: "🔗",
       title: "Obtén la URL del repositorio",
       body: "Ve al repositorio en GitHub y pulsa el botón verde Code. Aparecerá un desplegable: copia la URL de la pestaña HTTPS.",
+      target: ".repo-input-wrap",
       github: true,
-      hint: "También puedes elegir directamente uno de los sistemas de diseño conocidos desde el desplegable junto al campo.",
+      hint: "También puedes elegir directamente uno de los sistemas de diseño desde el desplegable junto al campo.",
     },
     {
       icon: "⚡",
       title: "Pégala y pulsa Mapear repositorio",
-      body: "Pega la URL en el campo de la barra superior y pulsa el botón azul Mapear repositorio. En unos segundos verás el mapa completo.",
+      body: "Pega la URL en el campo y pulsa este botón. En unos segundos verás el mapa completo del repositorio.",
+      target: ".repo-row .repo-btn:not(.guide-button)",
     },
     {
       icon: "👆",
       title: "Haz clic en cualquier pieza del mapa",
-      body: "Cada rectángulo representa una parte del proyecto. Al hacer clic, el panel de la derecha te explica qué es y para qué sirve — en lenguaje de diseño.",
+      body: "Cada rectángulo es una parte del proyecto. Al hacer clic, el panel de la derecha te explica qué es y para qué sirve — en lenguaje de diseño.",
+      target: ".graph",
+      side: "left",
+    },
+    {
+      icon: "🌳",
+      title: "El árbol de archivos",
+      body: "A la izquierda tienes todos los archivos del repositorio organizados en carpetas. Haz clic en cualquier archivo o carpeta para ver qué hace y resaltarlo en el mapa.",
+      target: ".repo-tree",
+      side: "right",
+    },
+    {
+      icon: "📖",
+      title: "La guía del proyecto",
+      body: "El botón Guide abre un panel con el resumen completo del proyecto: qué es, cómo está organizado y qué hace cada parte — todo explicado en lenguaje de diseño.",
+      target: ".repo-btn.guide-button",
     },
   ],
   en: [
@@ -142,34 +163,52 @@ const WIZARD_STEPS = {
       icon: "🗺️",
       title: "Your code, explained for designers",
       body: "Code Repo turns any GitHub repository into a visual map. See how files are organized, what each part does, and how they relate — no code reading required.",
+      target: null,
     },
     {
       icon: "🔗",
       title: "Get the repository URL",
       body: "Go to the repository on GitHub and click the green Code button. A dropdown appears — copy the URL from the HTTPS tab.",
+      target: ".repo-input-wrap",
       github: true,
       hint: "You can also pick one of the well-known design systems directly from the dropdown next to the field.",
     },
     {
       icon: "⚡",
       title: "Paste it and click Map repository",
-      body: "Paste the URL into the field in the top bar and click the blue Map repository button. The full map will appear in a few seconds.",
+      body: "Paste the URL into the field and click this button. The full map will appear in a few seconds.",
+      target: ".repo-row .repo-btn:not(.guide-button)",
     },
     {
       icon: "👆",
       title: "Click on any piece of the map",
       body: "Each rectangle represents a part of the project. Clicking one opens the right panel explaining what it is and what it does — in design language.",
+      target: ".graph",
+      side: "left",
+    },
+    {
+      icon: "🌳",
+      title: "The file tree",
+      body: "On the left you have all the repository files organized in folders. Click any file or folder to see what it does and highlight it on the map.",
+      target: ".repo-tree",
+      side: "right",
+    },
+    {
+      icon: "📖",
+      title: "The project guide",
+      body: "The Guide button opens a panel with a full summary of the project: what it is, how it's organized, and what each part does — all explained in design language.",
+      target: ".repo-btn.guide-button",
     },
   ],
 };
 
-function styledEdge(edge, active, dimmed) {
+function styledEdge(edge, active, dimmed, labelOffsetY = -14) {
   return {
     id: edge.id,
     source: edge.source,
     target: edge.target,
     type: "labeled",
-    data: { color: edge.color, verb: edge.verb, dimmed },
+    data: { color: edge.color, verb: edge.verb, dimmed, labelOffsetY },
     animated: true,
     markerEnd: { type: MarkerType.ArrowClosed, color: edge.color, width: 16, height: 16 },
     style: { stroke: edge.color, strokeWidth: active ? 2.8 : 1.5, opacity: dimmed ? 0.14 : 1 },
@@ -276,6 +315,7 @@ export default function App() {
   const [lang, setLang] = useState("es");
   const [selected, setSelected] = useState(null);
   const [selectedPath, setSelectedPath] = useState("");
+  const [selectedIsFolder, setSelectedIsFolder] = useState(false);
   const [relatedIds, setRelatedIds] = useState(new Set());
   const [guideOpen, setGuideOpen] = useState(false);
   const [repoMenuOpen, setRepoMenuOpen] = useState(false);
@@ -289,6 +329,7 @@ export default function App() {
   const [readingMenuOpen, setReadingMenuOpen] = useState(false);
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
+  const [wizardRect, setWizardRect] = useState(null);
   const [readingOptions, setReadingOptions] = useState(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem("repo-reading-options")) || {};
@@ -329,7 +370,7 @@ export default function App() {
   useEffect(() => {
     if (!flow || data === prevDataRef.current) return;
     prevDataRef.current = data;
-    const id = setTimeout(() => flow.fitView({ padding: 0.12, duration: 380 }), 120);
+    const id = setTimeout(() => flow.fitView({ padding: 0.12, duration: 380 }), 300);
     return () => clearTimeout(id);
   }, [data, flow]);
 
@@ -340,6 +381,14 @@ export default function App() {
   useEffect(() => {
     setExplanationLevel(0);
   }, [selected?.id, selectedPath]);
+
+  useLayoutEffect(() => {
+    if (!wizardOpen) { setWizardRect(null); return; }
+    const target = WIZARD_STEPS[lang][wizardStep]?.target;
+    if (!target) { setWizardRect(null); return; }
+    const el = document.querySelector(target);
+    setWizardRect(el ? el.getBoundingClientRect() : null);
+  }, [wizardOpen, wizardStep, lang]);
 
   useEffect(() => {
     const show = (event) => {
@@ -408,25 +457,36 @@ export default function App() {
     ...lanes.map((lane) => ({
       id: `lane-${lane.id}`, type: "lane", position: { x: 0, y: lane.top }, width: lane.width, height: lane.height,
       data: { label: lane.label, sub: lane.sub, color: lane.color, width: lane.width, height: lane.height, layer: lane.id },
-      selectable: false, draggable: false,
+      selectable: false, draggable: false, zIndex: -1,
     })),
-    ...layoutNodes.map((node) => ({
-      ...node,
-      draggable: false,
-      data: {
-        ...node.data,
-        selected: relatedIds.has(node.id),
-        dimmed: hasFocus && !relatedIds.has(node.id),
-        what: nodeMeta[node.id]?.what || "",
-        does: nodeMeta[node.id]?.does || "",
-      },
-    })),
+    ...layoutNodes.map((node) => {
+      const layerColor = lanes.find((l) => l.id === node.data.layer)?.color || "#a78bfa";
+      return {
+        ...node,
+        draggable: false,
+        data: {
+          ...node.data,
+          color: layerColor,
+          selected: relatedIds.has(node.id),
+          dimmed: hasFocus && !relatedIds.has(node.id),
+          what: nodeMeta[node.id]?.what || "",
+          does: nodeMeta[node.id]?.does || "",
+        },
+      };
+    }),
   ], [lanes, layoutNodes, relatedIds, hasFocus, nodeMeta]);
 
-  const edges = useMemo(() => data.edges.map((edge) => {
-    const active = relatedIds.has(edge.source) || relatedIds.has(edge.target);
-    return styledEdge(edge, active, hasFocus && !active);
-  }), [data.edges, relatedIds, hasFocus]);
+  const edges = useMemo(() => {
+    const targetCounts = {};
+    return data.edges.map((edge) => {
+      const active = relatedIds.has(edge.source) || relatedIds.has(edge.target);
+      const tgt = edge.target;
+      targetCounts[tgt] = (targetCounts[tgt] || 0) + 1;
+      const index = targetCounts[tgt] - 1;
+      const labelOffsetY = -14 - index * 18; // offset label by 18px per overlapping edge
+      return styledEdge(edge, active, hasFocus && !active, labelOffsetY);
+    });
+  }, [data.edges, relatedIds, hasFocus]);
 
   const focusCard = useCallback((id) => {
     const meta = nodeMeta[id];
@@ -434,17 +494,36 @@ export default function App() {
     setRelatedIds(new Set([id]));
     setSelected(meta);
     setSelectedPath(meta.files?.[0] || "");
-  }, [nodeMeta]);
+    setSelectedIsFolder(false);
+    if (flow) {
+      const flowNode = flow.getNode(id);
+      if (flowNode) {
+        const x = flowNode.position.x + (flowNode.measured?.width || flowNode.width || 250) / 2;
+        const y = flowNode.position.y + (flowNode.measured?.height || flowNode.height || 64) / 2;
+        flow.setCenter(x, y, { zoom: 1.5, duration: 400 });
+      }
+    }
+  }, [nodeMeta, flow]);
 
   const selectPath = useCallback((path, isFolder = false) => {
     setSelectedPath(path);
+    setSelectedIsFolder(isFolder);
     const matches = data.nodes.filter((node) => node.files?.some((file) =>
       isFolder ? file === path || file.startsWith(`${path}/`) : file === path
     ));
     const ids = new Set(matches.map((node) => node.id));
     setRelatedIds(ids);
-    setSelected(matches[0] || null);
-  }, [data.nodes]);
+    const matchedNode = matches[0];
+    setSelected(matchedNode || null);
+    if (matchedNode && flow) {
+      const flowNode = flow.getNode(matchedNode.id);
+      if (flowNode) {
+        const x = flowNode.position.x + (flowNode.measured?.width || flowNode.width || 250) / 2;
+        const y = flowNode.position.y + (flowNode.measured?.height || flowNode.height || 64) / 2;
+        flow.setCenter(x, y, { zoom: 1.4, duration: 400 });
+      }
+    }
+  }, [data.nodes, flow]);
 
   const analyzeRepo = async (urlOverride) => {
     const url = (typeof urlOverride === "string" ? urlOverride : repoUrl).trim();
@@ -461,16 +540,19 @@ export default function App() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) throw new Error(result.error || "Error");
-      setMap(result);
-      setSelected(null);
-      setSelectedPath("");
-      setRelatedIds(new Set());
-      setGuideOpen(true);
+      setBusy(false);
+      startTransition(() => {
+        setMap(result);
+        setSelected(null);
+        setSelectedPath("");
+        setRelatedIds(new Set());
+        setGuideOpen(true);
+      });
+      return;
     } catch (error) {
       setErr(error.message);
-    } finally {
-      setBusy(false);
     }
+    setBusy(false);
   };
 
   const resetMap = () => {
@@ -489,10 +571,6 @@ export default function App() {
         <div className="brand">
           <div>
             <h1>{t.title}</h1>
-            <p>{t.sub}</p>
-            <button className="wizard-trigger" onClick={() => { setWizardStep(0); setWizardOpen(true); }}>
-              {lang === "es" ? "Cómo empezar →" : "Getting started →"}
-            </button>
           </div>
         </div>
         <div className="repo-row">
@@ -505,7 +583,7 @@ export default function App() {
               {DESIGN_REPOS.map((repo) => <button key={repo.url} onClick={() => analyzeRepo(repo.url)}><strong>{repo.name}</strong><small>{repo.detail}</small></button>)}
             </div>}
           </div>
-          <button className="repo-btn" onClick={analyzeRepo} aria-busy={busy}>{busy ? "…" : t.repoButton}</button>
+          <button className="repo-btn" onClick={analyzeRepo} aria-busy={busy}>{t.repoButton}</button>
           <button className="repo-btn guide-button" onClick={() => setGuideOpen(true)}>{t.guide}</button>
           {err && <span className="repo-err">{err}</span>}
         </div>
@@ -560,7 +638,7 @@ export default function App() {
             {selectedPath && <button className="clear-focus" onClick={() => { setSelectedPath(""); setRelatedIds(new Set()); setSelected(null); }}>× {selectedPath}</button>}
           </div>
           <div className="graph">
-            {busy && <div className="loading-overlay"><div className="scan-line" /><p>{t.repoAnalyzing}</p></div>}
+            {busy && <div className="loading-overlay"><div className="scan-line" /><p>{t.repoAnalyzing}<br /><span className="loading-sub">{t.repoAnalyzingSub}</span></p></div>}
             <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodeClick={(_, node) => node.type === "chip" && focusCard(node.id)} onInit={setFlow} onPaneClick={() => { setRelatedIds(new Set()); setSelected(null); }} fitView fitViewOptions={{ padding: 0.12 }} nodesConnectable={false} elementsSelectable={false} proOptions={{ hideAttribution: true }} colorMode="light">
               <Background color="#d9d6e4" gap={24} size={1} />
               <Controls />
@@ -568,18 +646,33 @@ export default function App() {
           </div>
         </section>
 
-        {(selected || selectedIsFile) && <div className="inspector-resizer" role="separator" aria-label={lang === "es" ? "Redimensionar panel derecho" : "Resize right panel"} aria-orientation="vertical" aria-valuemin="280" aria-valuemax="680" aria-valuenow={Math.round(inspectorWidth)} tabIndex={0} onPointerDown={(event) => { event.preventDefault(); setResizingInspector(true); }} onKeyDown={(event) => { if (event.key === "ArrowLeft") setInspectorWidth((width) => Math.min(680, width + 24)); if (event.key === "ArrowRight") setInspectorWidth((width) => Math.max(280, width - 24)); }}><span /></div>}
-        {(selected || selectedIsFile) && (
-          <aside className={"inspector" + (selectedIsFile ? " code-inspector" : "")}>
-            <button className="icon-btn inspector-close has-tooltip" data-tooltip={lang === "es" ? "Cerrar panel" : "Close panel"} aria-label={lang === "es" ? "Cerrar panel" : "Close panel"} onClick={() => { setSelected(null); setSelectedPath(""); setRelatedIds(new Set()); }}>×</button>
+        {(selected || selectedIsFile || selectedIsFolder) && <div className="inspector-resizer" role="separator" aria-label={lang === "es" ? "Redimensionar panel derecho" : "Resize right panel"} aria-orientation="vertical" aria-valuemin="280" aria-valuemax="680" aria-valuenow={Math.round(inspectorWidth)} tabIndex={0} onPointerDown={(event) => { event.preventDefault(); setResizingInspector(true); }} onKeyDown={(event) => { if (event.key === "ArrowLeft") setInspectorWidth((width) => Math.min(680, width + 24)); if (event.key === "ArrowRight") setInspectorWidth((width) => Math.max(280, width - 24)); }}><span /></div>}
+        {(selected || selectedIsFile || selectedIsFolder) && (
+          <aside className={"inspector" + ((selectedIsFile || selectedIsFolder) ? " code-inspector" : "")}>
+            <button className="icon-btn inspector-close has-tooltip" data-tooltip={lang === "es" ? "Cerrar panel" : "Close panel"} aria-label={lang === "es" ? "Cerrar panel" : "Close panel"} onClick={() => { setSelected(null); setSelectedPath(""); setSelectedIsFolder(false); setRelatedIds(new Set()); }}>×</button>
             {selectedIsFile ? (
               <>
                 <span className="pane-kicker">{lang === "es" ? "ARCHIVO DE CÓDIGO" : "CODE FILE"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
                 <p className="inspector-sub code-path">{selectedPath}</p>
+                <div className="inspector-block">
+                  <span>{lang === "es" ? "QUÉ ES" : "WHAT IT IS"}</span>
+                  <p>{getFileExplanation(selectedPath, lang, selected, selectedCode)}</p>
+                </div>
                 <div className="code-shell">
                   <div className="code-toolbar"><span>{codeLanguage(selectedPath)}</span><span>{selectedCode == null ? "—" : `${selectedCode.split("\n").length} ${lang === "es" ? "líneas" : "lines"}`}</span></div>
                   {selectedCode != null ? <pre className="code-view"><code>{selectedCode}</code></pre> : <div className="code-unavailable">{lang === "es" ? "La vista previa no está disponible para este archivo binario o de gran tamaño." : "Preview is unavailable for this binary or large file."}</div>}
+                </div>
+                {selected && <div className="code-context"><span>{lang === "es" ? "RELACIONADO CON" : "RELATED TO"}</span><strong>{selected.title}</strong><p>{explanationLevel > 0 ? alternateExplanation(selected, lang, explanationLevel) : whatFor(selected, lang)}</p><ExplanationActions lang={lang} level={explanationLevel} onAlternate={() => setExplanationLevel((level) => Math.min(3, level + 1))} onReset={() => setExplanationLevel(0)} /></div>}
+              </>
+            ) : selectedIsFolder ? (
+              <>
+                <span className="pane-kicker">{lang === "es" ? "CARPETA DE PROYECTO" : "PROJECT FOLDER"}</span>
+                <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
+                <p className="inspector-sub code-path">{selectedPath}</p>
+                <div className="inspector-block">
+                  <span>{lang === "es" ? "QUÉ ES" : "WHAT IT IS"}</span>
+                  <p>{getFolderExplanation(selectedPath, lang)}</p>
                 </div>
                 {selected && <div className="code-context"><span>{lang === "es" ? "RELACIONADO CON" : "RELATED TO"}</span><strong>{selected.title}</strong><p>{explanationLevel > 0 ? alternateExplanation(selected, lang, explanationLevel) : whatFor(selected, lang)}</p><ExplanationActions lang={lang} level={explanationLevel} onAlternate={() => setExplanationLevel((level) => Math.min(3, level + 1))} onReset={() => setExplanationLevel(0)} /></div>}
               </>
@@ -602,69 +695,114 @@ export default function App() {
       {wizardOpen && (() => {
         const step = WIZARD_STEPS[lang][wizardStep];
         const total = WIZARD_STEPS[lang].length;
-        return (
-          <div className="wizard-overlay" onClick={(e) => e.target === e.currentTarget && setWizardOpen(false)}>
-            <div className="wizard-modal" role="dialog" aria-modal="true">
-              <button className="wizard-close" aria-label={lang === "es" ? "Cerrar" : "Close"} onClick={() => setWizardOpen(false)}>×</button>
-              <div className="wizard-body">
-                <div className="wizard-icon">{step.icon}</div>
-                <h3 className="wizard-title">{step.title}</h3>
-                <p className="wizard-text">{step.body}</p>
-                {step.github && (
-                  <div className="wizard-gh-mock">
-                    <div className="wgm-topbar">
-                      <div className="wgm-avatar" />
-                      <span className="wgm-reponame">usuario / <strong>proyecto</strong></span>
-                    </div>
-                    <div className="wgm-bar">
-                      <div className="wgm-files"><span>main.jsx</span><span>package.json</span><span>README.md</span></div>
-                      <div className="wgm-code-btn">↓ Code</div>
-                    </div>
-                    <div className="wgm-popup">
-                      <div className="wgm-tabs">
-                        <span className="wgm-tab-active">HTTPS</span>
-                        <span className="wgm-tab">SSH</span>
-                        <span className="wgm-tab">CLI</span>
-                      </div>
-                      <div className="wgm-url-row">
-                        <span>https://github.com/usuario/proyecto</span>
-                        <div className="wgm-copy-icon">⎘</div>
-                      </div>
-                      <p className="wgm-caption">{lang === "es" ? "← copia esta URL" : "← copy this URL"}</p>
-                    </div>
+        const closeWizard = () => setWizardOpen(false);
+        const modalContent = (
+          <>
+            <button className="wizard-close" aria-label={lang === "es" ? "Cerrar" : "Close"} onClick={closeWizard}>×</button>
+            <div className="wizard-body">
+              <div className="wizard-icon">{step.icon}</div>
+              <h3 className="wizard-title">{step.title}</h3>
+              <p className="wizard-text">{step.body}</p>
+              {step.github && (
+                <div className="wizard-gh-mock">
+                  <div className="wgm-topbar">
+                    <div className="wgm-avatar" />
+                    <span className="wgm-reponame">usuario / <strong>proyecto</strong></span>
                   </div>
+                  <div className="wgm-bar">
+                    <div className="wgm-files"><span>main.jsx</span><span>package.json</span><span>README.md</span></div>
+                    <div className="wgm-code-btn">↓ Code</div>
+                  </div>
+                  <div className="wgm-popup">
+                    <div className="wgm-tabs">
+                      <span className="wgm-tab-active">HTTPS</span>
+                      <span className="wgm-tab">SSH</span>
+                      <span className="wgm-tab">CLI</span>
+                    </div>
+                    <div className="wgm-url-row">
+                      <span>https://github.com/usuario/proyecto</span>
+                      <div className="wgm-copy-icon">⎘</div>
+                    </div>
+                    <p className="wgm-caption">{lang === "es" ? "← copia esta URL" : "← copy this URL"}</p>
+                  </div>
+                </div>
+              )}
+              {step.hint && <p className="wizard-hint">{step.hint}</p>}
+            </div>
+            <div className="wizard-footer">
+              <div className="wizard-dots">
+                {WIZARD_STEPS[lang].map((_, i) => (
+                  <button key={i} className={"wizard-dot" + (i === wizardStep ? " active" : "")} aria-label={`Paso ${i + 1}`} onClick={() => setWizardStep(i)} />
+                ))}
+              </div>
+              <div className="wizard-nav">
+                {wizardStep > 0 && (
+                  <button className="wizard-btn wizard-btn-sec" onClick={() => setWizardStep((s) => s - 1)}>
+                    {lang === "es" ? "← Anterior" : "← Back"}
+                  </button>
                 )}
-                {step.hint && <p className="wizard-hint">{step.hint}</p>}
+                {wizardStep < total - 1 ? (
+                  <button className="wizard-btn wizard-btn-pri" onClick={() => setWizardStep((s) => s + 1)}>
+                    {lang === "es" ? "Siguiente →" : "Next →"}
+                  </button>
+                ) : (
+                  <button className="wizard-btn wizard-btn-pri" onClick={closeWizard}>
+                    {lang === "es" ? "Empezar →" : "Get started →"}
+                  </button>
+                )}
               </div>
-              <div className="wizard-footer">
-                <div className="wizard-dots">
-                  {WIZARD_STEPS[lang].map((_, i) => (
-                    <button key={i} className={"wizard-dot" + (i === wizardStep ? " active" : "")} aria-label={`Paso ${i + 1}`} onClick={() => setWizardStep(i)} />
-                  ))}
-                </div>
-                <div className="wizard-nav">
-                  {wizardStep > 0 && (
-                    <button className="wizard-btn wizard-btn-sec" onClick={() => setWizardStep((s) => s - 1)}>
-                      {lang === "es" ? "← Anterior" : "← Back"}
-                    </button>
-                  )}
-                  {wizardStep < total - 1 ? (
-                    <button className="wizard-btn wizard-btn-pri" onClick={() => setWizardStep((s) => s + 1)}>
-                      {lang === "es" ? "Siguiente →" : "Next →"}
-                    </button>
-                  ) : (
-                    <button className="wizard-btn wizard-btn-pri" onClick={() => setWizardOpen(false)}>
-                      {lang === "es" ? "Empezar →" : "Get started →"}
-                    </button>
-                  )}
-                </div>
+            </div>
+          </>
+        );
+
+        if (wizardRect) {
+          const popoverWidth = 340;
+          const gap = 14;
+          const side = step.side || "below";
+          let left, top;
+          if (side === "left") {
+            left = Math.max(12, wizardRect.left - gap - popoverWidth);
+            top = Math.max(12, Math.min(wizardRect.top, window.innerHeight - 300 - 12));
+          } else if (side === "right") {
+            left = Math.min(wizardRect.right + gap, window.innerWidth - popoverWidth - 12);
+            top = Math.max(12, Math.min(wizardRect.top, window.innerHeight - 300 - 12));
+          } else {
+            const spaceBelow = window.innerHeight - wizardRect.bottom;
+            const above = spaceBelow < 260 + gap;
+            left = Math.max(12, Math.min(wizardRect.left + wizardRect.width / 2 - popoverWidth / 2, window.innerWidth - popoverWidth - 12));
+            top = above ? wizardRect.top - gap - 280 : wizardRect.bottom + gap;
+          }
+          return (
+            <>
+              <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.5)" }} onClick={closeWizard} />
+              <div className="wizard-spotlight" style={{ left: wizardRect.left - 6, top: wizardRect.top - 6, width: wizardRect.width + 12, height: wizardRect.height + 12 }} />
+              <div className="wizard-modal wizard-positioned" role="dialog" aria-modal="true" style={{ position: "fixed", left, top, width: popoverWidth, zIndex: 202 }}>
+                {modalContent}
               </div>
+            </>
+          );
+        }
+
+        return (
+          <div className="wizard-overlay" onClick={(e) => e.target === e.currentTarget && closeWizard()}>
+            <div className="wizard-modal" role="dialog" aria-modal="true">
+              {modalContent}
             </div>
           </div>
         );
       })()}
 
       {tooltip && <div className={"global-tooltip" + (tooltip.above ? " above" : "")} role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>{tooltip.label}</div>}
+
+      <footer className="app-footer">
+        <div className="app-footer-left">
+          <span>{lang === "es" ? "Tu repositorio de código explicado en lenguaje de diseño" : "Your code repo explained in design language"}</span>
+          <button className="wizard-trigger footer-wizard-trigger" onClick={() => { setWizardStep(0); setWizardOpen(true); }}>
+            {lang === "es" ? "Cómo empezar" : "Getting started"}
+          </button>
+        </div>
+        <span className="app-footer-credit">{lang === "es" ? "Hecho por" : "Made by"} <strong>Marta Conde</strong> <span className="footer-divider" /> {lang === "es" ? "Remix del proyecto de" : "Remix of a project by"} <strong>Cristian Morales</strong> 💙</span>
+      </footer>
     </div>
   );
 }

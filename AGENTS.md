@@ -38,6 +38,11 @@ npm run preview
 6. Mantén la accesibilidad: controles con nombres descriptivos, navegación por teclado y estados visibles de foco.
 7. No añadas secretos, credenciales ni rutas locales personales al repositorio.
 8. No cambies los puertos `4311` y `4314` sin actualizar también la configuración y la documentación.
+9. Las capas de fondo (`lane`) deben mantener siempre `zIndex: -1` para que las líneas de conexión (`edges`) y las tarjetas (`chip`) se muestren siempre por encima y visibles.
+10. La disposición de las tarjetas (`chip`) en el lienzo debe seguir un diseño en rejilla (como el layout de 4 columnas) con un espaciado vertical amplio (`ROW_GAP = 96px`) para asegurar que el texto de subtítulos y de conexiones no se solape.
+11. Las etiquetas de las conexiones (`edges`) deben usar fondos opacos y sólidos (como `#ffffff` o `var(--paper)`) para evitar que las líneas de conexión crucen de forma transparente por detrás y emborronen el texto. Además, cuando múltiples conexiones apunten al mismo nodo de destino, sus etiquetas deben apilarse verticalmente de forma dinámica (con un desplazamiento incremental de 18px en `labelOffsetY`) para prohibir por completo el solapamiento de textos de diferentes relaciones.
+12. Tanto los archivos individuales como las carpetas del explorador de la izquierda deben disponer de explicaciones básicas y descriptivas en ambos idiomas en el panel del inspector de la derecha al ser clicados.
+13. Las optimizaciones para repositorios grandes deben conservarse activas (umbral de contracción de carpetas en 150 archivos, límite de 100 resultados en búsquedas y memoización en el ordenamiento).
 
 ## Verificación antes de entregar
 
@@ -59,7 +64,7 @@ npm run preview
 ## Estándar de etiquetas de metadatos
 
 - Todas las etiquetas grises pequeñas que introducen una sección deben compartir un único estilo. Ejemplos: `REPOSITORY`, `FOUNDATIONS`, `WHAT IT IS`, `WHAT IT DOES`, `CODE FILE` y `RELATED TO`.
-- El estándar vive en las variables `--meta-label-*` de `src/map.css`: tamaño `8px`, peso `800`, interletrado `1px`, altura de línea `1.25`, color gris `#6b7280` y texto en mayúsculas.
+- El estándar vive en las variables `--meta-label-*` de `src/map.css`: tamaño `10px`, peso `800`, interletrado `1px`, altura de línea `1.25`, color gris `#6b7280` y texto en mayúsculas.
 - No declares tamaños, pesos, colores o interletrados distintos para una nueva etiqueta de este tipo. Reutiliza `.pane-kicker` o incluye el selector en el grupo del estándar.
 - El cambio de idioma puede modificar el contenido de la etiqueta, pero nunca sus dimensiones tipográficas ni su tratamiento visual.
 - Consulta también `design.md` antes de modificar la jerarquía tipográfica.

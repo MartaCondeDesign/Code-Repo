@@ -326,12 +326,16 @@ export const SUB_ES = {
 };
 
 export function subFor(item, lang) {
+  if (!item) return "";
+  if (Array.isArray(item.sub)) {
+    return lang === "es" ? item.sub[0] : item.sub[1];
+  }
   if (lang === "es") {
     if (SUB_ES[item.id]) return SUB_ES[item.id];
-    return item.sub;
+    return item.sub || "";
   }
   if (item.sub_en) return item.sub_en;
-  return item.sub;
+  return item.sub || "";
 }
 
 export const DESC_EN = {

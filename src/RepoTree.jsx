@@ -36,14 +36,16 @@ function makeTree(files) {
   return root;
 }
 
-function TreeRow({ item, depth, selectedPath, onSelect }) {
-  const [open, setOpen] = useState(depth < 1);
+function TreeRow({ item, depth, selectedPath, onSelect, defaultOpen }) {
+  const [open, setOpen] = useState(defaultOpen ? depth < 1 : false);
   const rowRef = useRef(null);
   const isFolder = !item.file;
-  const children = [...item.children.values()].sort((a, b) => {
-    if (a.file !== b.file) return a.file ? 1 : -1;
-    return a.name.localeCompare(b.name);
-  });
+  const children = useMemo(() => {
+    return [...item.children.values()].sort((a, b) => {
+      if (a.file !== b.file) return a.file ? 1 : -1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [item.children]);
   const active = selectedPath === item.path;
 
   useEffect(() => {
@@ -80,6 +82,7 @@ function TreeRow({ item, depth, selectedPath, onSelect }) {
           depth={depth + 1}
           selectedPath={selectedPath}
           onSelect={onSelect}
+          defaultOpen={defaultOpen}
         />
       ))}
     </>
@@ -89,10 +92,15 @@ function TreeRow({ item, depth, selectedPath, onSelect }) {
 export default function RepoTree({ files, repoName, selectedPath, onSelect, lang }) {
   const [query, setQuery] = useState("");
   const tree = useMemo(() => makeTree(files), [files]);
-  const children = [...tree.children.values()].sort((a, b) => {
-    if (a.file !== b.file) return a.file ? 1 : -1;
-    return a.name.localeCompare(b.name);
-  });
+  const children = useMemo(() => {
+    return [...tree.children.values()].sort((a, b) => {
+      if (a.file !== b.file) return a.file ? 1 : -1;
+      return a.name.localeCompare(b.name);
+    });
+  }, [tree.children]);
+  
+  const defaultOpen = (files?.length || 0) < 150;
+
   const results = useMemo(() => {
     const term = normalize(query.trim());
     if (!term) return null;
@@ -106,6 +114,12 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
     }
     return { direct, related };
   }, [files, query]);
+
+  const MAX_SEARCH_RESULTS = 100;
+  const visibleDirect = useMemo(() => results?.direct.slice(0, MAX_SEARCH_RESULTS) || [], [results]);
+  const visibleRelated = useMemo(() => results?.related.slice(0, MAX_SEARCH_RESULTS) || [], [results]);
+  const hasMoreDirect = (results?.direct.length || 0) > MAX_SEARCH_RESULTS;
+  const hasMoreRelated = (results?.related.length || 0) > MAX_SEARCH_RESULTS;
 
   const SearchResult = ({ path, related = false }) => (
     <button className="tree-search-result" onClick={() => onSelect(path, false)} title={path}>
@@ -136,12 +150,17 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
       <div className="tree-scroll">
         {results ? <div className="tree-results">
           <span className="tree-result-label">{lang === "es" ? "Coincide con el nombre" : "Name matches"}</span>
-          {results.direct.map((path) => <SearchResult key={path} path={path} />)}
+          {visibleDirect.map((path) => <SearchResult key={path} path={path} />)}
+          {hasMoreDirect && <small className="tree-no-results">{lang === "es" ? `Mostrando los primeros ${MAX_SEARCH_RESULTS} resultados directos...` : `Showing first ${MAX_SEARCH_RESULTS} direct results...`}</small>}
           {!results.direct.length && <small className="tree-no-results">{lang === "es" ? "Ninguna coincidencia directa" : "No direct matches"}</small>}
-          {!!results.related.length && <><span className="tree-result-label related">{lang === "es" ? "Relacionado por concepto" : "Related by concept"}</span>{results.related.map((path) => <SearchResult key={path} path={path} related />)}</>}
+          {!!results.related.length && <>
+            <span className="tree-result-label related">{lang === "es" ? "Relacionado por concepto" : "Related by concept"}</span>
+            {visibleRelated.map((path) => <SearchResult key={path} path={path} related />)}
+            {hasMoreRelated && <small className="tree-no-results">{lang === "es" ? `Mostrando los primeros ${MAX_SEARCH_RESULTS} resultados relacionados...` : `Showing first ${MAX_SEARCH_RESULTS} related results...`}</small>}
+          </>}
           {!results.direct.length && !results.related.length && <small className="tree-no-results">{lang === "es" ? "Prueba con otra palabra." : "Try another word."}</small>}
         </div> : children.map((item) => (
-          <TreeRow key={item.path} item={item} depth={0} selectedPath={selectedPath} onSelect={onSelect} />
+          <TreeRow key={item.path} item={item} depth={0} selectedPath={selectedPath} onSelect={onSelect} defaultOpen={defaultOpen} />
         ))}
       </div>
     </aside>

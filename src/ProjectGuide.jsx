@@ -92,17 +92,17 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const patternFiles = new Set();
     const documentationFiles = new Set();
     const layoutFiles = new Set();
-    const codeFile = /\.(jsx?|tsx?|vue|svelte)$/i;
+    const codeFile = /\.(jsx?|tsx?|vue|svelte|rb|erb|haml|html|php|py|go)$/i;
 
     files.forEach((file) => {
       if (/(^|\/)(components?|ui)\//i.test(file) && codeFile.test(file)) componentFiles.add(file);
-      if (/(^|\/)(pages?|screens?|views?|routes?|app)\//i.test(file) && codeFile.test(file) && !/(layout|loading|error|not-found)\.(jsx?|tsx?)$/i.test(file)) pageFiles.add(file);
+      if (/(^|\/)(pages?|screens?|views?|routes?|app)\//i.test(file) && codeFile.test(file) && !/(layout|loading|error|not-found)\.(jsx?|tsx?|erb)$/i.test(file)) pageFiles.add(file);
       if (/(^|\/)(tokens?|variables?|theme|primitives?|semantic|foundations?)(\/|\.|-)/i.test(file)) tokenFiles.add(file);
       if (/\.(css|scss|sass|less|styl)$/i.test(file)) styleFiles.add(file);
       if (/\.(stories?|story)\.(jsx?|tsx?|mdx)$/i.test(file)) storyFiles.add(file);
       if (/(^|\/)(patterns?|recipes?|templates?)\//i.test(file) || /(^|\/)(pattern|recipe)[.-]/i.test(file)) patternFiles.add(file);
       if (/(^|\/)docs?\//i.test(file) || /(^|\/)(readme|contributing|architecture|guidelines?)\.(md|mdx)$/i.test(file)) documentationFiles.add(file);
-      if (/(^|\/)(layouts?|shells?)\//i.test(file) || /(^|\/)(layout|shell|template)\.(jsx?|tsx?|vue|svelte)$/i.test(file)) layoutFiles.add(file);
+      if (/(^|\/)(layouts?|shells?)\//i.test(file) || /(^|\/)(layout|shell|template)\.(jsx?|tsx?|vue|svelte|rb|erb|haml|html|php|py|go)$/i.test(file)) layoutFiles.add(file);
     });
     nodes.forEach((node) => {
       const nodeFiles = node.files || [];
@@ -115,18 +115,201 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       if (["layout", "template"].includes(node.tag)) nodeFiles.forEach((file) => layoutFiles.add(file));
     });
 
+    const readmeLibraries = {
+      icons: [],
+      components: [],
+      tokens: []
+    };
+
+    const readmeEntry = Object.entries(data.fileContents || {}).find(([path]) => path.toLowerCase().endsWith("readme.md"));
+    if (readmeEntry) {
+      const source = readmeEntry[1];
+      const lowerSource = source.toLowerCase();
+
+      if (lowerSource.includes("font awesome pro") || lowerSource.includes("fontawesome pro") || lowerSource.includes("fontawesome-pro")) {
+        readmeLibraries.icons.push(lang === "es" ? "Font Awesome Pro (Pago)" : "Font Awesome Pro (Paid)");
+      } else if (lowerSource.includes("font awesome") || lowerSource.includes("fontawesome") || lowerSource.includes("font-awesome")) {
+        readmeLibraries.icons.push("Font Awesome");
+      }
+      if (lowerSource.includes("streamline icon") || lowerSource.includes("streamline-icon") || lowerSource.includes("streamlineicon")) {
+        readmeLibraries.icons.push(lang === "es" ? "Streamline Icons (Pago)" : "Streamline Icons (Paid)");
+      }
+      if (lowerSource.includes("noun project") || lowerSource.includes("thenounproject")) {
+        readmeLibraries.icons.push(lang === "es" ? "The Noun Project (Pago)" : "The Noun Project (Paid)");
+      }
+      if (lowerSource.includes("remix icon") || lowerSource.includes("remixicon") || lowerSource.includes("remix-icon")) {
+        readmeLibraries.icons.push("Remix Icons");
+      }
+      if (lowerSource.includes("lucide")) {
+        readmeLibraries.icons.push("Lucide Icons");
+      }
+      if (lowerSource.includes("heroicon")) {
+        readmeLibraries.icons.push("Heroicons");
+      }
+      if (lowerSource.includes("feather icon") || lowerSource.includes("feather-icon") || lowerSource.includes("feathericon")) {
+        readmeLibraries.icons.push("Feather Icons");
+      }
+
+      if (lowerSource.includes("tailwind ui")) {
+        readmeLibraries.components.push(lang === "es" ? "Tailwind UI (Pago)" : "Tailwind UI (Paid)");
+      }
+      if (lowerSource.includes("kendo ui") || lowerSource.includes("kendoui")) {
+        readmeLibraries.components.push(lang === "es" ? "Kendo UI (Pago)" : "Kendo UI (Paid)");
+      }
+      if (lowerSource.includes("syncfusion")) {
+        readmeLibraries.components.push(lang === "es" ? "Syncfusion (Pago)" : "Syncfusion (Paid)");
+      }
+      if (lowerSource.includes("radix ui") || lowerSource.includes("radix-ui")) {
+        readmeLibraries.components.push("Radix UI");
+      }
+      if (lowerSource.includes("material ui") || lowerSource.includes("mui") || lowerSource.includes("@mui")) {
+        readmeLibraries.components.push("Material UI");
+      }
+      if (lowerSource.includes("chakra ui") || lowerSource.includes("chakra-ui")) {
+        readmeLibraries.components.push("Chakra UI");
+      }
+      if (lowerSource.includes("shadcn")) {
+        readmeLibraries.components.push("shadcn/ui");
+      }
+      if (lowerSource.includes("mantine")) {
+        readmeLibraries.components.push("Mantine");
+      }
+      if (lowerSource.includes("ant design") || lowerSource.includes("antd")) {
+        readmeLibraries.components.push("Ant Design");
+      }
+
+      if (lowerSource.includes("supernova")) {
+        readmeLibraries.tokens.push(lang === "es" ? "Supernova (Pago)" : "Supernova (Paid)");
+      }
+      if (lowerSource.includes("knapsack")) {
+        readmeLibraries.tokens.push(lang === "es" ? "Knapsack (Pago)" : "Knapsack (Paid)");
+      }
+      if (lowerSource.includes("zeroheight")) {
+        readmeLibraries.tokens.push(lang === "es" ? "zeroheight (Pago)" : "zeroheight (Paid)");
+      }
+      if (lowerSource.includes("style dictionary") || lowerSource.includes("style-dictionary")) {
+        readmeLibraries.tokens.push("Style Dictionary");
+      }
+      if (lowerSource.includes("tokens studio") || lowerSource.includes("tokens-studio")) {
+        readmeLibraries.tokens.push("Tokens Studio");
+      }
+      if (lowerSource.includes("tailwind")) {
+        readmeLibraries.tokens.push("Tailwind CSS");
+      }
+    }
+
     const packages = new Set();
     Object.entries(data.fileContents || {}).forEach(([path, source]) => {
-      if (!/(^|\/)package\.json$/i.test(path)) return;
-      try {
-        const manifest = JSON.parse(source);
-        [manifest.dependencies, manifest.devDependencies, manifest.peerDependencies].forEach((group) => Object.keys(group || {}).forEach((name) => packages.add(name)));
-      } catch { /* A partial package.json preview is ignored. */ }
+      const lowerPath = path.toLowerCase();
+      if (lowerPath.endsWith("readme.md")) return;
+
+      if (/(^|\/)package\.json$/i.test(path)) {
+        try {
+          const manifest = JSON.parse(source);
+          [manifest.dependencies, manifest.devDependencies, manifest.peerDependencies].forEach((group) => Object.keys(group || {}).forEach((name) => packages.add(name)));
+        } catch { /* A partial package.json preview is ignored. */ }
+      }
+      if (lowerPath.endsWith("gemfile") || lowerPath.endsWith("gemfile.lock")) {
+        const lowerSource = source.toLowerCase();
+        if ((lowerSource.includes("remix") || lowerSource.includes("remixicon") || lowerSource.includes("remix-icon")) && !readmeLibraries.icons.some(i => i.includes("Remix"))) {
+          readmeLibraries.icons.push("Remix Icons");
+        }
+        if ((lowerSource.includes("font-awesome") || lowerSource.includes("fontawesome")) && !readmeLibraries.icons.some(i => i.includes("Font Awesome"))) {
+          readmeLibraries.icons.push("Font Awesome");
+        }
+        if (lowerSource.includes("tailwind") && !readmeLibraries.tokens.some(t => t.includes("Tailwind"))) {
+          readmeLibraries.tokens.push("Tailwind CSS");
+        }
+        if (lowerSource.includes("bootstrap") && !readmeLibraries.components.some(c => c.includes("Bootstrap"))) {
+          readmeLibraries.components.push("Bootstrap");
+        }
+      }
     });
-    const libraries = [...new Set([...packages].map(libraryName).filter(Boolean))];
+
+    const icons = [...readmeLibraries.icons];
+    const tokens = [...readmeLibraries.tokens];
+    const charts = [];
+    const animations = [];
+    const tables = [];
+    const core = [];
+
+    const getFriendlyName = (pkg) => {
+      const PRESETS = {
+        react: "React",
+        vue: "Vue",
+        "@angular/core": "Angular",
+        svelte: "Svelte",
+        next: "Next.js",
+        nuxt: "Nuxt.js",
+        tailwindcss: "Tailwind CSS",
+        "@mui/material": "Material UI",
+        "@chakra-ui/react": "Chakra UI",
+        "styled-components": "styled-components",
+        "@emotion/react": "Emotion",
+        antd: "Ant Design",
+        "@mantine/core": "Mantine",
+        bootstrap: "Bootstrap",
+        "class-variance-authority": "CVA",
+        "framer-motion": "Motion",
+        "lucide-react": "Lucide",
+        "react-icons": "React Icons",
+        "@heroicons/react": "Heroicons",
+        "feather-icons": "Feather Icons",
+        "@fortawesome/react-fontawesome": "FontAwesome",
+        "style-dictionary": "Style Dictionary",
+        "@tokens-studio/types": "Tokens Studio",
+        recharts: "Recharts",
+        "chart.js": "Chart.js",
+        "react-chartjs-2": "React Chart.js",
+        apexcharts: "ApexCharts",
+        d3: "D3",
+        "@tanstack/react-table": "TanStack Table",
+        "react-table": "React Table",
+        "react-virtual": "React Virtual",
+        "@xyflow/react": "React Flow",
+        "reactflow": "React Flow",
+      };
+      if (PRESETS[pkg]) return PRESETS[pkg];
+      if (pkg.startsWith("@radix-ui/")) return "Radix UI";
+      if (pkg.startsWith("@storybook/")) return "Storybook";
+      return pkg.replace(/^@/, "").split("/").pop().replace(/-react$/, "").replace(/-js$/, "");
+    };
+
+    packages.forEach((pkg) => {
+      const name = getFriendlyName(pkg);
+      const lowerPkg = pkg.toLowerCase();
+      if (lowerPkg.includes("icon") || lowerPkg === "lucide-react") {
+        if (!icons.some(i => i.toLowerCase().includes(name.toLowerCase()))) {
+          icons.push(name);
+        }
+      } else if (lowerPkg.includes("token") || lowerPkg === "style-dictionary") {
+        if (!tokens.some(t => t.toLowerCase().includes(name.toLowerCase()))) {
+          tokens.push(name);
+        }
+      } else if (lowerPkg.includes("chart") || lowerPkg === "d3" || lowerPkg === "apexcharts") {
+        charts.push(name);
+      } else if (lowerPkg === "framer-motion" || lowerPkg === "gsap" || lowerPkg === "animejs" || lowerPkg.includes("animate") || lowerPkg === "react-spring") {
+        animations.push(name);
+      } else if (lowerPkg.includes("table") || lowerPkg.includes("filter") || lowerPkg === "react-virtual") {
+        tables.push(name);
+      } else {
+        const standard = LIBRARY_NAMES[pkg] || (pkg.startsWith("@radix-ui/") ? "Radix UI" : null) || (pkg.startsWith("@storybook/") ? "Storybook" : null) || pkg === "react" || pkg === "next";
+        if (standard) {
+          const finalName = standard === true ? getFriendlyName(pkg) : standard;
+          if (!readmeLibraries.components.some(c => c.toLowerCase().includes(finalName.toLowerCase()))) {
+            core.push(finalName);
+          }
+        }
+      }
+    });
+
+    const finalIcons = icons.length ? [...new Set(icons)] : [];
+    const finalTokens = tokens.length ? [...new Set(tokens)] : [];
+    const finalComponents = readmeLibraries.components.length ? [...new Set(readmeLibraries.components)] : [];
+
     const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
-    return { components: componentFiles.size, pages: pageFiles.size, tokens: tokenFiles.size, styles: styleFiles.size, stories: storyFiles.size, patterns: patternFiles.size, documentation: documentationFiles.size, layouts: layoutFiles.size, libraries, hasDesignSystem };
-  }, [data.fileContents, data.files, data.nodes]);
+    return { components: componentFiles.size, pages: pageFiles.size, tokens: tokenFiles.size, styles: styleFiles.size, stories: storyFiles.size, patterns: patternFiles.size, documentation: documentationFiles.size, layouts: layoutFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem };
+  }, [data.fileContents, data.files, data.nodes, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();
     (data.files || []).forEach((file) => {
@@ -144,7 +327,15 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       if (lang === "es") return `${selectedPath} contiene ${matches.length || "varios"} elementos visuales relacionados. ${matches.map((node) => `${node.title}: ${node.what}`).join(" ") || "Selecciona un archivo relacionado para ver su tarjeta en el mapa."}`;
       return `${selectedPath} contains ${matches.length || "several"} related visual elements. ${matches.map((node) => `${node.title}: ${node.what_en || node.what}`).join(" ") || "Select a related file to see its card on the map."}`;
     }
-    const libraryText = design.libraries.length ? design.libraries.join(", ") : null;
+    const allLibs = [...new Set([
+      ...design.core,
+      ...(design.icons[0]?.includes("custom") || design.icons[0]?.includes("Custom") ? [] : design.icons),
+      ...(design.tokensList[0]?.includes("custom") || design.tokensList[0]?.includes("Custom") ? [] : design.tokensList),
+      ...design.animations,
+      ...design.charts,
+      ...design.tables
+    ])];
+    const libraryText = allLibs.length ? allLibs.join(", ") : null;
     if (lang === "es") return `${design.hasDesignSystem ? "Sí veo una base de sistema de diseño" : "No veo un sistema de diseño formal, pero sí una base visual"} en ${data.repoName}. He encontrado ${design.components} componentes reutilizables, ${design.tokens} archivos de tokens, ${design.styles} archivos de estilos, ${design.patterns} patrones, ${design.layouts} layouts y ${design.pages} páginas de producto. También hay ${design.documentation} archivos de documentación.${libraryText ? ` Las librerías que afectan a la interfaz son ${libraryText}.` : " No he podido confirmar una librería visual desde los package.json analizados."} Los tokens guardan decisiones como color, tipografía y espacio. Los componentes aplican esas decisiones. Los patrones explican cómo combinar componentes para resolver acciones repetidas. Los layouts organizan las zonas comunes de una pantalla, y las páginas usan layouts, patrones y componentes para construir experiencias completas. La documentación explica cómo usar todo de forma consistente.${design.stories ? ` Además, hay ${design.stories} historias que enseñan estados y variantes.` : " No he detectado historias de componentes, así que sus estados pueden estar documentados en otro lugar."}`;
     return `${design.hasDesignSystem ? "I found a design-system foundation" : "I did not find a formal design system, but I did find a visual foundation"} in ${data.repoName}. It contains ${design.components} reusable components, ${design.tokens} token files, ${design.styles} style files, ${design.patterns} patterns, ${design.layouts} layouts, and ${design.pages} product pages. It also has ${design.documentation} documentation files.${libraryText ? ` The libraries that affect the interface are ${libraryText}.` : " I could not confirm a visual library from the analyzed package.json files."} Tokens store decisions such as color, type, and spacing. Components apply those decisions. Patterns explain how components are combined to solve repeated interactions. Layouts organize the shared areas of a screen, and pages use layouts, patterns, and components to build complete experiences. Documentation explains how to use everything consistently.${design.stories ? ` There are also ${design.stories} stories showing states and variants.` : " I did not detect component stories, so their states may be documented elsewhere."}`;
   }, [data, design, folders, lang, mode, selectedPath]);
@@ -308,10 +499,61 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
               <p>{text}</p>
             </div>
             <div className="design-metrics">
-              {[[design.components, lang === "es" ? "Componentes" : "Components"], [design.patterns, lang === "es" ? "Patrones" : "Patterns"], [design.layouts, "Layouts"], [design.pages, lang === "es" ? "Páginas" : "Pages"], [design.tokens, "Tokens"], [design.styles, lang === "es" ? "Estilos" : "Styles"], [design.documentation, lang === "es" ? "Documentación" : "Documentation"], [design.stories, "Stories"]].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
+              {[[design.components, lang === "es" ? "Componentes" : "Components"], [design.patterns, lang === "es" ? "Patrones" : "Patterns"], [design.layouts, "Layouts"], [design.pages, lang === "es" ? "Páginas" : "Pages"], [design.tokens, "Tokens"], [design.styles, lang === "es" ? "Estilos" : "Styles"], [design.documentation, lang === "es" ? "Documentación" : "Documentación"], [design.stories, "Stories"]].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
             </div>
-            <div className="design-libraries"><span>{lang === "es" ? "Librerías de interfaz" : "Interface libraries"}</span><div>{design.libraries.length ? design.libraries.map((library) => <small key={library}>{library}</small>) : <small>{lang === "es" ? "No detectadas" : "Not detected"}</small>}</div></div>
-            <h3>{lang === "es" ? "Estructura principal" : "Main structure"}</h3>
+              <div className="design-libraries" style={{ display: "grid", gap: "8px", marginTop: "20px" }}>
+                <span>{lang === "es" ? "Librerías de interfaz" : "Interface libraries"}</span>
+                <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {design.icons && design.icons.length > 0 && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Iconos: " : "Icons: "}</strong>
+                      {design.icons.join(", ")}
+                    </p>
+                  )}
+                  {design.componentsList && design.componentsList.length > 0 && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Componentes: " : "Components: "}</strong>
+                      {design.componentsList.join(", ")}
+                    </p>
+                  )}
+                  {design.tokensList && design.tokensList.length > 0 && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Tokens: " : "Tokens: "}</strong>
+                      {design.tokensList.join(", ")}
+                    </p>
+                  )}
+                  {design.animations.length > 0 && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Animaciones: " : "Animations: "}</strong>
+                      {design.animations.join(", ")}
+                    </p>
+                  )}
+                  {design.charts.length > 0 && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Gráficos: " : "Charts: "}</strong>
+                      {design.charts.join(", ")}
+                    </p>
+                  )}
+                  {design.tables.length > 0 && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Tablas/Filtros: " : "Tables/Filters: "}</strong>
+                      {design.tables.join(", ")}
+                    </p>
+                  )}
+                  {design.core.length > 0 && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Otros/Frameworks: " : "Others/Frameworks: "}</strong>
+                      {design.core.join(", ")}
+                    </p>
+                  )}
+                  {(!design.icons?.length && !design.componentsList?.length && !design.tokensList?.length && !design.animations.length && !design.charts.length && !design.tables.length && !design.core.length) && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#6b7280", fontStyle: "italic" }}>
+                      {lang === "es" ? "No se detectaron librerías externas." : "No external libraries detected."}
+                    </p>
+                  )}
+                </div>
+              </div>
+             <h3 style={{ marginTop: "24px" }}>{lang === "es" ? "Estructura principal" : "Main structure"}</h3>
             <div className="folder-grid">
               {folders.slice(0, 12).map(([name, count]) => (
                 <button key={name} className="folder-card" onClick={() => name !== "raíz" && name !== "root" && onSelectPath(name, true)}>

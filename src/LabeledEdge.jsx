@@ -22,7 +22,7 @@ export default function LabeledEdge({
   });
   const color = data?.color || "#a1a1aa";
   const labelX = targetX + (data?.labelOffsetX || 0);
-  const labelY = targetY - 14;
+  const labelY = targetY + (data?.labelOffsetY !== undefined ? data.labelOffsetY : -14);
   return (
     <>
       <BaseEdge id={id} path={path} markerEnd={markerEnd} style={style} />
