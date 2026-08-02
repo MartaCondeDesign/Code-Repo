@@ -67,7 +67,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
   const [sectionQuery, setSectionQuery] = useState("");
   const [position, setPosition] = useState(null);
   const [dragging, setDragging] = useState(null);
-  const [guideHeight, setGuideHeight] = useState(() => Number(window.localStorage.getItem("repo-guide-height")) || 430);
+  const [guideHeight, setGuideHeight] = useState(() => Number(window.localStorage.getItem("repo-guide-height")) || 760);
   const [resizingHeight, setResizingHeight] = useState(null);
   const [resizingTop, setResizingTop] = useState(null);
   const [disclaimerExpanded, setDisclaimerExpanded] = useState(false);
@@ -382,7 +382,8 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     if (!resizingTop) return undefined;
     const onMove = (event) => {
       const dy = event.clientY - resizingTop.startY;
-      const newTop = Math.max(80, resizingTop.startTop + dy);
+      const maxAllowedTop = resizingTop.startTop + (resizingTop.startHeight - 200);
+      const newTop = Math.max(80, Math.min(maxAllowedTop, resizingTop.startTop + dy));
       const newHeight = Math.max(200, resizingTop.startHeight - (newTop - resizingTop.startTop));
       setPosition({ x: resizingTop.startX, y: newTop });
       setGuideHeight(newHeight);
