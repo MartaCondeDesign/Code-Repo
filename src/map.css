@@ -22,7 +22,7 @@ body { overflow: hidden; background: var(--paper); color: var(--ink); font-famil
 body.is-resizing { cursor: col-resize; user-select: none; }
 button, input { font: inherit; }
 button { color: inherit; }
-.app { height: 100vh; display: flex; flex-direction: column; padding-bottom: 33px; }
+.app { height: 100vh; display: flex; flex-direction: column; }
 .app.reading-font { --font-ui: "OpenDyslexic", sans-serif; font-family: var(--font-ui); }
 .app.reading-font .tree-label { font-family: "OpenDyslexic", sans-serif; }
 .app.reading-size :where(p, .tree-row, .folder-card small, .linked-files button) { font-size: var(--reading-base-size, 12px); }
@@ -527,7 +527,7 @@ button { color: inherit; }
 .guide-fab {
   position: fixed;
   right: 24px;
-  bottom: 24px;
+  bottom: 40px;
   z-index: 999;
   width: 48px;
   height: 48px;

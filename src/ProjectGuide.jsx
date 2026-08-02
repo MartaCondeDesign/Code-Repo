@@ -93,6 +93,14 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const patternFiles = new Set();
     const documentationFiles = new Set();
     const layoutFiles = new Set();
+    // DS node-based counts — metric cards show only files belonging to map nodes
+    const dsComponentFiles = new Set();
+    const dsPageFiles = new Set();
+    const dsTokenFiles = new Set();
+    const dsStyleFiles = new Set();
+    const dsStoryFiles = new Set();
+    const dsPatternFiles = new Set();
+    const dsLayoutFiles = new Set();
     const codeFile = /\.(jsx?|tsx?|vue|svelte|rb|erb|haml|html|php|py|go)$/i;
 
     files.forEach((file) => {
@@ -107,13 +115,28 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     });
     nodes.forEach((node) => {
       const nodeFiles = node.files || [];
-      if (node.tag === "component" || ["components", "ui"].includes(node.layer)) nodeFiles.forEach((file) => componentFiles.add(file));
-      if (node.tag === "page") nodeFiles.forEach((file) => pageFiles.add(file));
-      if (node.tag === "tokens" || ["tokens", "foundation"].includes(node.layer)) nodeFiles.filter((file) => !/package\.json$/i.test(file)).forEach((file) => tokenFiles.add(file));
-      if (node.tag === "story") nodeFiles.forEach((file) => storyFiles.add(file));
-      if (node.tag === "pattern" || node.layer === "patterns") nodeFiles.forEach((file) => patternFiles.add(file));
-      if (["doc", "documentation"].includes(node.tag) || node.layer === "docs") nodeFiles.forEach((file) => documentationFiles.add(file));
-      if (["layout", "template"].includes(node.tag)) nodeFiles.forEach((file) => layoutFiles.add(file));
+      if (node.tag === "component" || ["components", "ui"].includes(node.layer)) {
+        nodeFiles.forEach((file) => { componentFiles.add(file); dsComponentFiles.add(file); });
+      }
+      if (node.tag === "page") {
+        nodeFiles.forEach((file) => { pageFiles.add(file); dsPageFiles.add(file); });
+      }
+      if (node.tag === "tokens" || ["tokens", "foundation"].includes(node.layer)) {
+        nodeFiles.filter((file) => !/package\.json$/i.test(file)).forEach((file) => { tokenFiles.add(file); dsTokenFiles.add(file); });
+      }
+      if (node.tag === "story") {
+        nodeFiles.forEach((file) => { storyFiles.add(file); dsStoryFiles.add(file); });
+      }
+      if (node.tag === "pattern" || node.layer === "patterns") {
+        nodeFiles.forEach((file) => { patternFiles.add(file); dsPatternFiles.add(file); });
+      }
+      if (["doc", "documentation"].includes(node.tag) || node.layer === "docs") {
+        nodeFiles.forEach((file) => documentationFiles.add(file));
+      }
+      if (["layout", "template"].includes(node.tag)) {
+        nodeFiles.forEach((file) => { layoutFiles.add(file); dsLayoutFiles.add(file); });
+      }
+      nodeFiles.filter((file) => /\.(css|scss|sass|less|styl)$/i.test(file)).forEach((file) => dsStyleFiles.add(file));
     });
 
     const readmeLibraries = {
@@ -310,7 +333,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const finalComponents = readmeLibraries.components.length ? [...new Set(readmeLibraries.components)] : [];
 
     const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
-    return { components: componentFiles.size, pages: pageFiles.size, tokens: tokenFiles.size, styles: styleFiles.size, stories: storyFiles.size, patterns: patternFiles.size, documentation: documentationFiles.size, layouts: layoutFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem };
+    return { components: dsComponentFiles.size, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem };
   }, [data.fileContents, data.files, data.nodes, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();

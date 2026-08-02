@@ -187,6 +187,18 @@ const WIZARD_STEPS = {
       body: "El botón Guide abre un panel con el resumen completo del proyecto: qué es, cómo está organizado y qué hace cada parte — todo explicado en lenguaje de diseño.",
       target: ".repo-btn.guide-button",
     },
+    {
+      icon: "⭐",
+      title: "Guarda tus repositorios favoritos",
+      body: "En el desplegable junto al campo de URL encontrarás todos los repositorios disponibles. Pasa el cursor sobre cualquiera y pulsa la estrella para guardarlo — aparecerá en la sección Guardados cada vez que abras la herramienta.",
+      target: ".repo-input-wrap",
+    },
+    {
+      icon: "🧩",
+      title: "Explora los componentes desde la guía",
+      body: "Dentro de la guía del proyecto puedes seleccionar cualquier componente del listado para ver todos sus detalles: qué hace, dónde se usa y cómo se relaciona con el resto del sistema.",
+      target: ".repo-btn.guide-button",
+    },
   ],
   en: [
     {
@@ -227,6 +239,18 @@ const WIZARD_STEPS = {
       icon: "📖",
       title: "The project guide",
       body: "The Guide button opens a panel with a full summary of the project: what it is, how it's organized, and what each part does — all explained in design language.",
+      target: ".repo-btn.guide-button",
+    },
+    {
+      icon: "⭐",
+      title: "Save your favourite repositories",
+      body: "In the dropdown next to the URL field you'll find all available repositories. Hover over any one and click the star to save it — it will appear in the Saved section every time you open the tool.",
+      target: ".repo-input-wrap",
+    },
+    {
+      icon: "🧩",
+      title: "Explore components from the guide",
+      body: "Inside the project guide you can select any component from the list to see all its details: what it does, where it's used, and how it connects to the rest of the system.",
       target: ".repo-btn.guide-button",
     },
   ],
