@@ -991,6 +991,7 @@ export default function App() {
                     type="checkbox"
                     checked={saveToken}
                     onChange={(e) => setSaveToken(e.target.checked)}
+                    style={{ margin: 0 }}
                   />
                   <span>
                     {lang === "es" ? "Guardar token para futuras búsquedas" : "Save token for future searches"}
@@ -1000,8 +1001,8 @@ export default function App() {
               <div className="wizard-nav" style={{ marginTop: "24px", display: "flex", gap: "10px", justifyContent: "flex-end", width: "100%" }}>
                 {gitToken && (
                   <button 
-                    className="repo-btn guide-button"
-                    style={{ padding: "8px 12px" }}
+                    className="repo-btn"
+                    style={{ background: "#dc2626", color: "#fff", borderColor: "#dc2626", padding: "8px 14px", marginRight: "auto", whiteSpace: "nowrap" }}
                     onClick={() => {
                       setGitToken("");
                       setModalToken("");
