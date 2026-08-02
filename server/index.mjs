@@ -43,14 +43,16 @@ function validateRepoUrl(input) {
   return { owner, repo };
 }
 
-async function cloneAndAnalyze(repoUrl, subPath) {
+async function cloneAndAnalyze(repoUrl, subPath, token) {
   const parsed = validateRepoUrl(repoUrl);
   if (!parsed) throw new Error("URL inválida: usa https://github.com/usuario/repo");
   const tmp = await fs.promises.mkdtemp(path.join(os.tmpdir(), "dsmap-"));
   
   let cloneUrl = `https://github.com/${parsed.owner}/${parsed.repo}.git`;
   const trimmed = repoUrl.trim();
-  if (trimmed.startsWith("git@github.com") || trimmed.includes("github.com:")) {
+  if (token) {
+    cloneUrl = `https://oauth2:${token}@github.com/${parsed.owner}/${parsed.repo}.git`;
+  } else if (trimmed.startsWith("git@github.com") || trimmed.includes("github.com:")) {
     cloneUrl = `git@github.com:${parsed.owner}/${parsed.repo}.git`;
   } else {
     try {
@@ -64,13 +66,10 @@ async function cloneAndAnalyze(repoUrl, subPath) {
   }
 
   try {
-    await execFileP("git", ["clone", "--depth", "1", "--quiet", cloneUrl, tmp], { timeout: 90000 });
+    await execFileP("git", ["-c", "credential.helper=", "clone", "--depth", "1", "--quiet", cloneUrl, tmp], { timeout: 90000 });
   } catch (err) {
     await fs.promises.rm(tmp, { recursive: true, force: true });
-    throw new Error(
-      "No se pudo clonar el repositorio (¿es privado o no existe?). " +
-        (err.stderr ? err.stderr.toString().split("\n").slice(0, 3).join(" ") : "")
-    );
+    throw new Error("AUTH_REQUIRED");
   }
   const scanDir = subPath ? path.join(tmp, subPath) : tmp;
   if (subPath) {
@@ -104,13 +103,13 @@ const server = http.createServer(async (req, res) => {
     req.on("data", (c) => (body += c));
     req.on("end", async () => {
       try {
-        const { repoUrl, path: subPath } = JSON.parse(body || "{}");
+        const { repoUrl, path: subPath, token } = JSON.parse(body || "{}");
         if (!repoUrl || typeof repoUrl !== "string") {
           res.writeHead(400, { "Content-Type": "application/json" });
           res.end(JSON.stringify({ error: "Falta el campo repoUrl" }));
           return;
         }
-        const result = await cloneAndAnalyze(repoUrl, subPath);
+        const result = await cloneAndAnalyze(repoUrl, subPath, token);
         res.writeHead(200, { "Content-Type": "application/json" });
         res.end(JSON.stringify(result));
       } catch (err) {

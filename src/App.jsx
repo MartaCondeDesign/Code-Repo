@@ -13,11 +13,31 @@ const nodeTypes = { chip: ChipNode, lane: LaneNode };
 const edgeTypes = { labeled: LabeledEdge };
 
 const DESIGN_REPOS = [
-  { name: "shadcn/ui", detail: "Componentes abiertos para React", url: "https://github.com/shadcn-ui/ui" },
-  { name: "Material UI", detail: "Sistema de componentes Material", url: "https://github.com/mui/material-ui" },
-  { name: "Radix Primitives", detail: "Primitivas accesibles de interfaz", url: "https://github.com/radix-ui/primitives" },
-  { name: "Chakra UI", detail: "Componentes React accesibles", url: "https://github.com/chakra-ui/chakra-ui" },
-  { name: "Astryx", detail: "149 componentes de interfaz de producto", url: "https://github.com/facebook/astryx" },
+  { name: "shadcn/ui", url: "https://github.com/shadcn-ui/ui" },
+  { name: "Material UI", url: "https://github.com/mui/material-ui" },
+  { name: "Radix Primitives", url: "https://github.com/radix-ui/primitives" },
+  { name: "Chakra UI", url: "https://github.com/chakra-ui/chakra-ui" },
+  { name: "Astryx", url: "https://github.com/facebook/astryx" },
+  { name: "Ant Design", url: "https://github.com/ant-design/ant-design" },
+  { name: "Carbon Design", url: "https://github.com/carbon-design-system/carbon" },
+  { name: "Fluent UI", url: "https://github.com/microsoft/fluentui" },
+  { name: "Blueprint UI", url: "https://github.com/palantir/blueprint" },
+  { name: "Evergreen", url: "https://github.com/segmentio/evergreen" },
+  { name: "Semantic UI", url: "https://github.com/Semantic-Org/Semantic-UI" },
+  { name: "Primer UI", url: "https://github.com/primer/react" },
+  { name: "Ring UI", url: "https://github.com/JetBrains/ring-ui" },
+  { name: "Base Web", url: "https://github.com/uber/baseweb" },
+  { name: "Grommet", url: "https://github.com/grommet/grommet" },
+  { name: "Elastic EUI", url: "https://github.com/elastic/eui" },
+  { name: "Spectrum WC", url: "https://github.com/adobe/spectrum-web-components" },
+  { name: "Lion UI", url: "https://github.com/ing-bank/lion" },
+  { name: "Microsoft Fast", url: "https://github.com/microsoft/fast" },
+  { name: "Twilio Paste", url: "https://github.com/twilio-labs/paste" },
+  { name: "Kiwi Orbit", url: "https://github.com/kiwicom/orbit" },
+  { name: "Pinterest Gestalt", url: "https://github.com/pinterest/gestalt" },
+  { name: "Shopify Polaris", url: "https://github.com/Shopify/polaris" },
+  { name: "Zendesk Garden", url: "https://github.com/zendeskgarden/react-components" },
+  { name: "Workday Canvas", url: "https://github.com/Workday/canvas-kit" },
 ];
 
 const DEFAULT_FILES = [
@@ -317,8 +337,20 @@ export default function App() {
   const [selectedPath, setSelectedPath] = useState("");
   const [selectedIsFolder, setSelectedIsFolder] = useState(false);
   const [relatedIds, setRelatedIds] = useState(new Set());
+  const [activeCategory, setActiveCategory] = useState(null);
   const [guideOpen, setGuideOpen] = useState(false);
   const [repoMenuOpen, setRepoMenuOpen] = useState(false);
+  const [gitToken, setGitToken] = useState(() => window.localStorage.getItem("git-token") || "");
+  const [tokenModalOpen, setTokenModalOpen] = useState(false);
+  const [modalToken, setModalToken] = useState("");
+  const [saveToken, setSaveToken] = useState(true);
+  const [recentSearches, setRecentSearches] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("recent-searches")) || [];
+    } catch {
+      return [];
+    }
+  });
   const [flow, setFlow] = useState(null);
   const [treeWidth, setTreeWidth] = useState(() => Number(window.localStorage.getItem("repo-tree-width")) || 360);
   const [resizingTree, setResizingTree] = useState(false);
@@ -451,8 +483,77 @@ export default function App() {
   }, [resizingInspector]);
   const { lanes, nodes: layoutNodes } = useMemo(() => buildLayout(data, lang), [data, lang]);
 
+  const { categoryNodeIds, categoryFilePaths } = useMemo(() => {
+    if (!activeCategory) return { categoryNodeIds: new Set(), categoryFilePaths: new Set() };
+    const nodeIds = new Set();
+    const filePaths = new Set();
+
+    data.nodes.forEach((node) => {
+      let match = false;
+      const tag = node.tag;
+      const layer = node.layer;
+
+      if (activeCategory === "components") {
+        if (tag === "component" || layer === "components" || layer === "ui") match = true;
+      } else if (activeCategory === "patterns") {
+        if (tag === "pattern" || layer === "patterns") match = true;
+      } else if (activeCategory === "layouts") {
+        if (tag === "layout" || tag === "template" || layer === "layouts") match = true;
+      } else if (activeCategory === "pages") {
+        if (tag === "page" || layer === "pages") match = true;
+      } else if (activeCategory === "tokens") {
+        if (tag === "token" || layer === "tokens" || layer === "foundation") match = true;
+      } else if (activeCategory === "styles") {
+        const hasStyles = node.files?.some(f => /\.(css|scss|sass|less|styl)$/i.test(f));
+        if (hasStyles) match = true;
+      } else if (activeCategory === "documentation") {
+        if (["rule", "skill", "doc"].includes(tag) || layer === "docs") match = true;
+      } else if (activeCategory === "stories") {
+        if (tag === "story" || layer === "stories") match = true;
+      }
+
+      if (match) {
+        nodeIds.add(node.id);
+        node.files?.forEach(f => filePaths.add(f));
+      }
+    });
+
+    data.files?.forEach((filePath) => {
+      const lower = filePath.toLowerCase();
+      const ext = filePath.split(".").pop().toLowerCase();
+      if (activeCategory === "components") {
+        if (/(^|\/)(components?|ui)\//i.test(filePath) && ["js", "jsx", "ts", "tsx", "vue", "svelte"].includes(ext)) filePaths.add(filePath);
+      } else if (activeCategory === "tokens") {
+        if (/(^|\/)(tokens?|variables?|theme|primitives?|semantic|foundations?)(\/|\.|-)/i.test(filePath)) filePaths.add(filePath);
+      } else if (activeCategory === "pages") {
+        if (/(^|\/)(pages?|screens?|views?|routes?|app)\//i.test(filePath) && ["js", "jsx", "ts", "tsx", "vue", "svelte"].includes(ext)) filePaths.add(filePath);
+      } else if (activeCategory === "layouts") {
+        if (/(^|\/)(layouts?|shells?)\//i.test(filePath) || /layout\.(jsx?|tsx?|vue|svelte|erb)$/i.test(filePath)) filePaths.add(filePath);
+      } else if (activeCategory === "stories") {
+        if (/\.stories\./i.test(filePath)) filePaths.add(filePath);
+      } else if (activeCategory === "patterns") {
+        if (/(^|\/)(patterns?|recipes?|templates?)\//i.test(filePath)) filePaths.add(filePath);
+      } else if (activeCategory === "documentation") {
+        if (/(^|\/)docs?\//i.test(filePath) || /^(readme|agents|claude)\.md$/i.test(filePath.split("/").pop())) filePaths.add(filePath);
+      } else if (activeCategory === "styles") {
+        if (["css", "scss", "sass", "less", "styl"].includes(ext)) filePaths.add(filePath);
+      }
+    });
+
+    return { categoryNodeIds: nodeIds, categoryFilePaths: filePaths };
+  }, [data, activeCategory]);
+
+  useEffect(() => {
+    if (activeCategory && flow && categoryNodeIds.size > 0) {
+      const nodesToFit = flow.getNodes().filter((n) => categoryNodeIds.has(n.id));
+      if (nodesToFit.length > 0) {
+        flow.fitView({ nodes: nodesToFit, duration: 400, padding: 0.12 });
+      }
+    }
+  }, [activeCategory, categoryNodeIds, flow]);
+
   const nodeMeta = useMemo(() => Object.fromEntries(data.nodes.map((node) => [node.id, node])), [data.nodes]);
-  const hasFocus = relatedIds.size > 0;
+  const hasFocus = relatedIds.size > 0 || categoryNodeIds.size > 0;
   const nodes = useMemo(() => [
     ...lanes.map((lane) => ({
       id: `lane-${lane.id}`, type: "lane", position: { x: 0, y: lane.top }, width: lane.width, height: lane.height,
@@ -461,34 +562,36 @@ export default function App() {
     })),
     ...layoutNodes.map((node) => {
       const layerColor = lanes.find((l) => l.id === node.data.layer)?.color || "#a78bfa";
+      const isSelected = relatedIds.has(node.id) || categoryNodeIds.has(node.id);
       return {
         ...node,
         draggable: false,
         data: {
           ...node.data,
           color: layerColor,
-          selected: relatedIds.has(node.id),
-          dimmed: hasFocus && !relatedIds.has(node.id),
+          selected: isSelected,
+          dimmed: hasFocus && !isSelected,
           what: nodeMeta[node.id]?.what || "",
           does: nodeMeta[node.id]?.does || "",
         },
       };
     }),
-  ], [lanes, layoutNodes, relatedIds, hasFocus, nodeMeta]);
+  ], [lanes, layoutNodes, relatedIds, categoryNodeIds, hasFocus, nodeMeta]);
 
   const edges = useMemo(() => {
     const targetCounts = {};
     return data.edges.map((edge) => {
-      const active = relatedIds.has(edge.source) || relatedIds.has(edge.target);
+      const active = relatedIds.has(edge.source) || relatedIds.has(edge.target) || categoryNodeIds.has(edge.source) || categoryNodeIds.has(edge.target);
       const tgt = edge.target;
       targetCounts[tgt] = (targetCounts[tgt] || 0) + 1;
       const index = targetCounts[tgt] - 1;
       const labelOffsetY = -14 - index * 18; // offset label by 18px per overlapping edge
-      return styledEdge(edge, active, false, labelOffsetY);
+      return styledEdge(edge, active, hasFocus && !active, labelOffsetY);
     });
-  }, [data.edges, relatedIds, hasFocus]);
+  }, [data.edges, relatedIds, categoryNodeIds, hasFocus]);
 
   const focusCard = useCallback((id) => {
+    setActiveCategory(null);
     const meta = nodeMeta[id];
     if (!meta) return;
     setRelatedIds(new Set([id]));
@@ -506,6 +609,7 @@ export default function App() {
   }, [nodeMeta, flow]);
 
   const selectPath = useCallback((path, isFolder = false) => {
+    setActiveCategory(null);
     setSelectedPath(path);
     setSelectedIsFolder(isFolder);
     const matches = data.nodes.filter((node) => node.files?.some((file) =>
@@ -525,21 +629,37 @@ export default function App() {
     }
   }, [data.nodes, flow]);
 
-  const analyzeRepo = async (urlOverride) => {
+  const analyzeRepo = async (urlOverride, customToken) => {
     const url = (typeof urlOverride === "string" ? urlOverride : repoUrl).trim();
     if (!url || busy) return;
     setRepoUrl(url);
     setRepoMenuOpen(false);
     setBusy(true);
     setErr(null);
+    const tokenToSend = customToken !== undefined ? customToken : gitToken;
     try {
       const response = await fetch("/api/analyze", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
-        body: JSON.stringify({ repoUrl: url }),
+        body: JSON.stringify({ repoUrl: url, token: tokenToSend || undefined }),
       });
       const result = await response.json().catch(() => ({}));
-      if (!response.ok) throw new Error(result.error || "Error");
+      if (!response.ok) {
+        if (result.error && result.error.includes("AUTH_REQUIRED")) {
+          setBusy(false);
+          setModalToken(gitToken);
+          setTokenModalOpen(true);
+          return;
+        }
+        throw new Error(result.error || "Error");
+      }
+      
+      setRecentSearches((prev) => {
+        const next = [url, ...prev.filter((u) => u !== url)].slice(0, 4);
+        window.localStorage.setItem("recent-searches", JSON.stringify(next));
+        return next;
+      });
+
       setBusy(false);
       startTransition(() => {
         setMap(result);
@@ -550,7 +670,7 @@ export default function App() {
       });
       return;
     } catch (error) {
-      setErr(error.message);
+      setErr(error.message === "AUTH_REQUIRED" ? (lang === "es" ? "El repositorio requiere autenticación." : "Repository requires authentication.") : error.message);
     }
     setBusy(false);
   };
@@ -574,16 +694,55 @@ export default function App() {
           </div>
         </div>
         <div className="repo-row">
-          <div className={"repo-input-wrap" + (map ? " has-reset" : "")}>
-            <input className="repo-input" value={repoUrl} placeholder={t.repoPlaceholder} onChange={(event) => setRepoUrl(event.target.value)} onKeyDown={(event) => event.key === "Enter" && analyzeRepo()} spellCheck={false} />
+          <div className={"repo-input-wrap" + (map ? " has-reset" : "") + (gitToken ? " has-token" : "")}>
+            <input
+              className="repo-input"
+              value={repoUrl}
+              placeholder={t.repoPlaceholder}
+              onChange={(event) => setRepoUrl(event.target.value)}
+              onKeyDown={(event) => event.key === "Enter" && analyzeRepo()}
+              spellCheck={false}
+            />
             {map && <button className="reset-inside has-tooltip" onClick={resetMap} aria-label={t.resetTip} data-tooltip={t.resetTip}>↻</button>}
-            <button className="repo-menu-toggle has-tooltip" aria-expanded={repoMenuOpen} aria-label={lang === "es" ? "Elegir un sistema de diseño abierto" : "Choose an open-source design system"} data-tooltip={lang === "es" ? "Elegir repositorio" : "Choose repository"} onClick={() => setRepoMenuOpen((value) => !value)}><span aria-hidden="true" className="dropdown-chevron" /></button>
-            {repoMenuOpen && <div className="repo-menu">
-              <span>{lang === "es" ? "Sistemas de diseño abiertos" : "Open-source design systems"}</span>
-              {DESIGN_REPOS.map((repo) => <button key={repo.url} onClick={() => analyzeRepo(repo.url)}><strong>{repo.name}</strong><small>{repo.detail}</small></button>)}
-            </div>}
+            
+            {gitToken && (
+              <button
+                className="repo-token-toggle has-tooltip"
+                style={{ right: map ? "60px" : "32px" }}
+                aria-label={lang === "es" ? "Modificar token de GitHub" : "Modify GitHub token"}
+                data-tooltip={lang === "es" ? "Modificar token" : "Modify token"}
+                onClick={() => {
+                  setModalToken(gitToken);
+                  setTokenModalOpen(true);
+                }}
+              >
+                <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                </svg>
+              </button>
+            )}
+            
+            <button className="repo-menu-toggle has-tooltip" aria-expanded={repoMenuOpen} aria-label={lang === "es" ? "Elegir un sistema de diseño abierto" : "Choose an open-source design system"} data-tooltip={lang === "es" ? "Elegir repositorio" : "Choose repository"} onClick={() => { setRepoMenuOpen((value) => !value); }}><span aria-hidden="true" className="dropdown-chevron" /></button>
+            
+            {repoMenuOpen && (
+              <div className="repo-menu">
+                {recentSearches.length > 0 && (
+                  <>
+                    <span>{lang === "es" ? "Búsquedas recientes" : "Recent searches"}</span>
+                    {recentSearches.map((url) => (
+                      <button key={url} onClick={() => analyzeRepo(url)}>
+                        <strong>{url.replace("https://github.com/", "")}</strong>
+                      </button>
+                    ))}
+                    <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--border)" }} />
+                  </>
+                )}
+                <span>{lang === "es" ? "Sistemas Open Source" : "Open Source"}</span>
+                {DESIGN_REPOS.map((repo) => <button key={repo.url} onClick={() => analyzeRepo(repo.url)}><strong>{repo.name}</strong></button>)}
+              </div>
+            )}
           </div>
-          <button className="repo-btn" onClick={analyzeRepo} aria-busy={busy}>{t.repoButton}</button>
+          <button className="repo-btn" onClick={() => analyzeRepo()} aria-busy={busy}>{t.repoButton}</button>
           <button className="repo-btn guide-button" onClick={() => setGuideOpen(true)}>{t.guide}</button>
           {err && <span className="repo-err">{err}</span>}
         </div>
@@ -616,7 +775,7 @@ export default function App() {
       </header>
 
       <main className={"workspace" + (selectedIsFile ? " code-open" : "")} style={{ "--tree-width": `${treeWidth}px`, "--inspector-width": `${inspectorWidth}px` }}>
-        <RepoTree files={data.files || []} repoName={data.repoName} selectedPath={selectedPath} onSelect={selectPath} lang={lang} />
+        <RepoTree files={data.files || []} repoName={data.repoName} selectedPath={selectedPath} onSelect={selectPath} lang={lang} highlightedPaths={categoryFilePaths} />
         <div
           className="panel-resizer"
           role="separator"
@@ -635,11 +794,11 @@ export default function App() {
         <section className="visual-pane">
           <div className="pane-heading map-heading">
             <div><span className="pane-kicker">{t.map}</span><h2>{data.repoName}</h2></div>
-            {selectedPath && <button className="clear-focus" onClick={() => { setSelectedPath(""); setRelatedIds(new Set()); setSelected(null); }}>× {selectedPath}</button>}
+            {selectedPath && <button className="clear-focus" onClick={() => { setSelectedPath(""); setRelatedIds(new Set()); setSelected(null); setActiveCategory(null); }}>× {selectedPath}</button>}
           </div>
           <div className="graph">
             {busy && <div className="loading-overlay"><div className="scan-line" /><p>{t.repoAnalyzing}<br /><span className="loading-sub">{t.repoAnalyzingSub}</span></p></div>}
-            <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodeClick={(_, node) => node.type === "chip" && focusCard(node.id)} onInit={setFlow} onPaneClick={() => { setRelatedIds(new Set()); setSelected(null); }} fitView fitViewOptions={{ padding: 0.12 }} nodesConnectable={false} elementsSelectable={false} proOptions={{ hideAttribution: true }} colorMode="light">
+            <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodeClick={(_, node) => { setActiveCategory(null); node.type === "chip" && focusCard(node.id); }} onInit={setFlow} onPaneClick={() => { setRelatedIds(new Set()); setSelected(null); setActiveCategory(null); }} fitView fitViewOptions={{ padding: 0.12 }} nodesConnectable={false} elementsSelectable={false} proOptions={{ hideAttribution: true }} colorMode="light">
               <Background color="#d9d6e4" gap={24} size={1} />
               <Controls />
             </ReactFlow>
@@ -649,7 +808,7 @@ export default function App() {
         {(selected || selectedIsFile || selectedIsFolder) && <div className="inspector-resizer" role="separator" aria-label={lang === "es" ? "Redimensionar panel derecho" : "Resize right panel"} aria-orientation="vertical" aria-valuemin="280" aria-valuemax="680" aria-valuenow={Math.round(inspectorWidth)} tabIndex={0} onPointerDown={(event) => { event.preventDefault(); setResizingInspector(true); }} onKeyDown={(event) => { if (event.key === "ArrowLeft") setInspectorWidth((width) => Math.min(680, width + 24)); if (event.key === "ArrowRight") setInspectorWidth((width) => Math.max(280, width - 24)); }}><span /></div>}
         {(selected || selectedIsFile || selectedIsFolder) && (
           <aside className={"inspector" + ((selectedIsFile || selectedIsFolder) ? " code-inspector" : "")}>
-            <button className="icon-btn inspector-close has-tooltip" data-tooltip={lang === "es" ? "Cerrar panel" : "Close panel"} aria-label={lang === "es" ? "Cerrar panel" : "Close panel"} onClick={() => { setSelected(null); setSelectedPath(""); setSelectedIsFolder(false); setRelatedIds(new Set()); }}>×</button>
+            <button className="icon-btn inspector-close has-tooltip" data-tooltip={lang === "es" ? "Cerrar panel" : "Close panel"} aria-label={lang === "es" ? "Cerrar panel" : "Close panel"} onClick={() => { setSelected(null); setSelectedPath(""); setSelectedIsFolder(false); setRelatedIds(new Set()); setActiveCategory(null); }}>×</button>
             {selectedIsFile ? (
               <>
                 <span className="pane-kicker">{lang === "es" ? "ARCHIVO DE CÓDIGO" : "CODE FILE"}</span>
@@ -690,7 +849,7 @@ export default function App() {
         )}
       </main>
 
-      <ProjectGuide data={data} lang={lang} selectedPath={selectedPath} open={guideOpen} onClose={() => setGuideOpen(false)} onSelectPath={selectPath} />
+      <ProjectGuide data={data} lang={lang} selectedPath={selectedPath} open={guideOpen} onClose={() => setGuideOpen(false)} onSelectPath={selectPath} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
 
       {wizardOpen && (() => {
         const step = WIZARD_STEPS[lang][wizardStep];
@@ -791,6 +950,96 @@ export default function App() {
           </div>
         );
       })()}
+
+      {tokenModalOpen && (
+        <div className="wizard-overlay" onClick={(e) => e.target === e.currentTarget && setTokenModalOpen(false)}>
+          <div className="wizard-modal token-modal" style={{ maxWidth: "420px" }}>
+            <button className="wizard-close" onClick={() => setTokenModalOpen(false)}>×</button>
+            <div className="wizard-body">
+              <div className="wizard-icon">🔐</div>
+              <h3 className="wizard-title" style={{ marginTop: "12px", fontSize: "16px", fontWeight: "700" }}>
+                {lang === "es" ? "Introduce tu token de acceso" : "Enter your access token"}
+              </h3>
+              <p className="wizard-text" style={{ fontSize: "11px", color: "var(--text-sub)", margin: "8px 0 16px", lineHeight: "1.5" }}>
+                {lang === "es" 
+                  ? "Este repositorio es privado y necesitas introducir tu token de acceso personal para que GitHub pueda clonarlo y analizarlo." 
+                  : "This repository is private and you need to enter your personal access token so GitHub can clone and analyze it."}
+              </p>
+              
+              <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "left", gap: "8px" }}>
+                <input
+                  type="password"
+                  className="modal-token-input"
+                  value={modalToken}
+                  onChange={(e) => setModalToken(e.target.value)}
+                  placeholder="ghp_..."
+                  spellCheck={false}
+                />
+                <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
+                  <span style={{ fontSize: "11px" }}>ℹ️</span>
+                  <a
+                    href="https://github.com/settings/tokens/new?scopes=repo&description=dsmap-analyzer"
+                    target="_blank"
+                    rel="noopener noreferrer"
+                    style={{ fontSize: "11px", color: "var(--primary)", textDecoration: "underline" }}
+                  >
+                    {lang === "es" ? "¿Cómo obtener este token?" : "How to get this token?"}
+                  </a>
+                </div>
+                <label className="save-token-label" style={{ display: "flex", alignItems: "center", gap: "8px", marginTop: "6px", cursor: "pointer", fontSize: "11px", color: "var(--text-sub)" }}>
+                  <input
+                    type="checkbox"
+                    checked={saveToken}
+                    onChange={(e) => setSaveToken(e.target.checked)}
+                  />
+                  <span>
+                    {lang === "es" ? "Guardar token para futuras búsquedas" : "Save token for future searches"}
+                  </span>
+                </label>
+              </div>
+              <div className="wizard-nav" style={{ marginTop: "24px", display: "flex", gap: "10px", justifyContent: "flex-end", width: "100%" }}>
+                {gitToken && (
+                  <button 
+                    className="repo-btn secondary"
+                    style={{ background: "#fee2e2", color: "#991b1b", borderColor: "#fecaca", padding: "8px 12px", marginRight: "auto" }}
+                    onClick={() => {
+                      setGitToken("");
+                      setModalToken("");
+                      window.localStorage.removeItem("git-token");
+                      setTokenModalOpen(false);
+                    }}
+                  >
+                    {lang === "es" ? "Eliminar token" : "Delete token"}
+                  </button>
+                )}
+                <button 
+                  className="repo-btn secondary"
+                  style={{ background: "transparent", color: "var(--primary)", borderColor: "var(--primary)", padding: "8px 12px" }}
+                  onClick={() => setTokenModalOpen(false)}
+                >
+                  {lang === "es" ? "Cancelar" : "Cancel"}
+                </button>
+                <button 
+                  className="repo-btn"
+                  style={{ padding: "8px 16px" }}
+                  onClick={() => {
+                    setGitToken(modalToken);
+                    if (saveToken) {
+                      window.localStorage.setItem("git-token", modalToken);
+                    } else {
+                      window.localStorage.removeItem("git-token");
+                    }
+                    setTokenModalOpen(false);
+                    analyzeRepo(repoUrl, modalToken);
+                  }}
+                >
+                  {lang === "es" ? "Analizar repo" : "Analyze repo"}
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+      )}
 
       {tooltip && <div className={"global-tooltip" + (tooltip.above ? " above" : "")} role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>{tooltip.label}</div>}
 

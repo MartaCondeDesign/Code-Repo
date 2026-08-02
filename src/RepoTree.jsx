@@ -36,7 +36,7 @@ function makeTree(files) {
   return root;
 }
 
-function TreeRow({ item, depth, selectedPath, onSelect, defaultOpen }) {
+function TreeRow({ item, depth, selectedPath, onSelect, defaultOpen, highlightedPaths }) {
   const [open, setOpen] = useState(defaultOpen ? depth < 1 : false);
   const rowRef = useRef(null);
   const isFolder = !item.file;
@@ -60,7 +60,7 @@ function TreeRow({ item, depth, selectedPath, onSelect, defaultOpen }) {
     <>
       <button
         ref={rowRef}
-        className={"tree-row" + (active ? " active" : "")}
+        className={"tree-row" + (active ? " active" : "") + (highlightedPaths?.has(item.path) ? " highlighted" : "")}
         style={{ paddingLeft: 12 + depth * 16 }}
         onClick={() => {
           if (isFolder) setOpen((value) => !value);
@@ -83,13 +83,14 @@ function TreeRow({ item, depth, selectedPath, onSelect, defaultOpen }) {
           selectedPath={selectedPath}
           onSelect={onSelect}
           defaultOpen={defaultOpen}
+          highlightedPaths={highlightedPaths}
         />
       ))}
     </>
   );
 }
 
-export default function RepoTree({ files, repoName, selectedPath, onSelect, lang }) {
+export default function RepoTree({ files, repoName, selectedPath, onSelect, lang, highlightedPaths }) {
   const [query, setQuery] = useState("");
   const tree = useMemo(() => makeTree(files), [files]);
   const children = useMemo(() => {
@@ -122,7 +123,7 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
   const hasMoreRelated = (results?.related.length || 0) > MAX_SEARCH_RESULTS;
 
   const SearchResult = ({ path, related = false }) => (
-    <button className="tree-search-result" onClick={() => onSelect(path, false)} title={path}>
+    <button className="tree-search-result" onClick={() => { onSelect(path, false); setQuery(""); }} title={path}>
       <span className="tree-file-icon" aria-hidden="true" />
       <span><strong>{path.split("/").pop()}</strong><small>{path}{related ? (lang === "es" ? " · concepto relacionado" : " · related concept") : ""}</small></span>
     </button>
@@ -160,7 +161,7 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
           </>}
           {!results.direct.length && !results.related.length && <small className="tree-no-results">{lang === "es" ? "Prueba con otra palabra." : "Try another word."}</small>}
         </div> : children.map((item) => (
-          <TreeRow key={item.path} item={item} depth={0} selectedPath={selectedPath} onSelect={onSelect} defaultOpen={defaultOpen} />
+          <TreeRow key={item.path} item={item} depth={0} selectedPath={selectedPath} onSelect={onSelect} defaultOpen={defaultOpen} highlightedPaths={highlightedPaths} />
         ))}
       </div>
     </aside>

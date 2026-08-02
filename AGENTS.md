@@ -131,6 +131,12 @@ Para mantener la consistencia estética y visual del proyecto, sigue estas espec
 13. La pantalla de carga que indica 'Leyendo la estructura...' y su subtítulo 'dame unos segundos...' deben tener un tamaño de letra unificado e idéntico de `14px` para una óptima lectura.
 14. Las optimizaciones para repositorios grandes deben conservarse activas (umbral de contracción de carpetas en 150 archivos, límite de 100 resultados en búsquedas y memoización en el ordenamiento).
 15. Si en el repositorio analizado coexisten archivos de reglas `agents.md` (o `agent.md`) y `claude.md`, el backend de análisis los fusiona y agrupa bajo un único nodo de reglas unificado en el mapa para evitar duplicaciones visuales.
+16. Al hacer clic en las tarjetas de métricas de la guía del proyecto (Tokens, Componentes, Documentación, etc.), la interfaz activa un resaltado por categoría que ilumina tanto las tarjetas correspondientes en el lienzo (canvas) como los archivos asociados en el árbol del repositorio izquierdo (tree row), aplicando un borde lateral azul a las filas correspondientes.
+17. Al hacer clic en un elemento dentro de los resultados de búsqueda del explorador izquierdo, el buscador se limpia automáticamente (`setQuery("")`), cerrando la lista de resultados para regresar a la estructura del árbol de ficheros y posicionar e iluminar el archivo seleccionado tanto en el explorador como en el lienzo canvas.
+18. El dropdown de sistemas de diseño de la cabecera muestra una lista de 25 repositorios de código abierto más populares representados únicamente por su nombre, sin descripciones adicionales.
+19. Al intentar analizar un repositorio, el backend intenta clonarlo primero de forma pública. Si la descarga falla debido a restricciones de autorización (error AUTH_REQUIRED), la interfaz detiene la carga y activa automáticamente un modal de diálogo que solicita su Token de Acceso Personal (PAT) con opción de guardado en localStorage.
+20. El icono de la llave (🔑) permanece oculto por defecto y solo se muestra al lado de la barra de búsqueda si hay un token guardado o ingresado, sirviendo como acceso para modificar o eliminar dicho token.
+21. Las búsquedas exitosas de repositorios se almacenan como búsquedas recientes en localStorage (mostrando un máximo de 4 elementos ordenados por los más recientes) en la parte superior del dropdown del buscador.
 
 ---
 

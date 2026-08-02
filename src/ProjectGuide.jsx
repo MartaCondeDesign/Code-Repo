@@ -57,7 +57,7 @@ function libraryName(packageName) {
   return LIBRARY_NAMES[packageName];
 }
 
-export default function ProjectGuide({ data, lang, selectedPath, open, onClose, onSelectPath }) {
+export default function ProjectGuide({ data, lang, selectedPath, open, onClose, onSelectPath, activeCategory, onSelectCategory }) {
   const popupRef = useRef(null);
   const [mode, setMode] = useState("overview");
   const [speaking, setSpeaking] = useState(false);
@@ -500,7 +500,28 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
               <p>{text}</p>
             </div>
             <div className="design-metrics">
-              {[[design.components, lang === "es" ? "Componentes" : "Components"], [design.patterns, lang === "es" ? "Patrones" : "Patterns"], [design.layouts, "Layouts"], [design.pages, lang === "es" ? "Páginas" : "Pages"], [design.tokens, "Tokens"], [design.styles, lang === "es" ? "Estilos" : "Styles"], [design.documentation, lang === "es" ? "Documentación" : "Documentación"], [design.stories, "Stories"]].map(([value, label]) => <div key={label}><strong>{value}</strong><span>{label}</span></div>)}
+              {[
+                [design.components, lang === "es" ? "Componentes" : "Components", "components"],
+                [design.patterns, lang === "es" ? "Patrones" : "Patterns", "patterns"],
+                [design.layouts, "Layouts", "layouts"],
+                [design.pages, lang === "es" ? "Páginas" : "Pages", "pages"],
+                [design.tokens, "Tokens", "tokens"],
+                [design.styles, lang === "es" ? "Estilos" : "Styles", "styles"],
+                [design.documentation, lang === "es" ? "Documentación" : "Documentación", "documentation"],
+                [design.stories, "Stories", "stories"]
+              ].map(([value, label, category]) => {
+                const isActive = activeCategory === category;
+                return (
+                  <button
+                    key={category}
+                    className={"metric-card" + (isActive ? " active" : "")}
+                    onClick={() => onSelectCategory(isActive ? null : category)}
+                  >
+                    <strong>{value}</strong>
+                    <span>{label}</span>
+                  </button>
+                );
+              })}
             </div>
               <div className="design-libraries" style={{ display: "grid", gap: "8px", marginTop: "20px" }}>
                 <span>{lang === "es" ? "Librerías de interfaz" : "Interface libraries"}</span>
