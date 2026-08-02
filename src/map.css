@@ -148,7 +148,7 @@ button { color: inherit; }
 .tree-search-result small, .tree-no-results { color: #8a8490; font-size: 8px; }
 .tree-no-results { display: block; padding: 5px 6px 2px; color: #6b7280; font-size: 8px; font-weight: 700; line-height: normal; }
 .tree-row { display: flex; width: max-content; min-width: 100%; align-items: center; min-height: 29px; border: 0; border-radius: 5px; background: transparent; color: #48444f; text-align: left; cursor: pointer; font-size: 11px; }
-.tree-row:hover { background: #f4f2f7; }
+.tree-row:hover { background: #eff6ff; color: #1d4ed8; }
 .tree-row.active { color: #1d4ed8; background: var(--violet-soft); font-weight: 700; }
 .tree-row.highlighted { color: #1d4ed8; background: rgba(37, 99, 235, 0.08); font-weight: 500; border-left: 2px solid #2563eb; }
 .tree-caret { width: 14px; flex: 0 0 14px; color: #656d76; font-size: 14px; }
