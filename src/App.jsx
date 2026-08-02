@@ -770,7 +770,6 @@ export default function App() {
             )}
           </div>
           <button className="repo-btn" onClick={() => analyzeRepo()} aria-busy={busy}>{t.repoButton}</button>
-          <button className="repo-btn guide-button" onClick={() => setGuideOpen(true)}>{t.guide}</button>
           {err && <span className="repo-err">{err}</span>}
         </div>
         <div className="lang-switch" aria-label="Language / Idioma">
@@ -877,6 +876,20 @@ export default function App() {
       </main>
 
       <ProjectGuide data={data} lang={lang} selectedPath={selectedPath} open={guideOpen} onClose={() => setGuideOpen(false)} onSelectPath={selectPath} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
+
+      {!guideOpen && (
+        <button 
+          className="guide-fab has-tooltip" 
+          onClick={() => setGuideOpen(true)}
+          data-tooltip={lang === "es" ? "Abrir guía de onboarding" : "Open onboarding guide"}
+          aria-label={lang === "es" ? "Abrir guía de onboarding" : "Open onboarding guide"}
+        >
+          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+            <circle cx="12" cy="12" r="10" />
+            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+          </svg>
+        </button>
+      )}
 
       {wizardOpen && (() => {
         const step = WIZARD_STEPS[lang][wizardStep];
