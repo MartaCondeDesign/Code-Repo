@@ -583,6 +583,21 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                 </button>
               ))}
             </div>
+            
+            <div className="guide-callout" style={{ marginTop: "24px", padding: "12px 14px", background: "#f8fafc", borderLeft: "4px solid var(--primary)", borderRadius: "0 8px 8px 0", fontSize: "11px", lineHeight: "1.5", color: "var(--text-sub)", display: "flex", gap: "10px", alignItems: "flex-start" }}>
+              <span style={{ fontSize: "14px", marginTop: "-1px" }}>⚠️</span>
+              <div>
+                {lang === "es" ? (
+                  <>
+                    <strong>Aviso importante:</strong> Puede ser que no se mencionen todos los componentes o detalles del design system y que cada proyecto es completamente distinto. Esta web está entrenada para leer y buscar sobre nomenclatura muy genérica; si un CDS usa una estructura fuera de la habitual o usa otra nomenclatura, seguramente cueste encontrarla. Además, esto sirve únicamente como punto de partida para entender tu sistema. Se recomienda siempre hacer una auditoría para poder entenderlo; esto es una navegación para darte un overview pero no una fuente de verdad única e infalible.
+                  </>
+                ) : (
+                  <>
+                    <strong>Important Notice:</strong> Some components or design system details might not be mentioned, and every project is completely distinct. This tool is trained to search and read generic nomenclature; if a design system uses a custom structure or custom naming conventions, it may be harder to detect. Additionally, this serves only as a starting point to understand your system. Conducting a manual audit is always recommended to fully understand it; this view is meant to provide a quick navigation overview but not a single source of absolute truth.
+                  </>
+                )}
+              </div>
+            </div>
           </div>
         ) : (
           <>
