@@ -533,3 +533,65 @@ button { color: inherit; }
 .guide-fab:active {
   transform: scale(0.95);
 }
+
+/* Star and Key action items in repository dropdown menu */
+.repo-menu-item {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  width: 100%;
+  padding: 6px 8px;
+  border-radius: 6px;
+  background: transparent;
+  border: 0;
+  transition: background-color 0.15s;
+  box-sizing: border-box;
+}
+.repo-menu-item:hover {
+  background: #eff6ff;
+}
+.repo-menu-item-left {
+  flex: 1;
+  min-width: 0;
+  background: transparent;
+  border: 0;
+  text-align: left;
+  cursor: pointer;
+  padding: 0;
+  display: block;
+}
+.repo-menu-item-actions {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  opacity: 0;
+  transition: opacity 0.15s;
+}
+.repo-menu-item:hover .repo-menu-item-actions {
+  opacity: 1;
+}
+.repo-action-btn {
+  background: transparent;
+  border: 0;
+  cursor: pointer;
+  padding: 2px 4px;
+  font-size: 13px;
+  color: #9ca3af;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: color 0.15s, transform 0.15s;
+}
+.repo-action-btn:hover {
+  color: #2563eb;
+  transform: scale(1.2);
+}
+.repo-action-btn.is-active {
+  color: #eab308;
+}
+.repo-action-btn.is-key {
+  color: #6b7280;
+}
+.repo-action-btn.is-key:hover {
+  color: #2563eb;
+}

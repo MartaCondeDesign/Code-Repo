@@ -12,7 +12,7 @@ import { getFileExplanation, getFolderExplanation } from "./file-descriptions.js
 const nodeTypes = { chip: ChipNode, lane: LaneNode };
 const edgeTypes = { labeled: LabeledEdge };
 
-const SAVED_REPOS = [
+const DEFAULT_SAVED_REPOS = [
   { name: "Marta Conde (CMD Formación)", url: "https://github.com/MartaCondeDesign/CMD-Formacion.git", requiresToken: true },
   { name: "Marta Conde (Code Repo)", url: "https://github.com/MartaCondeDesign/Code-Repo.git", requiresToken: false }
 ];
@@ -369,6 +369,29 @@ export default function App() {
   const [explanationLevel, setExplanationLevel] = useState(0);
   const [tooltip, setTooltip] = useState(null);
   const [readingMenuOpen, setReadingMenuOpen] = useState(false);
+
+  const [savedRepos, setSavedRepos] = useState(() => {
+    try {
+      return JSON.parse(window.localStorage.getItem("saved-repos")) || DEFAULT_SAVED_REPOS;
+    } catch {
+      return DEFAULT_SAVED_REPOS;
+    }
+  });
+
+  useEffect(() => {
+    window.localStorage.setItem("saved-repos", JSON.stringify(savedRepos));
+  }, [savedRepos]);
+
+  const toggleSaveRepo = (name, url, isPrivate) => {
+    setSavedRepos((prev) => {
+      const exists = prev.some((r) => r.url === url);
+      if (exists) {
+        return prev.filter((r) => r.url !== url);
+      } else {
+        return [...prev, { name, url, requiresToken: isPrivate }];
+      }
+    });
+  };
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
   const [wizardRect, setWizardRect] = useState(null);
@@ -736,36 +759,102 @@ export default function App() {
             
             {repoMenuOpen && (
               <div className="repo-menu">
-                <span>{lang === "es" ? "Guardados" : "Saved"}</span>
-                {SAVED_REPOS.map((repo) => (
-                  <button key={repo.url} onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
-                    <strong>{repo.name}</strong>
-                    {repo.requiresToken && (
-                      <span style={{ fontSize: "11px", filter: "grayscale(1) brightness(1.2)" }} aria-hidden="true">🔑</span>
-                    )}
-                  </button>
-                ))}
-                
-                <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--line)" }} />
+                {savedRepos.length > 0 && (
+                  <>
+                    <span>{lang === "es" ? "Guardados" : "Saved"}</span>
+                    {savedRepos.map((repo) => {
+                      const isSaved = true;
+                      return (
+                        <div key={repo.url} className="repo-menu-item">
+                          <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
+                            <strong>{repo.name}</strong>
+                          </button>
+                          <div className="repo-menu-item-actions">
+                            <button 
+                              className="repo-action-btn is-key" 
+                              onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
+                              title={lang === "es" ? "Configurar token" : "Configure token"}
+                            >
+                              🔑
+                            </button>
+                            <button 
+                              className="repo-action-btn is-active" 
+                              onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, repo.requiresToken); }}
+                              title={lang === "es" ? "Quitar de guardados" : "Remove from saved"}
+                            >
+                              ★
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                    <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--line)" }} />
+                  </>
+                )}
 
                 {recentSearches.length > 0 && (
                   <>
                     <span>{lang === "es" ? "Búsquedas recientes" : "Recent searches"}</span>
-                    {recentSearches.map((url) => (
-                      <button key={url} onClick={() => { setRepoUrl(url); setRepoMenuOpen(false); analyzeRepo(url); }}>
-                        <strong>{url.replace("https://github.com/", "")}</strong>
-                      </button>
-                    ))}
+                    {recentSearches.map((url) => {
+                      const repoName = url.replace("https://github.com/", "");
+                      const isSaved = savedRepos.some((r) => r.url === url);
+                      const isPrivate = requiresToken(url);
+                      return (
+                        <div key={url} className="repo-menu-item">
+                          <button className="repo-menu-item-left" onClick={() => { setRepoUrl(url); setRepoMenuOpen(false); analyzeRepo(url); }}>
+                            <strong>{repoName}</strong>
+                          </button>
+                          <div className="repo-menu-item-actions">
+                            <button 
+                              className="repo-action-btn is-key" 
+                              onClick={(e) => { e.stopPropagation(); setRepoUrl(url); setModalToken(gitToken); setTokenModalOpen(true); }}
+                              title={lang === "es" ? "Configurar token" : "Configure token"}
+                            >
+                              🔑
+                            </button>
+                            <button 
+                              className={"repo-action-btn" + (isSaved ? " is-active" : "")} 
+                              onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repoName, url, isPrivate); }}
+                              title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}
+                            >
+                              {isSaved ? "★" : "☆"}
+                            </button>
+                          </div>
+                        </div>
+                      );
+                    })}
                     <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--line)" }} />
                   </>
                 )}
 
                 <span>{lang === "es" ? "Design Systems Open Source" : "Open Source Design Systems"}</span>
-                {DESIGN_REPOS.map((repo) => (
-                  <button key={repo.url} onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
-                    <strong>{repo.name}</strong>
-                  </button>
-                ))}
+                {DESIGN_REPOS.map((repo) => {
+                  const isSaved = savedRepos.some((r) => r.url === repo.url);
+                  const isPrivate = requiresToken(repo.url);
+                  return (
+                    <div key={repo.url} className="repo-menu-item">
+                      <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
+                        <strong>{repo.name}</strong>
+                      </button>
+                      <div className="repo-menu-item-actions">
+                        <button 
+                          className="repo-action-btn is-key" 
+                          onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
+                          title={lang === "es" ? "Configurar token" : "Configure token"}
+                        >
+                          🔑
+                        </button>
+                        <button 
+                          className={"repo-action-btn" + (isSaved ? " is-active" : "")} 
+                          onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, isPrivate); }}
+                          title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}
+                        >
+                          {isSaved ? "★" : "☆"}
+                        </button>
+                      </div>
+                    </div>
+                  );
+                })}
               </div>
             )}
           </div>
