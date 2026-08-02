@@ -170,7 +170,8 @@ button { color: inherit; }
 .graph .react-flow__controls-button::after { content: attr(aria-label); position: absolute; left: calc(100% + 8px); top: 50%; z-index: 2000; transform: translateY(-50%) translateX(-3px); width: max-content; max-width: 180px; padding: 6px 8px; border-radius: 5px; background: #172033; color: #fff; box-shadow: 0 4px 14px rgba(15,23,42,.18); font-family: var(--font-ui); font-size: 10px; line-height: 1.25; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .14s, transform .14s; }
 .graph .react-flow__controls-button:hover::after, .graph .react-flow__controls-button:focus-visible::after { opacity: 1; visibility: visible; transform: translateY(-50%) translateX(0); }
 .loading-overlay { position: absolute; inset: 0; z-index: 50; display: grid; place-content: center; gap: 18px; background: rgba(251,250,252,.94); color: var(--muted); text-align: center; font-size: 14px; }
-.loading-sub { display: block; margin-top: 6px; color: var(--muted); font-size: 14px; }
+.loading-overlay p { font-size: 14px !important; margin: 0; line-height: 1.5; }
+.loading-overlay .loading-sub { display: block; margin-top: 6px; color: var(--muted); font-size: 14px !important; }
 .scan-line { width: 210px; height: 2px; overflow: hidden; background: #e3dff0; }
 .scan-line::after { content: ""; display: block; width: 42%; height: 100%; background: var(--violet); animation: scan 1.2s ease-in-out infinite alternate; }
 @keyframes scan { to { transform: translateX(140%); } }
