@@ -973,7 +973,7 @@ export default function App() {
           }
           return (
             <>
-              <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "rgba(0,0,0,0.5)" }} onClick={closeWizard} />
+              <div style={{ position: "fixed", inset: 0, zIndex: 200, background: "transparent" }} onClick={closeWizard} />
               <div className="wizard-spotlight" style={{ left: wizardRect.left - 6, top: wizardRect.top - 6, width: wizardRect.width + 12, height: wizardRect.height + 12 }} />
               <div className="wizard-modal wizard-positioned" role="dialog" aria-modal="true" style={{ position: "fixed", left, top, width: popoverWidth, zIndex: 202 }}>
                 {modalContent}

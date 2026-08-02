@@ -374,7 +374,7 @@ button { color: inherit; }
 .wizard-btn-pri:hover { background: #1d4ed8; border-color: #1d4ed8; }
 .wizard-btn-sec { border: 1px solid var(--line); background: #fff; color: var(--muted); }
 .wizard-btn-sec:hover { border-color: #93c5fd; color: #1d4ed8; }
-.wizard-spotlight { position: fixed; border-radius: 10px; border: 2.5px solid rgba(37,99,235,.8); box-shadow: 0 0 0 4px rgba(37,99,235,.15); pointer-events: none; z-index: 201; }
+.wizard-spotlight { position: fixed; border-radius: 10px; border: 2.5px solid rgba(37,99,235,.8); box-shadow: 0 0 0 9999px rgba(0,0,0,.5), 0 0 0 4px rgba(37,99,235,.15); pointer-events: none; z-index: 201; }
 .wizard-positioned { border-radius: 14px; }
 .wizard-positioned .wizard-body { padding: 24px 24px 16px; text-align: left; }
 .wizard-positioned .wizard-icon { font-size: 28px; margin-bottom: 10px; }
