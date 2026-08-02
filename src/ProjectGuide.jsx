@@ -369,8 +369,8 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     if (!resizingHeight) return undefined;
     const onMove = (event) => {
       const rect = popupRef.current?.getBoundingClientRect();
-      const maxHeight = Math.max(300, window.innerHeight - (rect?.top || 80) - 8);
-      setGuideHeight(Math.max(300, Math.min(resizingHeight.startHeight + event.clientY - resizingHeight.startY, maxHeight)));
+      const maxHeight = Math.max(200, window.innerHeight - (rect?.top || 80) - 8);
+      setGuideHeight(Math.max(200, Math.min(resizingHeight.startHeight + event.clientY - resizingHeight.startY, maxHeight)));
     };
     const onUp = () => setResizingHeight(null);
     window.addEventListener("pointermove", onMove);
@@ -383,7 +383,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const onMove = (event) => {
       const dy = event.clientY - resizingTop.startY;
       const newTop = Math.max(80, resizingTop.startTop + dy);
-      const newHeight = Math.max(300, resizingTop.startHeight - (newTop - resizingTop.startTop));
+      const newHeight = Math.max(200, resizingTop.startHeight - (newTop - resizingTop.startTop));
       setPosition({ x: resizingTop.startX, y: newTop });
       setGuideHeight(newHeight);
     };
