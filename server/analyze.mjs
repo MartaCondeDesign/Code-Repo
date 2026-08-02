@@ -81,14 +81,14 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
 
   const raw = [];
   for (const s of skills) raw.push(skillNode(s));
-  const agents = configFiles.find((f) => /agenta?\.md/i.test(path.basename(f)));
-  if (agents) raw.push(ruleNode(agents));
-  for (const d of docs) raw.push(docNode(d));
+  const ruleFiles = configFiles.filter((f) => /^(agenta?|claude)\.md$/i.test(path.basename(f)));
+  if (ruleFiles.length > 0) raw.push(ruleNode(ruleFiles));
+  for (const d of docs.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)))) raw.push(docNode(d));
   for (const t of tokens) raw.push(tokenNode(t));
   for (const c of components) raw.push(componentNode(c));
   for (const s of stories) raw.push(storyNode(s, components));
   for (const s of scripts) raw.push(scriptNode(s));
-  for (const f of configFiles.filter((f) => !/agenta?\.md/i.test(path.basename(f)))) raw.push(configNode(f));
+  for (const f of configFiles.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)))) raw.push(configNode(f));
 
   const nodes = assignIds(raw);
   const fileToNode = new Map();
@@ -280,17 +280,18 @@ function skillNode(file) {
   };
 }
 
-function ruleNode(file) {
+function ruleNode(matchingFiles) {
+  const titles = matchingFiles.map(f => baseName(f).toUpperCase()).join(" & ");
   return {
     layer: "rules",
-    title: baseName(file).toUpperCase(),
+    title: titles,
     sub: "rules · source of truth",
     tag: "rule",
-    files: [file],
-    what: "Documento de instrucciones del proyecto: flujos de trabajo, fuentes de verdad y reglas globales.",
-    what_en: "Project instruction document: workflows, sources of truth and global rules.",
-    does: "Es la primera lectura obligatoria: orquesta cómo se construye y mantiene el sistema.",
-    does_en: "It is the mandatory first read: it orchestrates how the system is built and maintained.",
+    files: matchingFiles,
+    what: "Documento de instrucciones del proyecto que fusiona flujos de trabajo, fuentes de verdad y reglas globales.",
+    what_en: "Project instruction document merging workflows, sources of truth and global rules.",
+    does: "Es la lectura obligatoria para agentes: orquesta cómo se construye y mantiene el sistema.",
+    does_en: "It is the mandatory reading for agents: it orchestrates how the system is built and maintained.",
   };
 }
 

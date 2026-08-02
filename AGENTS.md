@@ -130,6 +130,7 @@ Para mantener la consistencia estética y visual del proyecto, sigue estas espec
 12. El cálculo estadístico de componentes, páginas y layouts incluye extensiones generales y plantillas backend (`.rb`, `.erb`, `.haml`, `.html`, `.php`, `.py`, `.go`) para dar soporte a cualquier tecnología.
 13. La pantalla de carga que indica 'Leyendo la estructura...' y su subtítulo 'dame unos segundos...' deben tener un tamaño de letra unificado e idéntico de `14px` para una óptima lectura.
 14. Las optimizaciones para repositorios grandes deben conservarse activas (umbral de contracción de carpetas en 150 archivos, límite de 100 resultados en búsquedas y memoización en el ordenamiento).
+15. Si en el repositorio analizado coexisten archivos de reglas `agents.md` (o `agent.md`) y `claude.md`, el backend de análisis los fusiona y agrupa bajo un único nodo de reglas unificado en el mapa para evitar duplicaciones visuales.
 
 ---
 
