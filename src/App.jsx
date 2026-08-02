@@ -1013,8 +1013,8 @@ export default function App() {
                   </button>
                 )}
                 <button 
-                  className="repo-btn secondary"
-                  style={{ background: "transparent", color: "var(--primary)", borderColor: "var(--primary)", padding: "8px 12px" }}
+                  className="repo-btn guide-button"
+                  style={{ padding: "8px 12px" }}
                   onClick={() => setTokenModalOpen(false)}
                 >
                   {lang === "es" ? "Cancelar" : "Cancel"}
