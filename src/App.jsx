@@ -12,6 +12,16 @@ import { getFileExplanation, getFolderExplanation } from "./file-descriptions.js
 const nodeTypes = { chip: ChipNode, lane: LaneNode };
 const edgeTypes = { labeled: LabeledEdge };
 
+const SAVED_REPOS = [
+  { name: "Marta Conde (CMD Formación)", url: "https://github.com/MartaCondeDesign/CMD-Formacion.git", requiresToken: true },
+  { name: "Marta Conde (Code Repo)", url: "https://github.com/MartaCondeDesign/Code-Repo.git", requiresToken: false }
+];
+
+const requiresToken = (url = "") => {
+  const norm = url.toLowerCase();
+  return norm.includes("cmd-formacion") || norm.includes("cmd_formacion") || norm.includes("private");
+};
+
 const DESIGN_REPOS = [
   { name: "Shadcn (ui)", url: "https://github.com/shadcn-ui/ui" },
   { name: "MUI (Material UI)", url: "https://github.com/mui/material-ui" },
@@ -705,7 +715,7 @@ export default function App() {
             />
             {map && <button className="reset-inside has-tooltip" onClick={resetMap} aria-label={t.resetTip} data-tooltip={t.resetTip}>↻</button>}
             
-            {gitToken && (
+            {requiresToken(repoUrl) && (
               <button
                 className="repo-token-toggle has-tooltip"
                 style={{ right: map ? "60px" : "32px" }}
@@ -726,19 +736,36 @@ export default function App() {
             
             {repoMenuOpen && (
               <div className="repo-menu">
+                <span>{lang === "es" ? "Guardados" : "Saved"}</span>
+                {SAVED_REPOS.map((repo) => (
+                  <button key={repo.url} onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }} style={{ display: "flex", justifyContent: "space-between", alignItems: "center" }}>
+                    <strong>{repo.name}</strong>
+                    {repo.requiresToken && (
+                      <span style={{ fontSize: "11px", filter: "grayscale(1) brightness(1.2)" }} aria-hidden="true">🔑</span>
+                    )}
+                  </button>
+                ))}
+                
+                <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--line)" }} />
+
                 {recentSearches.length > 0 && (
                   <>
                     <span>{lang === "es" ? "Búsquedas recientes" : "Recent searches"}</span>
                     {recentSearches.map((url) => (
-                      <button key={url} onClick={() => analyzeRepo(url)}>
+                      <button key={url} onClick={() => { setRepoUrl(url); setRepoMenuOpen(false); analyzeRepo(url); }}>
                         <strong>{url.replace("https://github.com/", "")}</strong>
                       </button>
                     ))}
-                    <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--border)" }} />
+                    <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--line)" }} />
                   </>
                 )}
-                <span>{lang === "es" ? "Sistemas Open Source" : "Open Source"}</span>
-                {DESIGN_REPOS.map((repo) => <button key={repo.url} onClick={() => analyzeRepo(repo.url)}><strong>{repo.name}</strong></button>)}
+
+                <span>{lang === "es" ? "Design Systems Open Source" : "Open Source Design Systems"}</span>
+                {DESIGN_REPOS.map((repo) => (
+                  <button key={repo.url} onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
+                    <strong>{repo.name}</strong>
+                  </button>
+                ))}
               </div>
             )}
           </div>
