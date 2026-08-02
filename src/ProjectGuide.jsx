@@ -25,8 +25,8 @@ function selectSystemVoice(persona, lang) {
   const locale = lang === "es" ? "es" : "en";
   const localVoices = voices.filter((voice) => voice.lang.toLowerCase().startsWith(locale));
   const preferredNames = persona === "alex"
-    ? (lang === "es" ? ["monica", "mónica", "paulina", "marisol", "helena", "laura"] : ["samantha", "victoria", "karen", "ava", "moira", "fiona", "tessa"])
-    : (lang === "es" ? ["jorge", "diego", "enrique", "pablo"] : ["daniel", "alex", "fred", "tom", "aaron", "arthur"]);
+    ? (lang === "es" ? ["lucía", "lucia", "mónica", "monica", "paulina", "marisol", "helena", "laura"] : ["samantha", "victoria", "karen", "ava", "moira", "fiona", "tessa"])
+    : (lang === "es" ? ["diego", "pablo", "enrique", "jorge"] : ["aaron", "daniel", "fred", "tom", "arthur", "alex"]);
   return preferredNames.map((name) => localVoices.find((voice) => voice.name.toLowerCase().includes(name))).find(Boolean)
     || localVoices[persona === "alex" ? 0 : Math.min(1, localVoices.length - 1)]
     || voices[0];

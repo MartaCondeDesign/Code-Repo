@@ -354,6 +354,7 @@ export default function App() {
   const [tokenModalOpen, setTokenModalOpen] = useState(false);
   const [modalToken, setModalToken] = useState("");
   const [saveToken, setSaveToken] = useState(true);
+  const [showToken, setShowToken] = useState(false);
   const [recentSearches, setRecentSearches] = useState(() => {
     try {
       return JSON.parse(window.localStorage.getItem("recent-searches")) || [];
@@ -770,15 +771,17 @@ export default function App() {
                             <strong>{repo.name}</strong>
                           </button>
                           <div className="repo-menu-item-actions">
-                            <button 
-                              className="repo-action-btn is-key" 
-                              onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
-                              title={lang === "es" ? "Configurar token" : "Configure token"}
-                            >
-                              🔑
-                            </button>
-                            <button 
-                              className="repo-action-btn is-active" 
+                            {repo.requiresToken && (
+                              <button
+                                className="repo-action-btn is-key"
+                                onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
+                                title={lang === "es" ? "Configurar token" : "Configure token"}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                              </button>
+                            )}
+                            <button
+                              className="repo-action-btn is-active"
                               onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, repo.requiresToken); }}
                               title={lang === "es" ? "Quitar de guardados" : "Remove from saved"}
                             >
@@ -805,15 +808,17 @@ export default function App() {
                             <strong>{repoName}</strong>
                           </button>
                           <div className="repo-menu-item-actions">
-                            <button 
-                              className="repo-action-btn is-key" 
-                              onClick={(e) => { e.stopPropagation(); setRepoUrl(url); setModalToken(gitToken); setTokenModalOpen(true); }}
-                              title={lang === "es" ? "Configurar token" : "Configure token"}
-                            >
-                              🔑
-                            </button>
-                            <button 
-                              className={"repo-action-btn" + (isSaved ? " is-active" : "")} 
+                            {isPrivate && (
+                              <button
+                                className="repo-action-btn is-key"
+                                onClick={(e) => { e.stopPropagation(); setRepoUrl(url); setModalToken(gitToken); setTokenModalOpen(true); }}
+                                title={lang === "es" ? "Configurar token" : "Configure token"}
+                              >
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                              </button>
+                            )}
+                            <button
+                              className={"repo-action-btn" + (isSaved ? " is-active" : "")}
                               onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repoName, url, isPrivate); }}
                               title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}
                             >
@@ -837,15 +842,17 @@ export default function App() {
                         <strong>{repo.name}</strong>
                       </button>
                       <div className="repo-menu-item-actions">
-                        <button 
-                          className="repo-action-btn is-key" 
-                          onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
-                          title={lang === "es" ? "Configurar token" : "Configure token"}
-                        >
-                          🔑
-                        </button>
-                        <button 
-                          className={"repo-action-btn" + (isSaved ? " is-active" : "")} 
+                        {isPrivate && (
+                          <button
+                            className="repo-action-btn is-key"
+                            onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
+                            title={lang === "es" ? "Configurar token" : "Configure token"}
+                          >
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                          </button>
+                        )}
+                        <button
+                          className={"repo-action-btn" + (isSaved ? " is-active" : "")}
                           onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, isPrivate); }}
                           title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}
                         >
@@ -1096,14 +1103,29 @@ export default function App() {
               </p>
               
               <div style={{ width: "100%", display: "flex", flexDirection: "column", alignItems: "flex-start", textAlign: "left", gap: "8px" }}>
-                <input
-                  type="password"
-                  className="modal-token-input"
-                  value={modalToken}
-                  onChange={(e) => setModalToken(e.target.value)}
-                  placeholder="ghp_..."
-                  spellCheck={false}
-                />
+                <div style={{ position: "relative", width: "100%" }}>
+                  <input
+                    type={showToken ? "text" : "password"}
+                    className="modal-token-input"
+                    value={modalToken}
+                    onChange={(e) => setModalToken(e.target.value)}
+                    placeholder="ghp_..."
+                    spellCheck={false}
+                    style={{ paddingRight: "36px" }}
+                  />
+                  <button
+                    type="button"
+                    onClick={() => setShowToken((v) => !v)}
+                    aria-label={showToken ? (lang === "es" ? "Ocultar token" : "Hide token") : (lang === "es" ? "Mostrar token" : "Show token")}
+                    style={{ position: "absolute", right: "8px", top: "50%", transform: "translateY(-50%)", border: 0, background: "transparent", color: "#6b7280", cursor: "pointer", padding: "2px", display: "flex", alignItems: "center" }}
+                  >
+                    {showToken ? (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"/><line x1="1" y1="1" x2="23" y2="23"/></svg>
+                    ) : (
+                      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+                    )}
+                  </button>
+                </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
                   <span style={{ fontSize: "11px" }}>ℹ️</span>
                   <a
@@ -1129,9 +1151,9 @@ export default function App() {
               </div>
               <div className="wizard-nav" style={{ marginTop: "24px", display: "flex", gap: "10px", justifyContent: "flex-end", width: "100%" }}>
                 {gitToken && (
-                  <button 
+                  <button
                     className="repo-btn"
-                    style={{ background: "#dc2626", color: "#fff", borderColor: "#dc2626", padding: "8px 14px", marginRight: "auto", whiteSpace: "nowrap" }}
+                    style={{ background: "#fff", color: "#dc2626", borderColor: "#fca5a5", padding: "8px 14px", marginRight: "auto", whiteSpace: "nowrap" }}
                     onClick={() => {
                       setGitToken("");
                       setModalToken("");
@@ -1174,7 +1196,7 @@ export default function App() {
           </button>
         </div>
         <span className="app-footer-credit">
-          {lang === "es" ? "Hecho por" : "Made by"}: <a href="https://www.martaconde.com" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>Marta Conde</a> | {lang === "es" ? "Remix del proyecto de" : "Remix of a project by"} <a href="https://agentic-design-system-visualization.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>Cristian Morales</a>
+          {lang === "es" ? "Hecho por" : "Made by"}: <a href="https://www.martaconde.com" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>Marta Conde</a> | {lang === "es" ? "Remix del proyecto de:" : "Remix of a project by:"} <a href="https://agentic-design-system-visualization.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline" }}>Cristian Morales</a>
         </span>
       </footer>
     </div>
