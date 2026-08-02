@@ -121,7 +121,8 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       tokens: []
     };
 
-    const readmeEntry = Object.entries(data.fileContents || {}).find(([path]) => path.toLowerCase().endsWith("readme.md"));
+    const readmeEntry = Object.entries(data.fileContents || {}).find(([path]) => path.toLowerCase().endsWith("discovery.md")) || 
+                        Object.entries(data.fileContents || {}).find(([path]) => path.toLowerCase().endsWith("readme.md"));
     if (readmeEntry) {
       const source = readmeEntry[1];
       const lowerSource = source.toLowerCase();

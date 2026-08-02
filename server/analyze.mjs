@@ -242,8 +242,8 @@ function isConfigFile(f) {
 
 function collectDocs(files) {
   const md = files.filter((f) => /\.(md|mdx)$/.test(f) && !/\.claude\//.test(f));
-  const docs = md.filter((f) => /(^|\/)docs?\//.test(f) || /^readme\.md$/i.test(path.basename(f)));
-  const extra = md.filter((f) => !docs.includes(f) && !/(^|\/)docs?\//.test(f) && !/^readme\.md$/i.test(path.basename(f)));
+  const docs = md.filter((f) => /(^|\/)docs?\//.test(f) || /^(readme|discovery)\.md$/i.test(path.basename(f)));
+  const extra = md.filter((f) => !docs.includes(f) && !/(^|\/)docs?\//.test(f) && !/^(readme|discovery)\.md$/i.test(path.basename(f)));
   return cap([...docs, ...extra], 6);
 }
 
