@@ -335,9 +335,11 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       const storybookMatch = source.match(/https?:\/\/[^\s)>"'\]]*(?:storybook\.[^\s)>"'\]]+|chromatic\.com\/[^\s)>"'\]]+|\.github\.io\/[^\s)>"'\]]*storybook[^\s)>"'\]]*)/i);
       if (storybookMatch) {
         const candidate = storybookMatch[0].replace(/[,.)]+$/, "");
-        const deprecatedNearStorybook = /(?:deprecated|archived|discontinued|no longer|legacy|obsolete)[^.!?\n]{0,60}storybook|storybook[^.!?\n]{0,60}(?:deprecated|archived|discontinued|no longer|legacy|obsolete)/i;
-        if (!deprecatedNearStorybook.test(source)) {
-          storybookUrl = candidate;
+        if (!candidate.includes("storybook.js.org")) {
+          const deprecatedNearStorybook = /(?:deprecated|archived|discontinued|no longer|legacy|obsolete)[^.!?\n]{0,60}storybook|storybook[^.!?\n]{0,60}(?:deprecated|archived|discontinued|no longer|legacy|obsolete)/i;
+          if (!deprecatedNearStorybook.test(source)) {
+            storybookUrl = candidate;
+          }
         }
       }
       const docsMatch = source.match(/https?:\/\/(?:docs\.[^\s)>"'\]]+|[^\s)>"'\]]+\.github\.io[^\s)>"'\]]*|[^\s)>"'\]]+\.(?:vercel|netlify)\.app[^\s)>"'\]]*)/i);
@@ -380,50 +382,15 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const core = [];
 
     const getFriendlyName = (pkg) => {
-      const PRESETS = {
-        react: "React",
-        vue: "Vue",
-        "@angular/core": "Angular",
-        svelte: "Svelte",
-        next: "Next.js",
-        nuxt: "Nuxt.js",
-        tailwindcss: "Tailwind CSS",
-        "@mui/material": "Material UI",
-        "@chakra-ui/react": "Chakra UI",
-        "styled-components": "styled-components",
-        "@emotion/react": "Emotion",
-        antd: "Ant Design",
-        "@mantine/core": "Mantine",
-        bootstrap: "Bootstrap",
-        "class-variance-authority": "CVA",
-        "framer-motion": "Motion",
-        "lucide-react": "Lucide",
-        "react-icons": "React Icons",
-        "@heroicons/react": "Heroicons",
-        "feather-icons": "Feather Icons",
-        "@fortawesome/react-fontawesome": "FontAwesome",
-        "style-dictionary": "Style Dictionary",
-        "@tokens-studio/types": "Tokens Studio",
-        recharts: "Recharts",
-        "chart.js": "Chart.js",
-        "react-chartjs-2": "React Chart.js",
-        apexcharts: "ApexCharts",
-        d3: "D3",
-        "@tanstack/react-table": "TanStack Table",
-        "react-table": "React Table",
-        "react-virtual": "React Virtual",
-        "@xyflow/react": "React Flow",
-        "reactflow": "React Flow",
-      };
-      if (PRESETS[pkg]) return PRESETS[pkg];
-      if (pkg.startsWith("@radix-ui/")) return "Radix UI";
-      if (pkg.startsWith("@storybook/")) return "Storybook";
+      if (pkg.startsWith("@storybook/")) return null;
       return pkg.replace(/^@/, "").split("/").pop().replace(/-react$/, "").replace(/-js$/, "");
     };
 
     packages.forEach((pkg) => {
-      const name = getFriendlyName(pkg);
       const lowerPkg = pkg.toLowerCase();
+      if (lowerPkg.includes("storybook")) return; // Storybook is a tool, not a UI framework
+      const name = getFriendlyName(pkg);
+      if (!name) return;
       if (lowerPkg.includes("icon") || lowerPkg === "lucide-react") {
         if (!icons.some(i => i.toLowerCase().includes(name.toLowerCase()))) {
           icons.push(name);
@@ -439,10 +406,10 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       } else if (lowerPkg.includes("table") || lowerPkg.includes("filter") || lowerPkg === "react-virtual") {
         tables.push(name);
       } else {
-        const standard = LIBRARY_NAMES[pkg] || (pkg.startsWith("@radix-ui/") ? "Radix UI" : null) || (pkg.startsWith("@storybook/") ? "Storybook" : null) || pkg === "react" || pkg === "next";
+        const standard = LIBRARY_NAMES[pkg] || (pkg.startsWith("@radix-ui/") ? "Radix UI" : null) || pkg === "react" || pkg === "next";
         if (standard) {
-          const finalName = standard === true ? getFriendlyName(pkg) : standard;
-          if (!readmeLibraries.components.some(c => c.toLowerCase().includes(finalName.toLowerCase()))) {
+          const finalName = standard === true ? name : standard;
+          if (finalName && finalName !== "Storybook" && !readmeLibraries.components.some(c => c.toLowerCase().includes(finalName.toLowerCase()))) {
             core.push(finalName);
           }
         }
@@ -452,12 +419,13 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const finalIcons = icons.length ? [...new Set(icons)] : [];
     const finalTokens = tokens.length ? [...new Set(tokens)] : [];
     const finalComponents = readmeLibraries.components.length ? [...new Set(readmeLibraries.components)] : [];
+    const finalCore = core.filter((c) => c !== "Storybook");
 
     const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
     const hasStorybook = !!storybookUrl;
     const componentTotal = data.componentTotal ?? dsComponentFiles.size;
     const componentsCapped = data.componentsCapped ?? false;
-    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, dsIconFiles: dsIconFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
+    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, dsIconFiles: dsIconFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core: finalCore, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
   }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();
