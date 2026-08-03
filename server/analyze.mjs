@@ -154,8 +154,11 @@ const EXCLUDED_ASSET_PATTERN = /(?:logo|brand|partner|wordmark|illustration|mark
 
 export function detectIcons(files, fileContents) {
   let externalLib = null;
+  let externalDocUrl = null;
   const packageJsonFile = files.find((f) => f.endsWith("package.json"));
-  
+  const readmeFiles = files.filter((f) => /(^|\/)(readme|contributing|architecture|guidelines?)\.(md|mdx)$/i.test(f));
+
+  // 1. Scan package.json for official package dependencies
   if (packageJsonFile && fileContents[packageJsonFile]) {
     const content = fileContents[packageJsonFile];
     for (const item of KNOWN_ICON_PACKAGES) {
@@ -166,6 +169,32 @@ export function detectIcons(files, fileContents) {
     }
   }
 
+  // 2. Scan README / MD files for icon library mentions and external documentation links
+  for (const readmeFile of readmeFiles) {
+    const content = fileContents[readmeFile] || "";
+    if (!content) continue;
+
+    // Scan for external human documentation URLs
+    if (!externalDocUrl) {
+      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*)/i);
+      if (docMatch) {
+        externalDocUrl = docMatch[0].replace(/[,.)]+$/, "");
+      }
+    }
+
+    // Scan README for icon library mentions if not found in package.json
+    if (!externalLib) {
+      for (const item of KNOWN_ICON_PACKAGES) {
+        const readmePattern = new RegExp(`(?:icons?\\s+(?:from|by|using|with)|library|pack|set)?[\\s:]*${item.name}`, "i");
+        if (readmePattern.test(content) || item.pattern.test(content)) {
+          externalLib = { name: item.name, pkg: item.pkg, evidenceFile: readmeFile };
+          break;
+        }
+      }
+    }
+  }
+
+  // 3. Scan code file imports if external library still not found
   if (!externalLib) {
     for (const [filePath, content] of Object.entries(fileContents || {})) {
       for (const item of KNOWN_ICON_PACKAGES) {
@@ -178,13 +207,14 @@ export function detectIcons(files, fileContents) {
     }
   }
 
+  // 4. Scan internal SVG & icon component files
   const internalIconFiles = files.filter((f) => {
     const lower = f.toLowerCase();
     if (EXCLUDED_ASSET_PATTERN.test(lower)) return false;
     const isSvg = lower.endsWith(".svg");
     const isIconDir = /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(lower);
     const isIconFile = /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(lower);
-    return isIconDir || isIconFile;
+    return isIconDir || isIconFile || (isSvg && !lower.includes("logo") && !lower.includes("banner"));
   });
 
   const hasInternal = internalIconFiles.length > 0;
@@ -224,13 +254,14 @@ export function detectIcons(files, fileContents) {
   return {
     hasIcons,
     sourceModel,
+    confidence,
     primaryEvidenceFile,
     iconSource,
+    officialIconCount,
     internalIconFiles: internalIconFiles.slice(0, 50),
     externalLibrary: externalLib ? externalLib.name : "None",
     externalPackage: externalLib ? externalLib.pkg : "None",
-    officialIconCount,
-    confidence
+    externalDocUrl: externalDocUrl || null,
   };
 }
 

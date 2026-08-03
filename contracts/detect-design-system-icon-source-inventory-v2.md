@@ -1,21 +1,18 @@
-# Detect Design System Icon Source and Inventory
+# Detect Design System Icon Source and Inventory (v2)
 
 ## Objective
 
-Analyze a repository and determine how the Design System provides icons.
+Analyze a repository to determine how the Design System provides icons and locate any external human documentation websites.
 
-The goal is NOT only to count icon files.
-
-The goal is to answer:
+The detector answers:
 
 1. Does the Design System have icons?
-2. Are the icons stored internally in the repository?
-3. Are the icons imported from an external icon library?
-4. Is the system mixed: internal icons + external library?
-5. Which repository file proves where the icons come from?
-6. Which files contain or expose the icon set?
-7. How many icons can be reliably identified?
-8. What should be shown in the Project Guide?
+2. Are icons stored internally in the repository (SVG files, icon components)?
+3. Are icons provided by an external icon library (Lucide, Tabler, Heroicons, FontAwesome, etc.)?
+4. Is the icon set referenced in `README.md` or markdown documentation?
+5. Is there an external human documentation website (Zeroheight, Supernova, custom `https://ds.company.com`) explaining the design system?
+6. Which repository files match/reference the icon set?
+7. What information must be rendered in the Project Guide?
 
 ---
 
@@ -31,154 +28,33 @@ ICON IMPORT ≠ LOCAL ICON SOURCE
 Icons may come from:
 
 ```text
-A. LOCAL ICON SOURCE
-B. EXTERNAL ICON LIBRARY
-C. MIXED SOURCE
+A. LOCAL ICON SOURCE (SVG files, icon components in repository)
+B. EXTERNAL ICON LIBRARY (Open-source package or external icon repository)
+C. MIXED SOURCE (Local SVG files + External library)
 ```
-
-The detector must identify which case applies.
 
 ---
 
-# What counts as an icon
+# Detection Workflow
 
-An icon is a reusable symbolic UI element used for:
+1. **Package manifest & Code scanning:**
+   Scan `package.json` dependencies and source code imports for known icon packages (`lucide-react`, `@tabler/icons-react`, `@heroicons/react`, `font-awesome`, `@phosphor-icons/react`, `@radix-ui/react-icons`, etc.).
 
-- actions
-- navigation
-- status
-- feedback
-- objects
-- concepts
-- controls
+2. **README & Documentation scanning:**
+   Scan `README.md` and documentation markdown files (`.md`, `.mdx`) for explicit references to icon libraries as well as external human documentation site URLs (e.g. Zeroheight, Supernova, custom DS doc portals).
 
-Examples:
-
-- Search
-- Add
-- Close
-- ChevronDown
-- ArrowLeft
-- Settings
-- User
-- Calendar
-- Warning
-- Check
-- Download
-- Menu
-
-Do NOT count by default:
-
-- photos
-- illustrations
-- videos
-- screenshots
-- marketing graphics
-- logos
-- brand marks
-- favicons
-- app store icons
-- background artwork
+3. **SVG & Icon Component scanning:**
+   Scan `.svg` files in the repository while excluding non-icon assets (`logo`, `illustration`, `marketing`, `banner`, `hero`, `favicon`, `screenshot`, `artwork`). Valid vector SVG files and icon components belong to `internalIconFiles`.
 
 ---
 
 # What the Project Guide needs
 
-1. **In the Icons metric card (`design-metrics`):**
-   - If an internal/private icon set is used, display the number of icon files (`internalIconFiles.length`).
-   - If an open-source external library is used, display the library name or link.
-   - Clicking on the Icons card highlights all canvas chips containing icons as well as the matching file rows in the left panel tree explorer.
+1. **Icons Metric Card (`design-metrics`):**
+   - Displays `design.dsIconFiles` — the exact count of files in the project/canvas referencing icons.
+   - Clicking on the Icons card highlights all matching canvas chips and left panel tree rows.
 
-2. **In the Interface Libraries section (`design-libraries`):**
-   - If an external open-source icon library is used, list the library name with its direct link (e.g. `Tabler Icons`, `Lucide`, etc.).
-   - If no external open-source icon library is present (or if only internal icon files exist), do NOT render an `Iconos:` line under Interface Libraries.
-
-3. **No extra summary cards:**
-   - Do not render separate extra boxes or summary cards for icon metadata in the Project Guide view.
-
----
-
-# Critical requirement: evidence file
-
-The evidence file may be:
-
-- `package.json`
-- `index.ts`
-- `icons.ts`
-- `Icon.tsx`
-- `registry.ts`
-- `theme.ts`
-- component file
-- barrel file
-- configuration file
-- any repository file that clearly proves the icon source
-
-Do NOT require the file to be named `icons.*`.
-
----
-
-# Source model A — Internal icons
-
-Icons may be stored directly in the repository.
-
-Possible structures:
-
-```text
-/icons/
-  search.svg
-  close.svg
-  add.svg
-```
-
-or:
-
-```text
-src/icons/
-  SearchIcon.tsx
-  CloseIcon.tsx
-  AddIcon.tsx
-```
-
----
-
-# Source model B — External icon libraries
-
-A Design System may use an external open-source icon library.
-
-Examples include:
-
-- Lucide
-- Heroicons
-- Material Symbols / Material Icons
-- Phosphor Icons
-- Radix Icons
-- Feather Icons
-- Remix Icon
-- Tabler Icons
-- Bootstrap Icons
-- Iconoir
-- Carbon Icons
-- Fluent UI Icons
-
----
-
-# Source model C — Mixed
-
-A Design System may use both internal icons and external library icons.
-
----
-
-# Final decision tree
-
-Ask these questions in order:
-
-```text
-1. Is there an official internal icon registry/package/folder?
-   YES → inspect it and count internal icon files.
-
-2. Is there an external icon library dependency?
-   YES → identify library, evidence file, and URL.
-
-3. Are files actually logos, illustrations, images, videos, or generic assets?
-   YES → exclude them.
-```
+2. **Información Section (`design-libraries`):**
+   - **External Icons / External Repos:** If an external open-source icon library or external icon repository is detected, render its name with a direct clickable URL under `Información`.
+   - **External Documentation Portal:** If an external human documentation website is found in the README/docs, render `Documentación externa: [URL]`.
+   - **Internal Icons Only:** If icons are strictly local to the repository, do NOT render a duplicate external `Iconos:` line under `Información`.

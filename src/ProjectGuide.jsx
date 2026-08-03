@@ -647,6 +647,14 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
               <div className="design-libraries" style={{ display: "grid", gap: "8px", marginTop: "20px" }}>
                 <span>{lang === "es" ? "Información" : "Information"}</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
+                  {data?.iconAnalysis?.externalDocUrl && (
+                    <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                      <strong>{lang === "es" ? "Documentación externa: " : "External documentation: "}</strong>
+                      <a href={data.iconAnalysis.externalDocUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>
+                        {data.iconAnalysis.externalDocUrl}
+                      </a>
+                    </p>
+                  )}
                   {data?.iconAnalysis?.externalLibrary && data.iconAnalysis.externalLibrary !== "None" && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Iconos: " : "Icons: "}</strong>
