@@ -422,6 +422,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const finalIcons = icons.length ? [...new Set(icons)] : [];
     const finalTokens = tokens.length ? [...new Set(tokens)] : [];
     const finalComponents = readmeLibraries.components.length ? [...new Set(readmeLibraries.components)] : [];
+    const finalCore = core.filter((c) => c !== "Storybook");
     const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
     const hasStorybook = !!storybookUrl;
 
