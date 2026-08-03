@@ -968,7 +968,6 @@ export default function App() {
           <div className="graph">
             {busy && (
               <div className="loading-overlay">
-                <div className="top-progress-bar" style={{ width: `${Math.min(100, Math.max(5, progress))}%` }} />
                 <div className="progress-bar-box">
                   <div className="progress-bar-container">
                     <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.max(5, progress))}%` }} />
