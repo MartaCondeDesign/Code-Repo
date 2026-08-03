@@ -200,18 +200,40 @@ export function detectIcons(files, fileContents) {
     if (!content) continue;
 
     if (!externalDocUrl || externalDocUrl.includes("shields.io")) {
-      // Look for dedicated company/DS domains (atmeta.com, primer.style, etc.) or explicit Markdown links
-      const dedicatedDomainMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com|primer\.style|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design|[^\s)>"'\]]+\.style)[^\s)>"'\]]*/i);
-      if (dedicatedDomainMatch && !dedicatedDomainMatch[0].includes("shields.io")) {
-        externalDocUrl = dedicatedDomainMatch[0].replace(/[,.)]+$/, "");
-      } else {
-        const mdDocMatch = content.match(/\[(?:documentation|docs|getting\s+started|guide|website|official\s+site)[^\]]*\]\((https?:\/\/[^\s)>"'\]]+)\)/i);
-        if (mdDocMatch && !mdDocMatch[1].includes("github.com") && !mdDocMatch[1].includes("shields.io")) {
-          externalDocUrl = mdDocMatch[1].replace(/[,.)]+$/, "");
+      // 1. Check for linked badges: [![badge](IMAGE_URL)](DESTINATION_URL)
+      const linkedBadgeMatch = content.match(/\[!\[[^\]]*\]\((https?:\/\/[^\s)>"'\]]+)\)\]\((https?:\/\/[^\s)>"'\]]+)\)/i);
+      if (linkedBadgeMatch && linkedBadgeMatch[2]) {
+        const destUrl = linkedBadgeMatch[2].replace(/[,.)]+$/, "");
+        if (!destUrl.includes("github.com") && !destUrl.includes("shields.io") && !/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i.test(destUrl)) {
+          externalDocUrl = destUrl;
+        }
+      }
+
+      // 2. Check for HTML linked images: <a href="DESTINATION_URL"><img src="IMAGE_URL"></a>
+      if (!externalDocUrl || externalDocUrl.includes("shields.io")) {
+        const htmlLinkMatch = content.match(/<a\s+[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>[\s\S]*?<img/i);
+        if (htmlLinkMatch && htmlLinkMatch[1]) {
+          const destUrl = htmlLinkMatch[1].replace(/[,.)]+$/, "");
+          if (!destUrl.includes("github.com") && !destUrl.includes("shields.io") && !/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i.test(destUrl)) {
+            externalDocUrl = destUrl;
+          }
+        }
+      }
+
+      // 3. Fallback: Look for dedicated company/DS domains (atmeta.com, primer.style, etc.) or explicit Markdown links
+      if (!externalDocUrl || externalDocUrl.includes("shields.io")) {
+        const dedicatedDomainMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com|primer\.style|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design|[^\s)>"'\]]+\.style)[^\s)>"'\]]*/i);
+        if (dedicatedDomainMatch && !dedicatedDomainMatch[0].includes("shields.io") && !/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i.test(dedicatedDomainMatch[0])) {
+          externalDocUrl = dedicatedDomainMatch[0].replace(/[,.)]+$/, "");
         } else {
-          const docsPathMatch = content.match(/https?:\/\/[^\s)>"'\]]+\/(?:docs|getting-started)(?:\/[^\s)>"'\]]*)?/i);
-          if (docsPathMatch && !docsPathMatch[0].includes("github.com") && !docsPathMatch[0].includes("shields.io") && !docsPathMatch[0].includes("npmjs.com")) {
-            externalDocUrl = docsPathMatch[0].replace(/[,.)]+$/, "");
+          const mdDocMatch = content.match(/\[(?:documentation|docs|getting\s+started|guide|website|official\s+site)[^\]]*\]\((https?:\/\/[^\s)>"'\]]+)\)/i);
+          if (mdDocMatch && !mdDocMatch[1].includes("github.com") && !mdDocMatch[1].includes("shields.io") && !/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i.test(mdDocMatch[1])) {
+            externalDocUrl = mdDocMatch[1].replace(/[,.)]+$/, "");
+          } else {
+            const docsPathMatch = content.match(/https?:\/\/[^\s)>"'\]]+\/(?:docs|getting-started)(?:\/[^\s)>"'\]]*)?/i);
+            if (docsPathMatch && !docsPathMatch[0].includes("github.com") && !docsPathMatch[0].includes("shields.io") && !docsPathMatch[0].includes("npmjs.com") && !/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i.test(docsPathMatch[0])) {
+              externalDocUrl = docsPathMatch[0].replace(/[,.)]+$/, "");
+            }
           }
         }
       }
