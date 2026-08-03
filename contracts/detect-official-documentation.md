@@ -29,6 +29,7 @@ Dado que cada repositorio de GitHub está estructurado de forma distinta, el ana
 ### Nivel 2: Extracción en Archivos de Documentación (`README.md`, `README.mdx`, `docs/*.md`)
 - Analiza todos los enlaces formateados en markdown `[Texto](https://...)` y etiquetas HTML `<a href="...">`.
 - Prioriza enlaces con texto ancla como "Documentation", "Documentación", "Getting Started", "Guía", "Website", "Official Site".
+- **Extracción de Badges de Shields (`img.shields.io`):** Si la documentación está embebida en la URL de una insignia/badge (ej. `img.shields.io/badge/Docs-astryx.atmeta.com-6741d9`), el sistema descompone la URL de la insignia, limpia los códigos de color hex y reconstruye la URL oficial del portal (`https://astryx.atmeta.com/docs/getting-started`).
 
 ### Nivel 3: Reconocimiento de Dominios y Rutas Oficiales
 El motor busca coincidencias con los siguientes patrones de URL:

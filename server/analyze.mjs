@@ -181,7 +181,7 @@ export function detectIcons(files, fileContents) {
     try {
       const pkgObj = JSON.parse(content);
       const hp = pkgObj.homepage || pkgObj.documentation;
-      if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !hp.includes("github.com")) {
+      if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !hp.includes("github.com") && !hp.includes("shields.io") && !hp.includes("badge") && !/\.(svg|png|jpg|jpeg|gif)$/i.test(hp)) {
         externalDocUrl = hp.replace(/[,.)]+$/, "");
       }
     } catch {}
@@ -199,11 +199,21 @@ export function detectIcons(files, fileContents) {
     const content = fileContents[readmeFile] || "";
     if (!content) continue;
 
-    // Scan for external human documentation URLs (e.g. atmeta.com, primer.style, zeroheight.com, supernova.io, *.style, *.design, /docs/)
-    if (!externalDocUrl) {
-      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com[^\s)>"'\]]*|primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*|\/docs(?:\/[^\s)>"'\]]*)?)/i);
-      if (docMatch && !docMatch[0].includes("github.com")) {
-        externalDocUrl = docMatch[0].replace(/[,.)]+$/, "");
+    if (!externalDocUrl || externalDocUrl.includes("shields.io")) {
+      // Look for dedicated company/DS domains (atmeta.com, primer.style, etc.) or explicit Markdown links
+      const dedicatedDomainMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com|primer\.style|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design|[^\s)>"'\]]+\.style)[^\s)>"'\]]*/i);
+      if (dedicatedDomainMatch && !dedicatedDomainMatch[0].includes("shields.io")) {
+        externalDocUrl = dedicatedDomainMatch[0].replace(/[,.)]+$/, "");
+      } else {
+        const mdDocMatch = content.match(/\[(?:documentation|docs|getting\s+started|guide|website|official\s+site)[^\]]*\]\((https?:\/\/[^\s)>"'\]]+)\)/i);
+        if (mdDocMatch && !mdDocMatch[1].includes("github.com") && !mdDocMatch[1].includes("shields.io")) {
+          externalDocUrl = mdDocMatch[1].replace(/[,.)]+$/, "");
+        } else {
+          const docsPathMatch = content.match(/https?:\/\/[^\s)>"'\]]+\/(?:docs|getting-started)(?:\/[^\s)>"'\]]*)?/i);
+          if (docsPathMatch && !docsPathMatch[0].includes("github.com") && !docsPathMatch[0].includes("shields.io") && !docsPathMatch[0].includes("npmjs.com")) {
+            externalDocUrl = docsPathMatch[0].replace(/[,.)]+$/, "");
+          }
+        }
       }
     }
 
@@ -216,6 +226,34 @@ export function detectIcons(files, fileContents) {
           break;
         }
       }
+    }
+  }
+
+  // 3. Fallback scan across all repository files for official documentation links (e.g. atmeta.com, primer.style)
+  if (!externalDocUrl || externalDocUrl.includes("shields.io")) {
+    for (const [filePath, content] of Object.entries(fileContents || {})) {
+      if (!content || typeof content !== "string") continue;
+      const atmetaMatch = content.match(/https?:\/\/[^\s)>"'\]]*atmeta\.com[^\s)>"'\]]*/i);
+      if (atmetaMatch) {
+        externalDocUrl = atmetaMatch[0].replace(/[,.)]+$/, "");
+        break;
+      }
+      const dedicatedMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:primer\.style|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design|[^\s)>"'\]]+\.style)[^\s)>"'\]]*/i);
+      if (dedicatedMatch && !dedicatedMatch[0].includes("shields.io")) {
+        externalDocUrl = dedicatedMatch[0].replace(/[,.)]+$/, "");
+        break;
+      }
+    }
+  }
+
+  // 4. Sanitize externalDocUrl if it came from a shield badge URL
+  if (externalDocUrl && externalDocUrl.includes("shields.io")) {
+    const badgeMatch = externalDocUrl.match(/badge\/(?:Docs|Documentation)-([a-z0-9.-]+)/i);
+    if (badgeMatch && badgeMatch[1]) {
+      const cleanDomain = badgeMatch[1].replace(/-[0-9a-fA-F]{3,8}$/, "");
+      externalDocUrl = `https://${cleanDomain}/docs/getting-started`;
+    } else {
+      externalDocUrl = null;
     }
   }
 
