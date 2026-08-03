@@ -140,6 +140,33 @@ Para mantener la consistencia estética y visual del proyecto, sigue estas espec
 
 ---
 
+## Contratos de detección del Design System
+
+Cada parte del Design System que aparece como card de métrica en la guía del proyecto tiene un contrato de detección en la carpeta `/contracts/`. Los contratos definen qué es cada parte, cómo detectarla en el código fuente y cómo clasificar los resultados.
+
+### Contratos disponibles
+
+| Parte DS | Contrato | Card en guía |
+|---|---|---|
+| Design Tokens | [`contracts/detect-tokens.md`](contracts/detect-tokens.md) | Tokens |
+| Styles | [`contracts/detect-styles.md`](contracts/detect-styles.md) | Estilos |
+
+### Reglas generales de detección
+
+1. **Los conteos de las cards** usan archivos pertenecientes a **nodos del mapa DS** (node-based), no escaneo genérico de `/src`. La detección genérica solo sirve para `hasDesignSystem`.
+2. **Tokens vs Styles:** Un archivo `.css` que solo define Custom Properties en `:root` es un token, no un style. Un archivo `.module.css` con selectores de componente es un style.
+3. **Archivos generados:** No contar como fuente de verdad archivos en `dist/`, `build/`, `output/` o con comentario `do not edit`.
+4. **Documentación:** La card de Documentación cuenta **todos** los archivos de docs (file-scan + nodos), no solo los de nodos DS.
+
+### Cómo añadir un nuevo contrato
+
+1. Crear `contracts/detect-{nombre}.md` siguiendo la estructura: definición, señales de archivo, señales de contenido, tags de nodo, clasificación y confianza.
+2. Actualizar esta tabla en AGENTS.md.
+3. Actualizar los Sets de detección en `src/ProjectGuide.jsx` (función `design` useMemo).
+4. Añadir la regla correspondiente en este archivo.
+
+---
+
 ## Comandos
 
 ```bash

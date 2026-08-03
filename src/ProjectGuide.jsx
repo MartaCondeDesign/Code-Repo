@@ -102,12 +102,23 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const dsPatternFiles = new Set();
     const dsLayoutFiles = new Set();
     const codeFile = /\.(jsx?|tsx?|vue|svelte|rb|erb|haml|html|php|py|go)$/i;
+    const styleExt = /\.(css|scss|sass|less|styl)$/i;
+    // contracts/detect-tokens.md — directory + filename signals
+    const isTokenPath = (file) =>
+      /(^|\/)(tokens?|design-tokens?|variables?|theme[s]?|primitives?|semantic|foundations?|palette|colors?|typography|spacing|dimensions?|shadows?|borders?|breakpoints?)(\/|\.|-)/i.test(file) ||
+      /(^|\/)(tokens?|variables?|palette|colors?|spacing|typography|shadows?)\.(json|json5|yaml|yml|js|ts|mjs|cjs)$/i.test(file) ||
+      /\.tokens\.(json|json5)$/i.test(file);
+    // contracts/detect-styles.md — CSS files that are NOT token-only files
+    const isStyleOnlyPath = (file) =>
+      styleExt.test(file) &&
+      !/(reset|normalize|base)\.(css|scss|sass)$/i.test(file) &&
+      !isTokenPath(file);
 
     files.forEach((file) => {
       if (/(^|\/)(components?|ui)\//i.test(file) && codeFile.test(file)) componentFiles.add(file);
       if (/(^|\/)(pages?|screens?|views?|routes?|app)\//i.test(file) && codeFile.test(file) && !/(layout|loading|error|not-found)\.(jsx?|tsx?|erb)$/i.test(file)) pageFiles.add(file);
-      if (/(^|\/)(tokens?|variables?|theme|primitives?|semantic|foundations?)(\/|\.|-)/i.test(file)) tokenFiles.add(file);
-      if (/\.(css|scss|sass|less|styl)$/i.test(file)) styleFiles.add(file);
+      if (isTokenPath(file)) tokenFiles.add(file);
+      if (isStyleOnlyPath(file)) styleFiles.add(file);
       if (/\.(stories?|story)\.(jsx?|tsx?|mdx)$/i.test(file)) storyFiles.add(file);
       if (/(^|\/)(patterns?|recipes?|templates?)\//i.test(file) || /(^|\/)(pattern|recipe)[.-]/i.test(file)) patternFiles.add(file);
       if (/(^|\/)docs?\//i.test(file) || /(^|\/)(readme|contributing|architecture|guidelines?)\.(md|mdx)$/i.test(file)) documentationFiles.add(file);
@@ -115,13 +126,14 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     });
     nodes.forEach((node) => {
       const nodeFiles = node.files || [];
+      const isTokenNode = node.tag === "tokens" || ["tokens", "foundation"].includes(node.layer);
       if (node.tag === "component" || ["components", "ui"].includes(node.layer)) {
         nodeFiles.forEach((file) => { componentFiles.add(file); dsComponentFiles.add(file); });
       }
       if (node.tag === "page") {
         nodeFiles.forEach((file) => { pageFiles.add(file); dsPageFiles.add(file); });
       }
-      if (node.tag === "tokens" || ["tokens", "foundation"].includes(node.layer)) {
+      if (isTokenNode) {
         nodeFiles.filter((file) => !/package\.json$/i.test(file)).forEach((file) => { tokenFiles.add(file); dsTokenFiles.add(file); });
       }
       if (node.tag === "story") {
@@ -136,8 +148,13 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       if (["layout", "template"].includes(node.tag)) {
         nodeFiles.forEach((file) => { layoutFiles.add(file); dsLayoutFiles.add(file); });
       }
-      nodeFiles.filter((file) => /\.(css|scss|sass|less|styl)$/i.test(file)).forEach((file) => dsStyleFiles.add(file));
+      // contracts/detect-styles.md: CSS in token nodes are tokens, not styles
+      if (!isTokenNode) {
+        nodeFiles.filter((file) => styleExt.test(file)).forEach((file) => dsStyleFiles.add(file));
+      }
     });
+    // Ensure no token file is double-counted as a style
+    dsTokenFiles.forEach((file) => dsStyleFiles.delete(file));
 
     const readmeLibraries = {
       icons: [],
