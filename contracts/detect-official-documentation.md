@@ -19,10 +19,14 @@ The documentation detector must distinguish between:
 IMAGE URL ≠ DOCUMENTATION URL
 BADGE URL ≠ DOCUMENTATION URL
 ASSET URL ≠ DOCUMENTATION URL
+PACKAGE REGISTRY URL ≠ DOCUMENTATION URL
 
 The detector must NEVER classify these as official documentation:
 
 img.shields.io
+npmjs.com
+npmjs.org
+yarnpkg.com
 badge image URLs
 .png
 .jpg
@@ -38,11 +42,11 @@ repository image assets
 
 Example:
 
-https://img.shields.io/badge/Docs-astryx.atmeta.com-6741d9?logo=readthedocs&logoColor=white
+https://www.npmjs.com/package/@primer/react
 
 must always be classified as:
 
-BADGE_IMAGE
+PACKAGE_REGISTRY (reject)
 
 and must NEVER be returned as:
 
@@ -88,7 +92,7 @@ classify:
 - `IMAGE_URL` → `BADGE_IMAGE` or `IMAGE_ASSET` (reject)
 - `DESTINATION_URL` → `DOCUMENTATION_CANDIDATE` (evaluate)
 
-Never return `IMAGE_URL` as the official documentation URL.
+Never return `IMAGE_URL` or `PACKAGE_REGISTRY` (`npmjs.com`) as the official documentation URL.
 
 ---
 
@@ -115,7 +119,7 @@ Always prefer the `href` over the `src`.
 
 Before evaluating documentation candidates, reject any URL when:
 
-1. **Hostname is:** `img.shields.io` or another known badge/image service (`badges.gitter.im`, `coveralls.io`, `travis-ci.org`, `raw.githubusercontent.com`).
+1. **Hostname is:** `npmjs.com`, `npmjs.org`, `yarnpkg.com`, `img.shields.io`, `pkg.go.dev`, `crates.io`, `pypi.org`, `rubygems.org`, `pub.dev`, `packagist.org` or other package registries/badge services (`badges.gitter.im`, `coveralls.io`, `travis-ci.org`, `raw.githubusercontent.com`).
 2. **URL path ends with:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp`, `.ico`.
 3. **URL was extracted from:**
    - `<img src="">`
@@ -123,6 +127,7 @@ Before evaluating documentation candidates, reject any URL when:
    - badge image source
    - logo source
    - screenshot source
+   - package registry links (e.g., `https://www.npmjs.com/package/...`)
 
 These URLs must be removed from the documentation candidate list before classification.
 
