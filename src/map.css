@@ -185,10 +185,12 @@ button { color: inherit; }
 .pane-heading h2 { font-size: 13px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-count { min-width: 28px; padding: 4px 7px; text-align: center; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 9px; cursor: default; }
 .tree-scroll { flex: 1; min-height: 0; height: 100%; padding: 9px 8px 40px; overflow: auto; scrollbar-width: thin; scrollbar-color: transparent transparent; }
-.tree-scroll:hover { scrollbar-color: #cbd5e1 transparent; }
-.tree-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
-.tree-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+.tree-scroll:hover { scrollbar-color: #94a3b8 transparent; }
+.tree-scroll::-webkit-scrollbar { height: 8px; width: 8px; }
+.tree-scroll::-webkit-scrollbar-thumb { background: transparent; border-radius: 999px; }
+.tree-scroll:hover::-webkit-scrollbar-thumb { background: #94a3b8; }
 .tree-scroll::-webkit-scrollbar-track { background: transparent; }
+.tree-scroll::-webkit-scrollbar-corner { background: transparent; }
 
 /* Search area wraps the input row + filter dropdown so dropdown can span full width */
 .tree-search-area { flex-shrink: 0; position: relative; margin: 9px 9px 4px; }
