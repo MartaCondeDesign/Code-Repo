@@ -422,7 +422,14 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const finalIcons = icons.length ? [...new Set(icons)] : [];
     const finalTokens = tokens.length ? [...new Set(tokens)] : [];
     const finalComponents = readmeLibraries.components.length ? [...new Set(readmeLibraries.components)] : [];
-    const finalCore = core.filter((c) => c !== "Storybook");
+    const finalCore = core.filter((c) => {
+      if (c === "Storybook") return false;
+      const lower = c.toLowerCase();
+      if (finalTokens.some((t) => t.toLowerCase() === lower)) return false;
+      if (finalComponents.some((comp) => comp.toLowerCase() === lower)) return false;
+      if (finalIcons.some((icon) => icon.toLowerCase() === lower)) return false;
+      return true;
+    });
     const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
     const hasStorybook = !!storybookUrl;
 
@@ -734,12 +741,6 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                         <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                           <strong>Figma: </strong>
                           <a href={design.figmaUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>{lang === "es" ? "Ver Figma" : "See Figma"}</a>
-                        </p>
-                      )}
-                      {design.docsUrl && (
-                        <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
-                          <strong>Docs: </strong>
-                          <a href={design.docsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>{lang === "es" ? "Ver documentación" : "See documentation"}</a>
                         </p>
                       )}
                     </>
