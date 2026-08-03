@@ -35,6 +35,9 @@ function selectSystemVoice(persona, lang) {
 const LIBRARY_URLS = {
   "Lucide Icons": "https://lucide.dev",
   "Lucide": "https://lucide.dev",
+  "Octicons": "https://primer.style/octicons/",
+  "Octicons Icons": "https://primer.style/octicons/",
+  "@primer/octicons-react": "https://primer.style/octicons/",
   "Tabler Icons": "https://tabler-icons.io",
   "Phosphor Icons": "https://phosphoricons.com",
   "Radix Icons": "https://icons.radix-ui.com",

@@ -135,6 +135,7 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
 }
 
 const KNOWN_ICON_PACKAGES = [
+  { name: "Octicons", pkg: "@primer/octicons-react", pattern: /@primer\/octicons-react|@primer\/octicons|octicons/i },
   { name: "Lucide", pkg: "lucide-react", pattern: /lucide-react|lucide-vue|lucide-svelte|lucide/i },
   { name: "Heroicons", pkg: "@heroicons/react", pattern: /@heroicons\/react|@heroicons\/vue|heroicons/i },
   { name: "Phosphor Icons", pkg: "@phosphor-icons/react", pattern: /@phosphor-icons\/react|@phosphor-icons\/vue|phosphor-icons/i },
@@ -148,6 +149,8 @@ const KNOWN_ICON_PACKAGES = [
   { name: "Fluent UI Icons", pkg: "@fluentui/react-icons", pattern: /@fluentui\/react-icons/i },
   { name: "Font Awesome", pkg: "@fortawesome/react-fontawesome", pattern: /@fortawesome\/react-fontawesome|fontawesome|font-awesome/i },
   { name: "Material Icons", pkg: "@mui/icons-material", pattern: /@mui\/icons-material|material-symbols|material-icons/i },
+  { name: "Ant Design Icons", pkg: "@ant-design/icons", pattern: /@ant-design\/icons/i },
+  { name: "Chakra UI Icons", pkg: "@chakra-ui/icons", pattern: /@chakra-ui\/icons/i },
 ];
 
 const EXCLUDED_ASSET_PATTERN = /(?:logo|brand|partner|wordmark|illustration|marketing|artwork|banner|hero|photo|screenshot|empty-state|favicon|apple-touch-icon|app-icon|launcher)/i;
@@ -174,9 +177,9 @@ export function detectIcons(files, fileContents) {
     const content = fileContents[readmeFile] || "";
     if (!content) continue;
 
-    // Scan for external human documentation URLs
+    // Scan for external human documentation URLs (e.g. primer.style, zeroheight.com, supernova.io, *.style, *.design)
     if (!externalDocUrl) {
-      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*)/i);
+      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*)/i);
       if (docMatch) {
         externalDocUrl = docMatch[0].replace(/[,.)]+$/, "");
       }
