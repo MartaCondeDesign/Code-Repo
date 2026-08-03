@@ -202,9 +202,10 @@ button { color: inherit; }
 .tree-search-result strong { color: #374151; font-size: 10px; }
 .tree-search-result small, .tree-no-results { color: #8a8490; font-size: 8px; }
 .tree-no-results { display: block; padding: 5px 6px 2px; color: #6b7280; font-size: 8px; font-weight: 700; line-height: normal; }
-.tree-no-results-empty { display: flex; flex-direction: column; gap: 3px; padding: 14px 10px 6px; }
-.tree-no-results-empty strong { font-size: 10px; font-weight: 600; color: #374151; }
-.tree-no-results-empty span { font-size: 9px; color: #8a8490; line-height: 1.35; }
+.tree-no-results-empty { display: flex; flex-direction: column; align-items: center; justify-content: center; text-align: center; gap: 6px; padding: 20px 14px 16px; }
+.tree-no-results-empty .empty-search-icon { display: grid; place-items: center; width: 36px; height: 36px; border-radius: 50%; background: #f1f5f9; color: #64748b; margin-bottom: 2px; }
+.tree-no-results-empty strong { font-size: 12px; font-weight: 600; color: #1e293b; text-align: center; }
+.tree-no-results-empty span { font-size: 10px; color: #64748b; line-height: 1.4; text-align: center; max-width: 220px; }
 
 /* Tree filter controls */
 .tree-filter-wrap { display: flex; align-items: center; gap: 2px; flex-shrink: 0; }

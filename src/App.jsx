@@ -12,6 +12,79 @@ import { getFileExplanation, getFolderExplanation } from "./file-descriptions.js
 const nodeTypes = { chip: ChipNode, lane: LaneNode };
 const edgeTypes = { labeled: LabeledEdge };
 
+const WORLD_LANGUAGES = [
+  { code: "en", name: "English", native: "English", flag: "🇬🇧" },
+  { code: "es", name: "Spanish", native: "Español", flag: "🇪🇸" },
+  { code: "af", name: "Afrikaans", native: "Afrikaans", flag: "🇿🇦" },
+  { code: "sq", name: "Albanian", native: "Shqip", flag: "🇦🇱" },
+  { code: "am", name: "Amharic", native: "አማርኛ", flag: "🇪🇹" },
+  { code: "ar", name: "Arabic", native: "العربية", flag: "🇸🇦" },
+  { code: "az", name: "Azerbaijani", native: "Azərbaycan", flag: "🇦🇿" },
+  { code: "eu", name: "Basque", native: "Euskara", flag: "🏴" },
+  { code: "be", name: "Belarusian", native: "Беларуская", flag: "🇧🇾" },
+  { code: "bn", name: "Bengali", native: "বাংলা", flag: "🇧🇩" },
+  { code: "bs", name: "Bosnian", native: "Bosanski", flag: "🇧🇦" },
+  { code: "bg", name: "Bulgarian", native: "Български", flag: "🇧🇬" },
+  { code: "ca", name: "Catalan", native: "Català", flag: "🏴" },
+  { code: "zh", name: "Chinese", native: "中文", flag: "🇨🇳" },
+  { code: "hr", name: "Croatian", native: "Hrvatski", flag: "🇭🇷" },
+  { code: "cs", name: "Czech", native: "Čeština", flag: "🇨🇿" },
+  { code: "da", name: "Danish", native: "Dansk", flag: "🇩🇰" },
+  { code: "nl", name: "Dutch", native: "Nederlands", flag: "🇳🇱" },
+  { code: "et", name: "Estonian", native: "Eesti", flag: "🇪🇪" },
+  { code: "fi", name: "Finnish", native: "Suomi", flag: "🇫🇮" },
+  { code: "fr", name: "French", native: "Français", flag: "🇫🇷" },
+  { code: "gl", name: "Galician", native: "Galego", flag: "🏴" },
+  { code: "ka", name: "Georgian", native: "ქართული", flag: "🇬🇪" },
+  { code: "de", name: "German", native: "Deutsch", flag: "🇩🇪" },
+  { code: "el", name: "Greek", native: "Ελληνικά", flag: "🇬🇷" },
+  { code: "gu", name: "Gujarati", native: "ગુજરાતી", flag: "🇮🇳" },
+  { code: "he", name: "Hebrew", native: "עברית", flag: "🇮🇱" },
+  { code: "hi", name: "Hindi", native: "हिन्दी", flag: "🇮🇳" },
+  { code: "hu", name: "Hungarian", native: "Magyar", flag: "🇭🇺" },
+  { code: "id", name: "Indonesian", native: "Bahasa Indonesia", flag: "🇮🇩" },
+  { code: "ga", name: "Irish", native: "Gaeilge", flag: "🇮🇪" },
+  { code: "it", name: "Italian", native: "Italiano", flag: "🇮🇹" },
+  { code: "ja", name: "Japanese", native: "日本語", flag: "🇯🇵" },
+  { code: "kn", name: "Kannada", native: "ಕನ್ನಡ", flag: "🇮🇳" },
+  { code: "kk", name: "Kazakh", native: "Қазақша", flag: "🇰🇿" },
+  { code: "km", name: "Khmer", native: "ភាសាខ្មែរ", flag: "🇰🇭" },
+  { code: "ko", name: "Korean", native: "한국어", flag: "🇰🇷" },
+  { code: "lv", name: "Latvian", native: "Latviešu", flag: "🇱🇻" },
+  { code: "lt", name: "Lithuanian", native: "Lietuvių", flag: "🇱🇹" },
+  { code: "mk", name: "Macedonian", native: "Македонски", flag: "🇲🇰" },
+  { code: "ms", name: "Malay", native: "Bahasa Melayu", flag: "🇲🇾" },
+  { code: "ml", name: "Malayalam", native: "മലയാളം", flag: "🇮🇳" },
+  { code: "mr", name: "Marathi", native: "मराठी", flag: "🇮🇳" },
+  { code: "mn", name: "Mongolian", native: "Монгол", flag: "🇲🇳" },
+  { code: "ne", name: "Nepali", native: "नेपाली", flag: "🇳🇵" },
+  { code: "nb", name: "Norwegian", native: "Norsk", flag: "🇳🇴" },
+  { code: "fa", name: "Persian", native: "فارسی", flag: "🇮🇷" },
+  { code: "pl", name: "Polish", native: "Polski", flag: "🇵🇱" },
+  { code: "pt", name: "Portuguese", native: "Português", flag: "🇧🇷" },
+  { code: "pa", name: "Punjabi", native: "ਪੰਜਾਬੀ", flag: "🇮🇳" },
+  { code: "ro", name: "Romanian", native: "Română", flag: "🇷🇴" },
+  { code: "ru", name: "Russian", native: "Русский", flag: "🇷🇺" },
+  { code: "sr", name: "Serbian", native: "Српски", flag: "🇷🇸" },
+  { code: "si", name: "Sinhala", native: "සිංහල", flag: "🇱🇰" },
+  { code: "sk", name: "Slovak", native: "Slovenčina", flag: "🇸🇰" },
+  { code: "sl", name: "Slovenian", native: "Slovenščina", flag: "🇸🇮" },
+  { code: "so", name: "Somali", native: "Soomaali", flag: "🇸🇴" },
+  { code: "sw", name: "Swahili", native: "Kiswahili", flag: "🇰🇪" },
+  { code: "sv", name: "Swedish", native: "Svenska", flag: "🇸🇪" },
+  { code: "tl", name: "Tagalog", native: "Tagalog", flag: "🇵🇭" },
+  { code: "ta", name: "Tamil", native: "தமிழ்", flag: "🇮🇳" },
+  { code: "te", name: "Telugu", native: "తెలుగు", flag: "🇮🇳" },
+  { code: "th", name: "Thai", native: "ภาษาไทย", flag: "🇹🇭" },
+  { code: "tr", name: "Turkish", native: "Türkçe", flag: "🇹🇷" },
+  { code: "uk", name: "Ukrainian", native: "Українська", flag: "🇺🇦" },
+  { code: "ur", name: "Urdu", native: "اردو", flag: "🇵🇰" },
+  { code: "uz", name: "Uzbek", native: "O'zbek", flag: "🇺🇿" },
+  { code: "vi", name: "Vietnamese", native: "Tiếng Việt", flag: "🇻🇳" },
+  { code: "cy", name: "Welsh", native: "Cymraeg", flag: "🏴󠁧󠁢󠁷󠁬󠁳󠁿" },
+  { code: "zu", name: "Zulu", native: "IsiZulu", flag: "🇿🇦" },
+];
+
 const DEFAULT_SAVED_REPOS = [
   { name: "Marta Conde (CMD Formación)", url: "https://github.com/MartaCondeDesign/CMD-Formacion.git", requiresToken: true },
   { name: "Marta Conde (Code Repo)", url: "https://github.com/MartaCondeDesign/Code-Repo.git", requiresToken: false }
@@ -397,6 +470,8 @@ export default function App() {
   const [explanationLevel, setExplanationLevel] = useState(0);
   const [tooltip, setTooltip] = useState(null);
   const [readingMenuOpen, setReadingMenuOpen] = useState(false);
+  const [langPickerOpen, setLangPickerOpen] = useState(false);
+  const [langSearch, setLangSearch] = useState("");
 
   const [savedRepos, setSavedRepos] = useState(() => {
     try {
@@ -438,6 +513,7 @@ export default function App() {
   });
   const t = STRINGS[lang];
   const data = map || DEFAULT_MAP;
+  const browserLang = useMemo(() => (navigator.language || navigator.languages?.[0] || "en").split("-")[0].toLowerCase(), []);
   const selectedCode = selectedPath ? data.fileContents?.[selectedPath] : null;
   const selectedIsFile = Boolean(selectedPath && data.files?.includes(selectedPath));
   const readingFontSize = Math.max(8, Math.min(32, Number(readingOptions.fontSize) || 12));
@@ -473,6 +549,13 @@ export default function App() {
   }, [readingOptions]);
 
   useEffect(() => {
+    if (!langPickerOpen) return;
+    const close = (e) => { if (!e.target.closest(".lang-picker-wrap")) setLangPickerOpen(false); };
+    document.addEventListener("mousedown", close);
+    return () => document.removeEventListener("mousedown", close);
+  }, [langPickerOpen]);
+
+  useEffect(() => {
     setExplanationLevel(0);
   }, [selected?.id, selectedPath]);
 
@@ -492,23 +575,26 @@ export default function App() {
   }, [wizardOpen, wizardStep, lang, guideOpen]);
 
   useEffect(() => {
+    let timer = null;
     const show = (event) => {
       const target = event.target.closest?.(".has-tooltip[data-tooltip]");
       if (!target) return;
-      const rect = target.getBoundingClientRect();
-      const label = target.dataset.tooltip;
-      const width = Math.min(210, Math.max(70, label.length * 6.2 + 16));
-      const above = rect.bottom + 48 > window.innerHeight;
-      setTooltip({
-        label,
-        x: Math.max(8 + width / 2, Math.min(rect.left + rect.width / 2, window.innerWidth - 8 - width / 2)),
-        y: above ? rect.top - 7 : rect.bottom + 7,
-        above,
-      });
+      clearTimeout(timer);
+      timer = setTimeout(() => {
+        const rect = target.getBoundingClientRect();
+        const label = target.dataset.tooltip;
+        const midY = rect.top + rect.height / 2;
+        setTooltip({
+          label,
+          x: rect.right + 8,
+          y: midY,
+        });
+      }, 5000);
     };
     const hide = (event) => {
       const target = event.target.closest?.(".has-tooltip[data-tooltip]");
       if (target && event.relatedTarget && target.contains(event.relatedTarget)) return;
+      clearTimeout(timer);
       setTooltip(null);
     };
     document.addEventListener("mouseover", show);
@@ -516,6 +602,7 @@ export default function App() {
     document.addEventListener("focusin", show);
     document.addEventListener("focusout", hide);
     return () => {
+      clearTimeout(timer);
       document.removeEventListener("mouseover", show);
       document.removeEventListener("mouseout", hide);
       document.removeEventListener("focusin", show);
@@ -802,7 +889,7 @@ export default function App() {
           </div>
         </div>
         <div className="repo-row">
-          <div className={"repo-input-wrap" + (map ? " has-reset" : "") + (gitToken ? " has-token" : "")}>
+          <div className={"repo-input-wrap" + (gitToken ? " has-token" : "")}>
             <input
               className="repo-input"
               value={repoUrl}
@@ -812,8 +899,11 @@ export default function App() {
               onKeyDown={(event) => { if (event.key === "Enter") { setRepoMenuOpen(false); analyzeRepo(); } if (event.key === "Escape") setRepoMenuOpen(false); }}
               spellCheck={false}
             />
-            {map && <button className="reset-inside has-tooltip" onClick={resetMap} aria-label={t.resetTip} data-tooltip={t.resetTip}>↻</button>}
-            
+            {repoUrl && <button className="repo-clear-btn has-tooltip" aria-label={lang === "es" ? "Limpiar búsqueda" : "Clear search"} data-tooltip={lang === "es" ? "Limpiar" : "Clear"} onClick={() => { setRepoUrl(""); setRepoMenuOpen(false); }}>
+              <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round"><line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/></svg>
+            </button>}
+
+
             {requiresToken(repoUrl) && (
               <button
                 className="repo-token-toggle has-tooltip"
@@ -836,7 +926,16 @@ export default function App() {
             {repoMenuOpen && (
               <div className="repo-menu">
                 {!repoMenuFiltered.saved.length && !repoMenuFiltered.recent.length && !repoMenuFiltered.design.length && (
-                  <span style={{ padding: "8px 12px", color: "var(--text-sub)", fontSize: "12px" }}>{lang === "es" ? "Sin resultados" : "No results"}</span>
+                  <div className="tree-no-results-empty">
+                    <div className="empty-search-icon">
+                      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                        <circle cx="11" cy="11" r="8" />
+                        <line x1="21" y1="21" x2="16.65" y2="16.65" />
+                      </svg>
+                    </div>
+                    <strong>{lang === "es" ? "Sin resultados" : "No results"}</strong>
+                    <span>{lang === "es" ? "No encontramos repositorios que coincidan con tu búsqueda." : "No repositories matched your search."}</span>
+                  </div>
                 )}
                 {repoMenuFiltered.saved.length > 0 && (
                   <>
@@ -937,9 +1036,60 @@ export default function App() {
               {readingActive && <button className="reading-reset" onClick={() => setReadingOptions({})}>{lang === "es" ? "Restablecer opciones" : "Reset options"}</button>}
             </div>}
           </div>
-          <span className={lang === "es" ? "active" : ""}>ES</span>
-          <button className="lang-toggle has-tooltip" role="switch" aria-checked={lang === "en"} aria-label={lang === "es" ? "Cambiar a inglés" : "Switch to Spanish"} data-tooltip={lang === "es" ? "Cambiar a inglés" : "Switch to Spanish"} onClick={() => setLang(lang === "es" ? "en" : "es")}><span className={"lang-knob" + (lang === "en" ? " right" : "")} /></button>
-          <span className={lang === "en" ? "active" : ""}>EN</span>
+          <div className="lang-picker-wrap">
+            {(() => {
+              const current = WORLD_LANGUAGES.find(l => l.code === lang) || WORLD_LANGUAGES[0];
+              const browserLangEntry = WORLD_LANGUAGES.find(l => l.code === browserLang);
+              const term = langSearch.trim().toLowerCase();
+              const filtered = term
+                ? WORLD_LANGUAGES.filter(l => l.name.toLowerCase().includes(term) || l.native.toLowerCase().includes(term) || l.code.includes(term))
+                : WORLD_LANGUAGES;
+              return (<>
+                <button
+                  className="lang-picker-btn has-tooltip"
+                  data-tooltip={lang === "es" ? "Cambiar idioma" : "Change language"}
+                  aria-expanded={langPickerOpen}
+                  aria-label={lang === "es" ? "Seleccionar idioma" : "Select language"}
+                  onClick={() => { setLangPickerOpen(v => !v); setLangSearch(""); }}
+                >
+                  <span className="lang-picker-code">{current.code.toUpperCase()}</span>
+                  <svg width="9" height="9" viewBox="0 0 10 10" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" strokeLinejoin="round"><polyline points="2,3 5,7 8,3"/></svg>
+                </button>
+                {langPickerOpen && (
+                  <div className="lang-picker-dropdown" role="listbox" aria-label={lang === "es" ? "Idiomas disponibles" : "Available languages"}>
+                    <div className="lang-picker-search-wrap">
+                      <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"><circle cx="11" cy="11" r="8"/><line x1="21" y1="21" x2="16.65" y2="16.65"/></svg>
+                      <input
+                        autoFocus
+                        type="text"
+                        value={langSearch}
+                        onChange={e => setLangSearch(e.target.value)}
+                        placeholder={lang === "es" ? "Buscar idioma…" : "Search language…"}
+                        aria-label={lang === "es" ? "Buscar idioma" : "Search language"}
+                      />
+                      {langSearch && <button className="lang-picker-clear" onClick={() => setLangSearch("")}>×</button>}
+                    </div>
+                    <div className="lang-picker-list">
+                      {!term && browserLangEntry && (<>
+                        <button key={browserLangEntry.code} role="option" aria-selected={lang === browserLangEntry.code} className={"lang-picker-item" + (lang === browserLangEntry.code ? " active" : "")} onClick={() => { setLang(browserLangEntry.code); setLangPickerOpen(false); setLangSearch(""); }}>
+                          <span className="lang-picker-names"><strong>{browserLangEntry.native}</strong></span>
+                          {lang === browserLangEntry.code && <span className="lang-picker-check">✓</span>}
+                        </button>
+                        <div className="lang-picker-separator" />
+                      </>)}
+                      {filtered.map(l => (
+                        <button key={l.code} role="option" aria-selected={lang === l.code} className={"lang-picker-item" + (lang === l.code ? " active" : "")} onClick={() => { setLang(l.code); setLangPickerOpen(false); setLangSearch(""); }}>
+                          <span className="lang-picker-names"><strong>{l.native}</strong></span>
+                          {lang === l.code && <span className="lang-picker-check">✓</span>}
+                        </button>
+                      ))}
+                      {term && filtered.length === 0 && <div className="lang-picker-empty">{lang === "es" ? "Sin resultados" : "No results"}</div>}
+                    </div>
+                  </div>
+                )}
+              </>);
+            })()}
+          </div>
         </div>
       </header>
 
@@ -1271,7 +1421,7 @@ export default function App() {
         </div>
       )}
 
-      {tooltip && <div className={"global-tooltip" + (tooltip.above ? " above" : "")} role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>{tooltip.label}</div>}
+      {tooltip && <div className="global-tooltip" role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>{tooltip.label}</div>}
 
       <footer className="app-footer">
         <div className="app-footer-left">
