@@ -317,8 +317,9 @@ button { color: inherit; }
 .design-metrics .metric-card { cursor: pointer; transition: all 0.2s ease; font-family: inherit; color: inherit; display: flex; flex-direction: column; align-items: center; justify-content: center; }
 .design-metrics .metric-card:hover { border-color: #2563eb; background: rgba(37, 99, 235, 0.04); transform: translateY(-1px); box-shadow: 0 4px 8px rgba(0,0,0,0.04); }
 .design-metrics .metric-card.active { border-color: #2563eb; background: rgba(37, 99, 235, 0.08); box-shadow: 0 0 0 2px rgba(37, 99, 235, 0.2); }
-.design-metrics strong { display: block; color: #111827; font-size: 15px; }
-.design-metrics span { display: block; margin-top: 2px; overflow: hidden; color: #6b7280; font-size: 9px; text-overflow: ellipsis; }
+.design-metrics strong { display: flex; align-items: baseline; justify-content: center; color: #111827; font-size: 15px; font-weight: 700; line-height: 1; }
+.design-metrics .plus-badge { display: inline; margin-left: 2px; color: var(--color-accent, #6366f1); font-size: 0.8em; font-weight: 700; }
+.design-metrics .metric-card > span:not(.plus-badge) { display: block; margin-top: 4px; overflow: hidden; color: #6b7280; font-size: 9px; text-overflow: ellipsis; white-space: nowrap; }
 .design-libraries > span, .design-overview h3 { display: block; margin: 0 0 6px; color: #6b7280; font-size: 9px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; }
 .pane-kicker,
 .inspector-block > span,

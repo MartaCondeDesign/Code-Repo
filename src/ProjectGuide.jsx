@@ -641,7 +641,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                     data-tooltip={tooltip}
                     onClick={() => onSelectCategory(isActive ? null : category)}
                   >
-                    <strong>{value}{capped ? <span style={{ fontSize: "0.75em", marginLeft: "1px", color: "var(--color-accent, #6366f1)" }}>+</span> : null}</strong>
+                    <strong>{value}{capped ? <span className="plus-badge">+</span> : null}</strong>
                     <span>{label}</span>
                   </button>
                 );
