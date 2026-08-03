@@ -665,11 +665,43 @@ export default function App() {
       timer = setTimeout(() => {
         const rect = target.getBoundingClientRect();
         const label = target.dataset.tooltip;
-        const midY = rect.top + rect.height / 2;
+        if (!label) return;
+
+        const vw = window.innerWidth;
+        const vh = window.innerHeight;
+        const margin = 10;
+        const approxWidth = Math.min(220, Math.max(120, label.length * 7 + 20));
+        const approxHeight = 36;
+
+        let x, y, transform = "translateY(-50%)";
+
+        // Near right edge of viewport -> flip to left side
+        if (rect.right + approxWidth + margin > vw) {
+          x = rect.left - approxWidth - 10;
+          if (x < margin) x = margin;
+          y = rect.top + rect.height / 2;
+        } else {
+          x = rect.right + 8;
+          y = rect.top + rect.height / 2;
+        }
+
+        // Clamp y to viewport height
+        if (y + approxHeight / 2 > vh - margin) {
+          y = Math.max(margin, vh - approxHeight - margin);
+          transform = "none";
+        } else if (y - approxHeight / 2 < margin) {
+          y = margin;
+          transform = "none";
+        }
+
+        // Clamp x strictly within screen boundaries
+        x = Math.max(margin, Math.min(x, vw - approxWidth - margin));
+
         setTooltip({
           label,
-          x: rect.right + 8,
-          y: midY,
+          x,
+          y,
+          transform,
         });
       }, 150);
     };
@@ -1517,7 +1549,7 @@ export default function App() {
         </div>
       )}
 
-      {tooltip && <div className="global-tooltip" role="tooltip" style={{ left: tooltip.x, top: tooltip.y }}>{tooltip.label}</div>}
+      {tooltip && <div className="global-tooltip" role="tooltip" style={{ left: tooltip.x, top: tooltip.y, transform: tooltip.transform }}>{tooltip.label}</div>}
 
       <footer className="app-footer">
         <div className="app-footer-left">
