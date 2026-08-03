@@ -1209,8 +1209,9 @@ export default function App() {
             <button className="icon-btn inspector-close has-tooltip" data-tooltip={lang === "es" ? "Cerrar panel" : "Close panel"} aria-label={lang === "es" ? "Cerrar panel" : "Close panel"} onClick={() => { setSelected(null); setSelectedPath(""); setSelectedIsFolder(false); setRelatedIds(new Set()); setActiveCategory(null); }}>×</button>
             {selectedIsFile ? (
               <>
-                <span className="pane-kicker">{lang === "es" ? "ARCHIVO DEL SISTEMA DE DISEÑO" : "DESIGN SYSTEM FILE"}</span>
+                <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
+                <div className="inspector-type-pill">{lang === "es" ? "Archivo del sistema de diseño" : "Design system file"}</div>
                 <p className="inspector-sub code-path">{selectedPath}</p>
 
                 <FileVisualPreview path={selectedPath} content={selectedCode} lang={lang} />
@@ -1275,8 +1276,9 @@ export default function App() {
               </>
             ) : selectedIsFolder ? (
               <>
-                <span className="pane-kicker">{lang === "es" ? "CARPETA DEL PROYECTO" : "PROJECT FOLDER"}</span>
+                <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
+                <div className="inspector-type-pill">{lang === "es" ? "Carpeta del proyecto" : "Project folder"}</div>
                 <p className="inspector-sub code-path">{selectedPath}</p>
                 <div className="inspector-block">
                   <span>{lang === "es" ? "QUÉ ES Y QUÉ CONTIENE" : "WHAT IT IS & CONTAINS"}</span>
@@ -1286,8 +1288,9 @@ export default function App() {
               </>
             ) : selected ? (
               <>
-                <span className="pane-kicker">{data.layers.find((layer) => layer.id === selected.layer)?.label}</span>
+                <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2>{selected.title}</h2>
+                <div className="inspector-type-pill">{data.layers.find((layer) => layer.id === selected.layer)?.label}</div>
                 <p className="inspector-sub">{subFor(selected, lang)}</p>
                 {selected.files?.length > 0 && <div className="linked-files">{selected.files.map((file) => <button key={file} onClick={() => selectPath(file, false)}>↳ {file}</button>)}</div>}
                 {explanationLevel > 0 ? <div className="alternate-explanation"><span>{lang === "es" ? `EXPLICACIÓN ${explanationLevel} DE 3` : `EXPLANATION ${explanationLevel} OF 3`}</span><p>{alternateExplanation(selected, lang, explanationLevel)}</p></div> : <><div className="inspector-block"><span>{t.what}</span><p>{whatFor(selected, lang)}</p></div>{selected.does && <div className="inspector-block"><span>{t.does}</span><p>{doesFor(selected, lang)}</p></div>}</>}
