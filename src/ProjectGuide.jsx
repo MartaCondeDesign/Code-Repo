@@ -436,19 +436,20 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const canvasComponentNodes = nodes.filter(n => n.tag === "component" || ["components", "ui"].includes(n.layer));
     const canvasTokenNodes = nodes.filter(n => n.tag === "token" || n.tag === "tokens" || ["tokens", "foundation"].includes(n.layer));
     const canvasDocNodes = nodes.filter(n => ["rule", "skill", "doc", "documentation"].includes(n.tag) || n.layer === "docs");
-    const canvasIconNodes = nodes.filter(n => n.tag === "icon" || n.layer === "icons" || n.files?.some(f => !/iconbutton/i.test(f) && (/(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(f) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(f))));
+    // Assets: all nodes in the "icons" layer (tag: "asset" | "icon" | layer: "icons")
+    const canvasAssetNodes = nodes.filter(n => n.tag === "asset" || n.tag === "icon" || n.layer === "icons");
 
     const componentCount = canvasComponentNodes.length;
     const tokenCount = canvasTokenNodes.length;
     const docCount = canvasDocNodes.length;
-    const iconCount = canvasIconNodes.length > 0 ? canvasIconNodes.length : dsIconFiles.size;
+    const assetCount = canvasAssetNodes.length > 0 ? canvasAssetNodes.length : dsIconFiles.size;
 
     const componentsCapped = data.componentsCapped ?? (data.componentTotal > 200);
     const tokensCapped = data.tokensCapped ?? (data.tokenTotal > 200);
     const docsCapped = data.docsCapped ?? (data.docTotal > 200);
-    const iconsCapped = data.iconAnalysis?.iconsCapped ?? (data.iconAnalysis?.iconTotal > 200);
-    return { components: componentCount, componentsCapped, pages: dsPageFiles.size, tokens: tokenCount, tokensCapped, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: docCount, docsCapped, layouts: dsLayoutFiles.size, dsIconFiles: iconCount, iconsCapped, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core: finalCore, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
-  }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, data.tokenTotal, data.tokensCapped, data.docTotal, data.docsCapped, data.iconAnalysis, lang]);
+    const iconsCapped = data.assetsCapped ?? data.iconAnalysis?.iconsCapped ?? (data.assetTotal > 200);
+    return { components: componentCount, componentsCapped, pages: dsPageFiles.size, tokens: tokenCount, tokensCapped, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: docCount, docsCapped, layouts: dsLayoutFiles.size, dsIconFiles: assetCount, iconsCapped, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core: finalCore, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
+  }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, data.tokenTotal, data.tokensCapped, data.docTotal, data.docsCapped, data.iconAnalysis, data.assetTotal, data.assetsCapped, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();
     (data.files || []).forEach((file) => {
@@ -481,15 +482,19 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
 
   useEffect(() => () => window.speechSynthesis?.cancel(), []);
 
+  const [isExpanded, setIsExpanded] = useState(false);
+
   useEffect(() => {
     if (!dragging) return undefined;
     const onMove = (event) => {
       const rect = popupRef.current?.getBoundingClientRect();
       const width = rect?.width || 390;
-      const height = rect?.height || 400;
+      const height = rect?.height || 340;
+      const minAllowedY = Math.max(window.innerHeight * 0.45, window.innerHeight - height - 40);
+      const maxAllowedY = Math.max(minAllowedY, window.innerHeight - 100);
       setPosition({
         x: Math.max(8, Math.min(event.clientX - dragging.offsetX, window.innerWidth - width - 8)),
-        y: Math.max(80, Math.min(event.clientY - dragging.offsetY, window.innerHeight - height - 8)),
+        y: Math.max(minAllowedY, Math.min(event.clientY - dragging.offsetY, maxAllowedY)),
       });
     };
     const onUp = () => setDragging(null);
@@ -497,44 +502,6 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     window.addEventListener("pointerup", onUp, { once: true });
     return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
   }, [dragging]);
-
-  useEffect(() => {
-    window.localStorage.setItem("repo-guide-height", String(guideHeight));
-  }, [guideHeight]);
-
-  useEffect(() => {
-    if (!resizingHeight) return undefined;
-    const onMove = (event) => {
-      const rect = popupRef.current?.getBoundingClientRect();
-      const maxHeight = Math.max(200, window.innerHeight - (rect?.top || 80) - 8);
-      setGuideHeight(Math.max(200, Math.min(resizingHeight.startHeight + event.clientY - resizingHeight.startY, maxHeight)));
-    };
-    const onUp = () => setResizingHeight(null);
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp, { once: true });
-    return () => { window.removeEventListener("pointermove", onMove); window.removeEventListener("pointerup", onUp); };
-  }, [resizingHeight]);
-
-  useEffect(() => {
-    if (!resizingTop) return undefined;
-    const onMove = (event) => {
-      const dy = event.clientY - resizingTop.startY;
-      const maxAllowedTop = resizingTop.startTop + (resizingTop.startHeight - 200);
-      const newTop = Math.max(80, Math.min(maxAllowedTop, resizingTop.startTop + dy));
-      const newHeight = Math.max(200, resizingTop.startHeight - (newTop - resizingTop.startTop));
-      setPosition({ x: resizingTop.startX, y: newTop });
-      setGuideHeight(newHeight);
-    };
-    const onUp = () => setResizingTop(null);
-    document.body.classList.add("is-resizing");
-    window.addEventListener("pointermove", onMove);
-    window.addEventListener("pointerup", onUp, { once: true });
-    return () => {
-      document.body.classList.remove("is-resizing");
-      window.removeEventListener("pointermove", onMove);
-      window.removeEventListener("pointerup", onUp);
-    };
-  }, [resizingTop]);
 
   stateRef.current = { sectionOptions, selectedPath, mode, data, lang, persona };
 
@@ -593,21 +560,42 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
 
   if (!open) return null;
   return (
-    <section ref={popupRef} className={"guide-popup" + (dragging ? " dragging" : "") + (resizingHeight || resizingTop ? " resizing" : "")} style={{ height: guideHeight, ...(position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : {}) }} aria-label={lang === "es" ? "Guía del proyecto" : "Project guide"}>
-      <div
-        className="guide-top-resizer"
-        onPointerDown={(event) => {
-          event.preventDefault();
-          const rect = popupRef.current.getBoundingClientRect();
-          setResizingTop({ startY: event.clientY, startTop: rect.top, startHeight: rect.height, startX: rect.left });
-        }}
-      />
+    <section
+      ref={popupRef}
+      className={"guide-popup" + (isExpanded ? " is-expanded" : "") + (dragging ? " dragging" : "")}
+      style={position ? { left: position.x, top: position.y, right: "auto", bottom: "auto" } : undefined}
+      aria-label={lang === "es" ? "Guía del proyecto" : "Project guide"}
+    >
       <div className="guide-head" onPointerDown={(event) => { if (event.target.closest("button")) return; const rect = popupRef.current.getBoundingClientRect(); event.currentTarget.setPointerCapture?.(event.pointerId); setPosition({ x: rect.left, y: rect.top }); setDragging({ offsetX: event.clientX - rect.left, offsetY: event.clientY - rect.top }); }}>
         <div>
           <span className="pane-kicker">PROJECT GUIDE</span>
           <h2>{lang === "es" ? "¿Quieres que te guíe por tu proyecto?" : "Would you like a tour of your project?"}</h2>
         </div>
         <div className="guide-head-actions">
+          <button
+            className={"guide-head-btn guide-expand has-tooltip" + (isExpanded ? " active" : "")}
+            data-tooltip={isExpanded ? (lang === "es" ? "Minimizar alto" : "Minimize height") : (lang === "es" ? "Expandir verticalmente" : "Expand vertically")}
+            onClick={() => setIsExpanded((v) => !v)}
+            aria-label={isExpanded ? (lang === "es" ? "Minimizar alto" : "Minimize height") : (lang === "es" ? "Expandir verticalmente" : "Expand vertically")}
+          >
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+              {isExpanded ? (
+                <>
+                  <polyline points="4 14 10 14 10 20" />
+                  <polyline points="20 10 14 10 14 4" />
+                  <line x1="14" y1="10" x2="21" y2="3" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </>
+              ) : (
+                <>
+                  <polyline points="15 3 21 3 21 9" />
+                  <polyline points="9 21 3 21 3 15" />
+                  <line x1="21" y1="3" x2="14" y2="10" />
+                  <line x1="3" y1="21" x2="10" y2="14" />
+                </>
+              )}
+            </svg>
+          </button>
           <button className="guide-head-btn guide-close has-tooltip" data-tooltip={lang === "es" ? "Cerrar guía" : "Close guide"} onClick={onClose} aria-label={lang === "es" ? "Cerrar guía" : "Close guide"}>×</button>
         </div>
       </div>
@@ -646,7 +634,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                 [design.documentation, lang === "es" ? "Documentación" : "Documentation", "documentation", design.docsCapped ? (lang === "es" ? `Hay más de 200 archivos de documentación. El canvas muestra los primeros 200.` : `This repository has more than 200 documentation files. The canvas shows the first 200.`) : (lang === "es" ? "Guías de uso del sistema" : "System usage guides"), design.docsCapped],
                 [
                   design.dsIconFiles,
-                  lang === "es" ? "Iconos" : "Icons",
+                  "Assets",
                   "icons",
                   design.iconsCapped
                     ? (lang === "es" ? `Hay más de 200 iconos en este repositorio. El canvas muestra los primeros 200.` : `This repository has more than 200 icon files. The canvas shows the first 200.`)
@@ -681,7 +669,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                   )}
                   {data?.iconAnalysis?.externalLibrary && data.iconAnalysis.externalLibrary !== "None" && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
-                      <strong>{lang === "es" ? "Iconos: " : "Icons: "}</strong>
+                      <strong>{"Assets: "}</strong>
                       <a href={LIBRARY_URLS[data.iconAnalysis.externalLibrary] || "#"} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
                         {data.iconAnalysis.externalLibrary}
                       </a>
