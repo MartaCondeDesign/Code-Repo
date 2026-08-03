@@ -100,7 +100,7 @@ button { color: inherit; }
 .repo-menu > button { display: block; width: 100%; padding: 8px; border: 0; border-radius: 6px; background: transparent; text-align: left; cursor: pointer; }
 .repo-menu > button:hover { background: #eff6ff; }
 .repo-menu strong, .repo-menu small { display: block; }
-.repo-menu strong { color: #1f2937; font-size: 10px; }
+.repo-menu strong { color: #1f2937; font-size: 10px; font-weight: 400 !important; }
 .repo-menu small { margin-top: 2px; color: #6b7280; font-size: 8px; }
 .repo-btn { height: 34px; border: 1px solid #2563eb; border-radius: 7px; background: #2563eb; color: #fff; padding: 0 12px; font-size: 10px; font-weight: 700; line-height: 1; cursor: pointer; white-space: nowrap; }
 .repo-row > .repo-btn:not(.guide-button) { width: 126px; flex: 0 0 126px; }
@@ -661,6 +661,9 @@ button { color: inherit; }
   cursor: pointer;
   padding: 0;
   display: block;
+}
+.repo-menu-item-left strong {
+  font-weight: 400 !important;
 }
 .repo-menu-item-actions {
   display: flex;
