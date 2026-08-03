@@ -258,13 +258,13 @@ const WIZARD_STEPS = {
   ],
 };
 
-function styledEdge(edge, active, dimmed, labelOffsetY = -14) {
+function styledEdge(edge, active, dimmed, labelOffsetY = -14, hideLabel = false) {
   return {
     id: edge.id,
     source: edge.source,
     target: edge.target,
     type: "labeled",
-    data: { color: edge.color, verb: edge.verb, dimmed, labelOffsetY },
+    data: { color: edge.color, verb: edge.verb, dimmed, labelOffsetY, hideLabel },
     animated: true,
     markerEnd: { type: MarkerType.ArrowClosed, color: edge.color, width: 16, height: 16 },
     style: { stroke: edge.color, strokeWidth: active ? 2.8 : 1.5, opacity: dimmed ? 0.14 : 1 },
@@ -648,13 +648,17 @@ export default function App() {
 
   const edges = useMemo(() => {
     const targetCounts = {};
+    const seenLabels = new Set(); // deduplicate: same verb+color shows only once
     return data.edges.map((edge) => {
       const active = relatedIds.has(edge.source) || relatedIds.has(edge.target) || categoryNodeIds.has(edge.source) || categoryNodeIds.has(edge.target);
       const tgt = edge.target;
       targetCounts[tgt] = (targetCounts[tgt] || 0) + 1;
       const index = targetCounts[tgt] - 1;
-      const labelOffsetY = -14 - index * 18; // offset label by 18px per overlapping edge
-      return styledEdge(edge, active, hasFocus && !active, labelOffsetY);
+      const labelOffsetY = -14 - index * 18;
+      const labelKey = `${edge.verb}|${edge.color}`;
+      const hideLabel = seenLabels.has(labelKey);
+      if (!hideLabel) seenLabels.add(labelKey);
+      return styledEdge(edge, active, hasFocus && !active, labelOffsetY, hideLabel);
     });
   }, [data.edges, relatedIds, categoryNodeIds, hasFocus]);
 
@@ -696,6 +700,15 @@ export default function App() {
       }
     }
   }, [data.nodes, flow]);
+
+  const repoMenuFiltered = useMemo(() => {
+    const q = repoUrl.trim().toLowerCase();
+    return {
+      saved: savedRepos.filter(r => !q || r.url.toLowerCase().includes(q) || r.name.toLowerCase().includes(q)),
+      recent: recentSearches.filter(u => !q || u.toLowerCase().includes(q)),
+      design: DESIGN_REPOS.filter(r => !q || r.url.toLowerCase().includes(q) || r.name.toLowerCase().includes(q)),
+    };
+  }, [repoUrl, savedRepos, recentSearches]);
 
   const analyzeRepo = async (urlOverride, customToken) => {
     const url = (typeof urlOverride === "string" ? urlOverride : repoUrl).trim();
@@ -767,8 +780,9 @@ export default function App() {
               className="repo-input"
               value={repoUrl}
               placeholder={t.repoPlaceholder}
-              onChange={(event) => setRepoUrl(event.target.value)}
-              onKeyDown={(event) => event.key === "Enter" && analyzeRepo()}
+              onChange={(event) => { setRepoUrl(event.target.value); setRepoMenuOpen(true); }}
+              onFocus={() => setRepoMenuOpen(true)}
+              onKeyDown={(event) => { if (event.key === "Enter") { setRepoMenuOpen(false); analyzeRepo(); } if (event.key === "Escape") setRepoMenuOpen(false); }}
               spellCheck={false}
             />
             {map && <button className="reset-inside has-tooltip" onClick={resetMap} aria-label={t.resetTip} data-tooltip={t.resetTip}>↻</button>}
@@ -794,45 +808,34 @@ export default function App() {
             
             {repoMenuOpen && (
               <div className="repo-menu">
-                {savedRepos.length > 0 && (
+                {!repoMenuFiltered.saved.length && !repoMenuFiltered.recent.length && !repoMenuFiltered.design.length && (
+                  <span style={{ padding: "8px 12px", color: "var(--text-sub)", fontSize: "12px" }}>{lang === "es" ? "Sin resultados" : "No results"}</span>
+                )}
+                {repoMenuFiltered.saved.length > 0 && (
                   <>
                     <span>{lang === "es" ? "Guardados" : "Saved"}</span>
-                    {savedRepos.map((repo) => {
-                      const isSaved = true;
-                      return (
-                        <div key={repo.url} className="repo-menu-item">
-                          <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
-                            <strong>{repo.name}</strong>
-                          </button>
-                          <div className="repo-menu-item-actions">
-                            {repo.requiresToken && (
-                              <button
-                                className="repo-action-btn is-key"
-                                onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
-                                title={lang === "es" ? "Configurar token" : "Configure token"}
-                              >
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                              </button>
-                            )}
-                            <button
-                              className="repo-action-btn is-active"
-                              onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, repo.requiresToken); }}
-                              title={lang === "es" ? "Quitar de guardados" : "Remove from saved"}
-                            >
-                              ★
+                    {repoMenuFiltered.saved.map((repo) => (
+                      <div key={repo.url} className="repo-menu-item">
+                        <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
+                          <strong>{repo.name}</strong>
+                        </button>
+                        <div className="repo-menu-item-actions">
+                          {repo.requiresToken && (
+                            <button className="repo-action-btn is-key" onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
                             </button>
-                          </div>
+                          )}
+                          <button className="repo-action-btn is-active" onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, repo.requiresToken); }} title={lang === "es" ? "Quitar de guardados" : "Remove from saved"}>★</button>
                         </div>
-                      );
-                    })}
+                      </div>
+                    ))}
                     <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--line)" }} />
                   </>
                 )}
-
-                {recentSearches.length > 0 && (
+                {repoMenuFiltered.recent.length > 0 && (
                   <>
                     <span>{lang === "es" ? "Búsquedas recientes" : "Recent searches"}</span>
-                    {recentSearches.map((url) => {
+                    {repoMenuFiltered.recent.map((url) => {
                       const repoName = url.replace("https://github.com/", "");
                       const isSaved = savedRepos.some((r) => r.url === url);
                       const isPrivate = requiresToken(url);
@@ -843,21 +846,11 @@ export default function App() {
                           </button>
                           <div className="repo-menu-item-actions">
                             {isPrivate && (
-                              <button
-                                className="repo-action-btn is-key"
-                                onClick={(e) => { e.stopPropagation(); setRepoUrl(url); setModalToken(gitToken); setTokenModalOpen(true); }}
-                                title={lang === "es" ? "Configurar token" : "Configure token"}
-                              >
+                              <button className="repo-action-btn is-key" onClick={(e) => { e.stopPropagation(); setRepoUrl(url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
                                 <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
                               </button>
                             )}
-                            <button
-                              className={"repo-action-btn" + (isSaved ? " is-active" : "")}
-                              onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repoName, url, isPrivate); }}
-                              title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}
-                            >
-                              {isSaved ? "★" : "☆"}
-                            </button>
+                            <button className={"repo-action-btn" + (isSaved ? " is-active" : "")} onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repoName, url, isPrivate); }} title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}>{isSaved ? "★" : "☆"}</button>
                           </div>
                         </div>
                       );
@@ -865,37 +858,30 @@ export default function App() {
                     <hr style={{ margin: "4px 0", border: 0, borderTop: "1px solid var(--line)" }} />
                   </>
                 )}
-
-                <span>{lang === "es" ? "Design Systems Open Source" : "Open Source Design Systems"}</span>
-                {DESIGN_REPOS.map((repo) => {
-                  const isSaved = savedRepos.some((r) => r.url === repo.url);
-                  const isPrivate = requiresToken(repo.url);
-                  return (
-                    <div key={repo.url} className="repo-menu-item">
-                      <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
-                        <strong>{repo.name}</strong>
-                      </button>
-                      <div className="repo-menu-item-actions">
-                        {isPrivate && (
-                          <button
-                            className="repo-action-btn is-key"
-                            onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }}
-                            title={lang === "es" ? "Configurar token" : "Configure token"}
-                          >
-                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                {repoMenuFiltered.design.length > 0 && (
+                  <>
+                    <span>{lang === "es" ? "Design Systems Open Source" : "Open Source Design Systems"}</span>
+                    {repoMenuFiltered.design.map((repo) => {
+                      const isSaved = savedRepos.some((r) => r.url === repo.url);
+                      const isPrivate = requiresToken(repo.url);
+                      return (
+                        <div key={repo.url} className="repo-menu-item">
+                          <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
+                            <strong>{repo.name}</strong>
                           </button>
-                        )}
-                        <button
-                          className={"repo-action-btn" + (isSaved ? " is-active" : "")}
-                          onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, isPrivate); }}
-                          title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}
-                        >
-                          {isSaved ? "★" : "☆"}
-                        </button>
-                      </div>
-                    </div>
-                  );
-                })}
+                          <div className="repo-menu-item-actions">
+                            {isPrivate && (
+                              <button className="repo-action-btn is-key" onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
+                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                              </button>
+                            )}
+                            <button className={"repo-action-btn" + (isSaved ? " is-active" : "")} onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, isPrivate); }} title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}>{isSaved ? "★" : "☆"}</button>
+                          </div>
+                        </div>
+                      );
+                    })}
+                  </>
+                )}
               </div>
             )}
           </div>
@@ -1005,7 +991,7 @@ export default function App() {
         )}
       </main>
 
-      <ProjectGuide data={data} lang={lang} selectedPath={selectedPath} open={guideOpen} onClose={() => setGuideOpen(false)} onSelectPath={selectPath} activeCategory={activeCategory} onSelectCategory={setActiveCategory} />
+      <ProjectGuide data={data} lang={lang} selectedPath={selectedPath} open={guideOpen} onClose={() => setGuideOpen(false)} onSelectPath={selectPath} activeCategory={activeCategory} onSelectCategory={setActiveCategory} repoUrl={repoUrl} />
 
       {!guideOpen && (
         <button 
@@ -1014,9 +1000,9 @@ export default function App() {
           data-tooltip={lang === "es" ? "Abrir guía de onboarding" : "Open onboarding guide"}
           aria-label={lang === "es" ? "Abrir guía de onboarding" : "Open onboarding guide"}
         >
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
-            <circle cx="12" cy="12" r="10" />
-            <polygon points="16.24 7.76 14.12 14.12 7.76 16.24 9.88 9.88 16.24 7.76" />
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" style={{ display: "block" }}>
+            <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/>
+            <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/>
           </svg>
         </button>
       )}
@@ -1126,7 +1112,11 @@ export default function App() {
           <div className="wizard-modal token-modal" style={{ maxWidth: "420px" }}>
             <button className="wizard-close" onClick={() => setTokenModalOpen(false)}>×</button>
             <div className="wizard-body">
-              <div className="wizard-icon">🔐</div>
+              <div className="wizard-icon" style={{ display: "flex", justifyContent: "center" }}>
+                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                </svg>
+              </div>
               <h3 className="wizard-title" style={{ marginTop: "12px", fontSize: "16px", fontWeight: "700" }}>
                 {lang === "es" ? "Introduce tu token de acceso" : "Enter your access token"}
               </h3>
@@ -1161,7 +1151,9 @@ export default function App() {
                   </button>
                 </div>
                 <div style={{ display: "flex", alignItems: "center", gap: "6px", marginTop: "2px" }}>
-                  <span style={{ fontSize: "11px" }}>ℹ️</span>
+                  <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}>
+                    <circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/>
+                  </svg>
                   <a
                     href="https://github.com/settings/tokens/new?scopes=repo&description=dsmap-analyzer"
                     target="_blank"
@@ -1187,7 +1179,7 @@ export default function App() {
                 {gitToken && (
                   <button
                     className="repo-btn"
-                    style={{ background: "#fff", color: "#dc2626", borderColor: "#fca5a5", padding: "8px 14px", marginRight: "auto", whiteSpace: "nowrap" }}
+                    style={{ background: "#ffffff", color: "#dc2626", border: "1px solid #dc2626", padding: "8px 14px", marginRight: "auto", whiteSpace: "nowrap" }}
                     onClick={() => {
                       setGitToken("");
                       setModalToken("");

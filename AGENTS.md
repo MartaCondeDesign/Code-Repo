@@ -137,6 +137,9 @@ Para mantener la consistencia estética y visual del proyecto, sigue estas espec
 19. Al intentar analizar un repositorio, el backend intenta clonarlo primero de forma pública. Si la descarga falla debido a restricciones de autorización (error AUTH_REQUIRED), la interfaz detiene la carga y activa automáticamente un modal de diálogo que solicita su Token de Acceso Personal (PAT) con opción de guardado en localStorage.
 20. El icono de la llave (🔑) permanece oculto por defecto y solo se muestra al lado de la barra de búsqueda si hay un token guardado o ingresado, sirviendo como acceso para modificar o eliminar dicho token.
 21. Las búsquedas exitosas de repositorios se almacenan como búsquedas recientes en localStorage (mostrando un máximo de 4 elementos ordenados por los más recientes) en la parte superior del dropdown del buscador.
+22. Al hacer clic en cualquier nodo (chip) del canvas, siempre se deben producir dos efectos simultáneos: (a) iluminar/seleccionar el archivo correspondiente en el árbol del repositorio izquierdo (tree), expandiendo las carpetas necesarias para que sea visible; y (b) abrir el panel de información derecho (inspector) mostrando los detalles de ese nodo.
+23. El buscador del árbol de repositorio (tree) filtra únicamente por coincidencia directa de texto en el nombre de ruta del archivo. No realiza expansión conceptual ni búsqueda semántica por sinónimos; solo devuelve archivos cuya ruta normalizada contiene exactamente la cadena de búsqueda introducida.
+24. La detección de componentes del Design System sigue dos contratos en orden: primero `contracts/detect-component-inventory.md` (¿cuántos componentes oficiales?) priorizando barrel files, registries y package.json exports; después `contracts/detect-components.md` (¿dónde está construido cada uno?). El número mostrado en la card siempre proviene del inventario, no del conteo de archivos.
 
 ---
 
@@ -148,8 +151,11 @@ Cada parte del Design System que aparece como card de métrica en la guía del p
 
 | Parte DS | Contrato | Card en guía |
 |---|---|---|
+| Component Inventory | [`contracts/detect-component-inventory.md`](contracts/detect-component-inventory.md) | Componentes (número) |
+| Component Source | [`contracts/detect-components.md`](contracts/detect-components.md) | Componentes (archivos) |
 | Design Tokens | [`contracts/detect-tokens.md`](contracts/detect-tokens.md) | Tokens |
-| Styles | [`contracts/detect-styles.md`](contracts/detect-styles.md) | Estilos |
+| Styles | [`contracts/detect-styles.md`](contracts/detect-styles.md) | — |
+| Storybook | [`contracts/detect-storybook.md`](contracts/detect-storybook.md) | — (link only) |
 
 ### Reglas generales de detección
 

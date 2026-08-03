@@ -1,150 +1,628 @@
-# Contrato de detección — Styles
+# Detect Style Source
 
-## Definición
+## Objective
 
-Un Style es la aplicación de una o más propiedades visuales a un componente o elemento de la interfaz.
+Analyze a repository and locate exclusively where visual styles are DEFINED.
 
-No confundir con un Design Token, que es la decisión reutilizable.  
-El style *consume* tokens; el token *define* decisiones.
+Do not search for every file that mentions styles.
+Do not confuse files with styles.
+Do not confuse consumer files with source files.
+
+---
+
+# Main rule
+
+```text
+FILE ≠ STYLE
+```
+
+A single file can contain multiple style rules or definitions.
+
+Example:
 
 ```css
-/* Token */
-:root { --color-brand-primary: #0057ff; }
+.button {}
+.card {}
+.input {}
+```
 
-/* Style */
-.button { background: var(--color-brand-primary); }
+This means:
+
+```text
+1 file
+3 style rules
 ```
 
 ---
 
-## Tecnologías que detectar
+# What you must find
 
-| Tecnología | Señales |
-|---|---|
-| **CSS** | `.css` con selectores y propiedades visuales |
-| **CSS Modules** | `.module.css`, `.module.scss` |
-| **Sass / SCSS** | `.scss`, `.sass` |
-| **Less** | `.less` |
-| **CSS-in-JS** | `styled.button\`…\``, `css({…})`, `createStyles({…})` |
-| **Inline styles** | `style={{ padding: "16px" }}` en JSX/TSX |
-| **Utility-first** | `className="bg-blue-600 px-4 py-2"` (Tailwind, UnoCSS) |
-| **MUI `sx` prop** | `sx={{ color: "primary.main" }}` |
-| **Chakra-style props** | `<Box p={4} color="brand.primary">` |
-| **Style objects** | `const styles = { backgroundColor: colors.primary }` |
+First answer:
 
----
+```text
+STYLES LOCATION
 
-## Señales de archivo
+Architecture:
+<Centralized / Co-located / CSS-in-JS / Utility-first / Mixed>
 
-### Extensiones principales
+Primary source:
+<exact path>
 
-`.css` `.scss` `.sass` `.less` `.styl`  
-`.module.css` `.module.scss`
+Definition files:
+- <path>
+- <path>
 
-### Archivos con estilos embebidos
+Number of definition files:
+X
 
-`.vue` (bloque `<style>`)  
-`.svelte` (estilos en el componente)  
-`.tsx` `.jsx` `.ts` `.js` (CSS-in-JS, inline styles, style objects)
+Number of style definitions:
+X
+```
 
-### Excluir como "style" del DS
+If there is no single file, indicate the actual folder or pattern.
 
-- Archivos que solo contienen CSS Custom Properties en `:root` → son **tokens**
-- Archivos de reset o normalize globales (`reset.css`, `normalize.css`, `base.css`)
-- Archivos de configuración de herramientas
+Example:
 
----
+```text
+Architecture:
+Co-located component styles
 
-## Propiedades visuales que detectar
+Primary location:
+/src/components/
 
-### Color
-`color` · `background` · `backgroundColor` · `borderColor` · `fill` · `stroke` · `outline`
-
-### Tipografía
-`fontFamily` · `fontSize` · `fontWeight` · `lineHeight` · `letterSpacing` · `textTransform` · `textDecoration`
-
-### Espaciado
-`padding` · `margin` · `gap` · `rowGap` · `columnGap`
-
-### Tamaño
-`width` · `height` · `minWidth` · `maxWidth` · `minHeight` · `maxHeight`
-
-### Borde
-`border` · `borderWidth` · `borderStyle` · `borderColor` · `borderRadius`
-
-### Sombra
-`boxShadow` · `textShadow` · `elevation`
-
-### Layout
-`display` · `flex` · `grid` · `alignItems` · `justifyContent` · `position`
-
-### Opacidad y movimiento
-`opacity` · `transition` · `animation` · `transform`
+Pattern:
+**/*.module.css
+```
 
 ---
 
-## Clasificación de valores
+# What is a style
 
-| Tipo | Descripción | Ejemplo |
+A style is a rule or set of visual properties applied to an element, component, or state.
+
+Example:
+
+```css
+.button {
+  background: var(--color-primary);
+  padding: var(--spacing-md);
+  border-radius: 8px;
+}
+```
+
+Here there is one style rule: `.button`.
+
+---
+
+# Formats where styles may be defined
+
+Look for definitions in:
+
+- `.css`
+- `.scss`
+- `.sass`
+- `.less`
+- `.js`
+- `.jsx`
+- `.ts`
+- `.tsx`
+- `.vue`
+- `.svelte`
+- `.swift`
+- `.kt`
+- `.xml`
+- `.dart`
+
+Other formats may also exist depending on the technology.
+
+---
+
+# Styling technologies
+
+Recognize:
+
+- CSS
+- CSS Modules
+- SCSS
+- Sass
+- Less
+- CSS-in-JS
+- Styled Components
+- Emotion
+- Vanilla Extract
+- Stitches
+- StyleX
+- Panda CSS
+- Tailwind CSS
+- UnoCSS
+- Styled System
+- MUI `sx`
+- Chakra-style props
+- Inline styles
+- SwiftUI
+- Jetpack Compose
+- Flutter styles
+
+---
+
+# What counts as Style Source
+
+A file is `STYLE_SOURCE` if it contains real visual definitions.
+
+CSS example:
+
+```css
+.button {
+  padding: 16px;
+}
+```
+
+CSS Module example:
+
+```css
+.root {
+  display: flex;
+  gap: var(--spacing-md);
+}
+```
+
+Style Object example:
+
+```ts
+export const buttonStyles = {
+  padding: spacing.md,
+  borderRadius: radius.md
+}
+```
+
+Styled Components example:
+
+```ts
+const Button = styled.button`
+  padding: ${theme.spacing.md};
+`
+```
+
+---
+
+# What does NOT count as Style Source
+
+Do not classify as Style Source a file that only:
+
+- imports CSS
+- imports a theme
+- imports a style object
+- applies a className
+- renders a component
+- contains tests
+- contains stories
+- contains documentation
+- contains demos
+- contains snapshots
+
+Example:
+
+```tsx
+import styles from "./Button.module.css"
+
+return <button className={styles.button} />
+```
+
+This file consumes the style.
+
+The definition is in:
+
+```text
+Button.module.css
+```
+
+---
+
+# Centralized styles
+
+Example:
+
+```text
+/src/styles/
+  globals.css
+  typography.css
+  utilities.css
+  components.css
+```
+
+Return:
+
+```text
+Architecture:
+Centralized
+
+Primary source:
+/src/styles/
+```
+
+---
+
+# Co-located styles
+
+Example:
+
+```text
+/components/Button/Button.module.css
+/components/Card/Card.module.css
+/components/Input/Input.module.css
+```
+
+Return:
+
+```text
+Architecture:
+Co-located
+
+Primary location:
+/components/
+
+Pattern:
+**/*.module.css
+```
+
+Do not invent a single file.
+
+---
+
+# CSS-in-JS
+
+Styles may live in:
+
+```text
+Button.styles.ts
+```
+
+or directly in:
+
+```text
+Button.tsx
+```
+
+Example:
+
+```ts
+const styles = {
+  root: {
+    display: "flex",
+    gap: spacing.md
+  }
+}
+```
+
+Return the real pattern:
+
+```text
+Architecture:
+CSS-in-JS
+
+Pattern:
+**/*.styles.ts
+```
+
+or, if embedded:
+
+```text
+Architecture:
+CSS-in-JS embedded in components
+```
+
+---
+
+# Tailwind
+
+Do not mark every file that contains `className` as Style Source.
+
+Example:
+
+```tsx
+className="bg-primary px-4 rounded-md"
+```
+
+is consumption/application of utilities.
+
+You must identify:
+
+1. where the theme is defined
+2. where CSS variables are defined
+3. where utilities are configured
+4. which files only consume the classes
+
+Separate:
+
+- configuration
+- style definition
+- utility usage
+- token definition
+
+---
+
+# Tokens inside styles
+
+Example:
+
+```css
+.button {
+  background: var(--color-primary);
+  border-radius: var(--radius-md);
+  padding: 13px;
+}
+```
+
+Classify:
+
+| Property | Value | Type |
 |---|---|---|
-| **Token** | Referencia a una decisión nombrada | `var(--color-action-primary)`, `theme.colors.primary` |
-| **Hardcoded** | Valor literal sin nombre semántico | `#232323`, `17px`, `11px` |
-| **Calculated** | Valor computado dinámicamente | `calc(100% - 32px)` |
-| **Token bypass** | Hardcode con valor coincidente con un token existente | `padding: 16px` cuando existe `--spacing-md: 16px` |
+| background | `var(--color-primary)` | Token reference |
+| border-radius | `var(--radius-md)` | Token reference |
+| padding | `13px` | Hardcoded |
+
+A token used inside a style is still a token.
+The rule that uses it is a style.
 
 ---
 
-## Tipos de estilo
+# Hardcoded values
 
-| Tipo | Descripción | Ejemplos |
-|---|---|---|
-| **Global** | Reset, base, tema global | `reset.css`, `body {}`, `:root {}` con reglas de layout |
-| **Component** | Estilos de un componente específico | `Button.module.css`, `styled.button` |
-| **Layout** | Estructura de páginas o zonas | `Grid.css`, `AppShell.module.scss` |
-| **Utility** | Clases de utilidad reutilizables | `utilities.css`, `helpers.scss` |
-| **Unknown** | Sin contexto suficiente | — |
+Detect:
 
----
+- Hex
+- RGB
+- RGBA
+- HSL
+- px
+- rem
+- em
+- dp
+- sp
+- opacity
+- radius
+- shadow
+- duration
+- easing
 
-## Estados y variantes que detectar
+Classify them as:
 
-### Estados
-`default` · `hover` · `focus` · `focus-visible` · `active` · `disabled` · `selected` · `checked` · `loading` · `error` · `success`
+```text
+Hardcoded
+```
 
-### Variantes
-`size` (sm, md, lg) · `intent` (primary, danger, success) · `appearance` (filled, outlined, ghost) · `density` · `orientation`
+If they match an existing token:
 
----
+```text
+Possible token bypass
+```
 
-## Themes y modos
-
-Detecta cuándo los estilos cambian según:
-- `light` / `dark` (`@media (prefers-color-scheme: dark)`, `[data-theme="dark"]`)
-- Brands (`[data-brand="acme"]`)
-- Plataforma (mobile vs desktop via media queries)
-
----
-
-## Tags de nodo en el mapa DS
-
-Los archivos CSS que aparecen en **cualquier nodo** del mapa DS se cuentan como styles del sistema.  
-Los archivos CSS en nodos de tipo `tag="tokens"` o `layer="tokens"/"foundation"` se cuentan como **tokens**, no como styles.
+Do not automatically convert them to tokens.
 
 ---
 
-## Nivel de confianza
+# Visual properties
 
-| Nivel | Criterio |
-|---|---|
-| **High** | Archivo `.module.css` o `.scss` en directorio de componentes; `styled.X` o `css({})` en archivo de componente |
-| **Medium** | Archivo `.css` con selectores de componentes, sin ser un archivo de tokens |
-| **Low** | Archivo `.css` genérico sin selectores claros de componente |
+Analyze:
+
+## Color
+
+- color
+- background
+- backgroundColor
+- borderColor
+- fill
+- stroke
+
+## Typography
+
+- fontFamily
+- fontSize
+- fontWeight
+- lineHeight
+- letterSpacing
+
+## Spacing
+
+- padding
+- margin
+- gap
+
+## Size
+
+- width
+- height
+- minWidth
+- maxWidth
+- minHeight
+- maxHeight
+
+## Border
+
+- border
+- borderWidth
+- borderColor
+- borderRadius
+
+## Shadow
+
+- boxShadow
+- textShadow
+- elevation
+
+## Layout
+
+- display
+- flex
+- grid
+- alignItems
+- justifyContent
+- position
+- inset
+
+## Motion
+
+- transition
+- animation
+- transform
+
+## Responsive
+
+- media queries
+- breakpoints
+- container queries
 
 ---
 
-## Regla principal
+# States
 
-**Style = aplicación de decisiones visuales a un elemento concreto.**
+Detect rules related to:
 
-Distingue siempre entre el token que define la decisión y el style que la aplica.  
-Relaciona: `Component → Style → Token → Raw value`.
+- default
+- hover
+- pressed
+- active
+- focus
+- focus-visible
+- disabled
+- selected
+- checked
+- loading
+- error
+- success
+- warning
+- read-only
+
+---
+
+# Variants
+
+Detect:
+
+- size
+- hierarchy
+- intent
+- appearance
+- emphasis
+- tone
+- density
+- orientation
+- inverse
+
+---
+
+# Counting
+
+`Styles: X` must represent:
+
+```text
+number of style rules or visual definitions
+```
+
+Never:
+
+- number of files
+- number of imports
+- number of components
+- number of className occurrences
+- number of files that mention styles
+
+If you cannot count reliably:
+
+```text
+Style definition count: Unknown
+```
+
+Do not substitute with the number of files.
+
+---
+
+# DS node map tags
+
+CSS files that appear in **any node** of the DS map are counted as system styles.
+CSS files in nodes with `tag="tokens"` or `layer="tokens"/"foundation"` are counted as **tokens**, not as styles.
+
+---
+
+# Information to extract
+
+For each relevant style:
+
+- Style / selector name
+- Component / element
+- Property
+- Value
+- Token reference
+- Hardcoded value
+- State
+- Variant
+- Theme / Mode
+- Responsive condition
+- Styling technology
+- Source file
+- Exact file path
+- Confidence
+
+---
+
+# Required output
+
+## 1. Location
+
+```text
+STYLES LOCATION
+
+Architecture:
+...
+
+Primary source:
+...
+
+Definition files:
+...
+
+Number of definition files:
+...
+
+Style definitions:
+...
+```
+
+## 2. Technology
+
+```text
+Styling technologies:
+- CSS Modules
+- Tailwind
+- CSS-in-JS
+...
+```
+
+## 3. Evidence
+
+Show real examples:
+
+| Style | Component | File | Token usage | Hardcoded |
+|---|---|---|---|---|
+
+## 4. Related files
+
+If useful:
+
+```text
+Consumer files: X
+Configuration files: X
+Generated files: X
+```
+
+Never add them to the style count.
+
+---
+
+# Final rule
+
+Before marking a file as Style Source, ask:
+
+> Does this file DIRECTLY DEFINE style rules or visual properties?
+
+If the answer is no, it is not a Style Source.

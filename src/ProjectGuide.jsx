@@ -32,6 +32,73 @@ function selectSystemVoice(persona, lang) {
     || voices[0];
 }
 
+const LIBRARY_URLS = {
+  "Lucide Icons": "https://lucide.dev",
+  "Lucide": "https://lucide.dev",
+  "Font Awesome": "https://fontawesome.com",
+  "Font Awesome Pro": "https://fontawesome.com",
+  "Font Awesome Pro (Pago)": "https://fontawesome.com",
+  "Font Awesome Pro (Paid)": "https://fontawesome.com",
+  "Heroicons": "https://heroicons.com",
+  "Feather Icons": "https://feathericons.com",
+  "Remix Icons": "https://remixicon.com",
+  "The Noun Project": "https://thenounproject.com",
+  "The Noun Project (Pago)": "https://thenounproject.com",
+  "The Noun Project (Paid)": "https://thenounproject.com",
+  "Streamline Icons": "https://www.streamlinehq.com",
+  "Streamline Icons (Pago)": "https://www.streamlinehq.com",
+  "Streamline Icons (Paid)": "https://www.streamlinehq.com",
+  "React Icons": "https://react-icons.github.io/react-icons",
+  "FontAwesome": "https://fontawesome.com",
+  "Material UI": "https://mui.com",
+  "Chakra UI": "https://chakra-ui.com",
+  "Radix UI": "https://www.radix-ui.com",
+  "shadcn/ui": "https://ui.shadcn.com",
+  "Mantine": "https://mantine.dev",
+  "Ant Design": "https://ant.design",
+  "Bootstrap": "https://getbootstrap.com",
+  "Tailwind UI": "https://tailwindui.com",
+  "Tailwind UI (Pago)": "https://tailwindui.com",
+  "Tailwind UI (Paid)": "https://tailwindui.com",
+  "Kendo UI": "https://www.telerik.com/kendo-ui",
+  "Kendo UI (Pago)": "https://www.telerik.com/kendo-ui",
+  "Kendo UI (Paid)": "https://www.telerik.com/kendo-ui",
+  "Syncfusion": "https://www.syncfusion.com",
+  "Syncfusion (Pago)": "https://www.syncfusion.com",
+  "Syncfusion (Paid)": "https://www.syncfusion.com",
+  "Tailwind CSS": "https://tailwindcss.com",
+  "Style Dictionary": "https://styledictionary.com",
+  "Tokens Studio": "https://tokens.studio",
+  "Supernova": "https://supernova.io",
+  "Supernova (Pago)": "https://supernova.io",
+  "Supernova (Paid)": "https://supernova.io",
+  "Knapsack": "https://www.knapsack.cloud",
+  "Knapsack (Pago)": "https://www.knapsack.cloud",
+  "Knapsack (Paid)": "https://www.knapsack.cloud",
+  "zeroheight": "https://zeroheight.com",
+  "zeroheight (Pago)": "https://zeroheight.com",
+  "zeroheight (Paid)": "https://zeroheight.com",
+  "Storybook": "https://storybook.js.org",
+  "React": "https://react.dev",
+  "Vue": "https://vuejs.org",
+  "Angular": "https://angular.io",
+  "Svelte": "https://svelte.dev",
+  "Next.js": "https://nextjs.org",
+  "Nuxt.js": "https://nuxt.com",
+  "Emotion": "https://emotion.sh",
+  "styled-components": "https://styled-components.com",
+  "Motion": "https://www.framer.com/motion",
+  "CVA": "https://cva.style",
+  "Recharts": "https://recharts.org",
+  "Chart.js": "https://www.chartjs.org",
+  "React Chart.js": "https://react-chartjs-2.js.org",
+  "D3": "https://d3js.org",
+  "ApexCharts": "https://apexcharts.com",
+  "TanStack Table": "https://tanstack.com/table",
+  "React Table": "https://tanstack.com/table",
+  "React Flow": "https://reactflow.dev",
+};
+
 const LIBRARY_NAMES = {
   react: "React",
   vue: "Vue",
@@ -57,7 +124,7 @@ function libraryName(packageName) {
   return LIBRARY_NAMES[packageName];
 }
 
-export default function ProjectGuide({ data, lang, selectedPath, open, onClose, onSelectPath, activeCategory, onSelectCategory }) {
+export default function ProjectGuide({ data, lang, selectedPath, open, onClose, onSelectPath, activeCategory, onSelectCategory, repoUrl }) {
   const popupRef = useRef(null);
   const [mode, setMode] = useState("overview");
   const [speaking, setSpeaking] = useState(false);
@@ -156,6 +223,10 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     // Ensure no token file is double-counted as a style
     dsTokenFiles.forEach((file) => dsStyleFiles.delete(file));
 
+    let figmaUrl = null;
+    let storybookUrl = null;
+    let docsUrl = null;
+
     const readmeLibraries = {
       icons: [],
       components: [],
@@ -238,6 +309,18 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       if (lowerSource.includes("tailwind")) {
         readmeLibraries.tokens.push("Tailwind CSS");
       }
+      const figmaMatch = source.match(/https?:\/\/(?:www\.)?figma\.com\/[^\s)>"'\]]+/i);
+      if (figmaMatch) figmaUrl = figmaMatch[0].replace(/[,.)]+$/, "");
+      const storybookMatch = source.match(/https?:\/\/[^\s)>"'\]]*(?:storybook\.[^\s)>"'\]]+|chromatic\.com\/[^\s)>"'\]]+|\.github\.io\/[^\s)>"'\]]*storybook[^\s)>"'\]]*)/i);
+      if (storybookMatch) {
+        const candidate = storybookMatch[0].replace(/[,.)]+$/, "");
+        const deprecatedNearStorybook = /(?:deprecated|archived|discontinued|no longer|legacy|obsolete)[^.!?\n]{0,60}storybook|storybook[^.!?\n]{0,60}(?:deprecated|archived|discontinued|no longer|legacy|obsolete)/i;
+        if (!deprecatedNearStorybook.test(source)) {
+          storybookUrl = candidate;
+        }
+      }
+      const docsMatch = source.match(/https?:\/\/(?:docs\.[^\s)>"'\]]+|[^\s)>"'\]]+\.github\.io[^\s)>"'\]]*|[^\s)>"'\]]+\.(?:vercel|netlify)\.app[^\s)>"'\]]*)/i);
+      if (docsMatch && (!storybookUrl || docsMatch[0] !== storybookUrl)) docsUrl = docsMatch[0].replace(/[,.)]+$/, "");
     }
 
     const packages = new Set();
@@ -350,8 +433,11 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const finalComponents = readmeLibraries.components.length ? [...new Set(readmeLibraries.components)] : [];
 
     const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
-    return { components: dsComponentFiles.size, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem };
-  }, [data.fileContents, data.files, data.nodes, lang]);
+    const hasStorybook = !!storybookUrl;
+    const componentTotal = data.componentTotal ?? dsComponentFiles.size;
+    const componentsCapped = data.componentsCapped ?? false;
+    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
+  }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();
     (data.files || []).forEach((file) => {
@@ -378,8 +464,8 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       ...design.tables
     ])];
     const libraryText = allLibs.length ? allLibs.join(", ") : null;
-    if (lang === "es") return `${design.hasDesignSystem ? "Sí veo una base de sistema de diseño" : "No veo un sistema de diseño formal, pero sí una base visual"} en ${data.repoName}. He encontrado ${design.components} componentes reutilizables, ${design.tokens} archivos de tokens, ${design.styles} archivos de estilos, ${design.patterns} patrones, ${design.layouts} layouts y ${design.pages} páginas de producto. También hay ${design.documentation} archivos de documentación.${libraryText ? ` Las librerías que afectan a la interfaz son ${libraryText}.` : " No he podido confirmar una librería visual desde los package.json analizados."} Los tokens guardan decisiones como color, tipografía y espacio. Los componentes aplican esas decisiones. Los patrones explican cómo combinar componentes para resolver acciones repetidas. Los layouts organizan las zonas comunes de una pantalla, y las páginas usan layouts, patrones y componentes para construir experiencias completas. La documentación explica cómo usar todo de forma consistente.${design.stories ? ` Además, hay ${design.stories} historias que enseñan estados y variantes.` : " No he detectado historias de componentes, así que sus estados pueden estar documentados en otro lugar."}`;
-    return `${design.hasDesignSystem ? "I found a design-system foundation" : "I did not find a formal design system, but I did find a visual foundation"} in ${data.repoName}. It contains ${design.components} reusable components, ${design.tokens} token files, ${design.styles} style files, ${design.patterns} patterns, ${design.layouts} layouts, and ${design.pages} product pages. It also has ${design.documentation} documentation files.${libraryText ? ` The libraries that affect the interface are ${libraryText}.` : " I could not confirm a visual library from the analyzed package.json files."} Tokens store decisions such as color, type, and spacing. Components apply those decisions. Patterns explain how components are combined to solve repeated interactions. Layouts organize the shared areas of a screen, and pages use layouts, patterns, and components to build complete experiences. Documentation explains how to use everything consistently.${design.stories ? ` There are also ${design.stories} stories showing states and variants.` : " I did not detect component stories, so their states may be documented elsewhere."}`;
+    if (lang === "es") return `${design.hasDesignSystem ? "Sí veo una base de sistema de diseño" : "No veo un sistema de diseño formal, pero sí una base visual"} en ${data.repoName}. He encontrado ${design.components} archivos de componentes, ${design.tokens} archivos de tokens y ${design.documentation} archivos de documentación.${libraryText ? ` Las librerías que afectan a la interfaz son ${libraryText}.` : " No he podido confirmar una librería visual desde los package.json analizados."} Los tokens guardan decisiones como color, tipografía y espacio. Los componentes aplican esas decisiones. La documentación explica cómo usar todo de forma consistente.${design.stories ? ` Además, hay ${design.stories} archivos de historias que enseñan estados y variantes.` : " No he detectado historias de componentes, así que sus estados pueden estar documentados en otro lugar."}`;
+    return `${design.hasDesignSystem ? "I found a design-system foundation" : "I did not find a formal design system, but I did find a visual foundation"} in ${data.repoName}. It has ${design.components} component files, ${design.tokens} token files, and ${design.documentation} documentation files.${libraryText ? ` The libraries that affect the interface are ${libraryText}.` : " I could not confirm a visual library from the analyzed package.json files."} Tokens store decisions such as color, type, and spacing. Components apply those decisions. Documentation explains how to use everything consistently.${design.stories ? ` There are also ${design.stories} story files showing states and variants.` : " I did not detect component stories, so their states may be documented elsewhere."}`;
   }, [data, design, folders, lang, mode, selectedPath]);
 
   useEffect(() => () => window.speechSynthesis?.cancel(), []);
@@ -541,25 +627,23 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
               <strong>{design.hasDesignSystem ? (lang === "es" ? "Sistema de diseño detectado" : "Design system detected") : (lang === "es" ? "Base visual detectada" : "Visual foundation detected")}</strong>
               <p>{text}</p>
             </div>
+            <span className="pane-kicker" style={{ marginTop: "16px", display: "block" }}>{lang === "es" ? "Número de archivos" : "Number of files"}</span>
             <div className="design-metrics">
               {[
-                [design.components, lang === "es" ? "Componentes" : "Components", "components"],
-                [design.patterns, lang === "es" ? "Patrones" : "Patterns", "patterns"],
-                [design.layouts, "Layouts", "layouts"],
-                [design.pages, lang === "es" ? "Páginas" : "Pages", "pages"],
-                [design.tokens, "Tokens", "tokens"],
-                [design.styles, lang === "es" ? "Estilos" : "Styles", "styles"],
-                [design.documentation, lang === "es" ? "Documentación" : "Documentación", "documentation"],
-                [design.stories, "Stories", "stories"]
-              ].map(([value, label, category]) => {
+                [design.components, lang === "es" ? "Componentes" : "Components", "components", design.componentsCapped ? (lang === "es" ? `Hay más de 200 componentes en este repositorio. El canvas muestra los primeros 200.` : `This repository has more than 200 components. The canvas shows the first 200.`) : (lang === "es" ? "Piezas reutilizables de UI" : "Reusable UI pieces"), design.componentsCapped],
+                [design.tokens, "Tokens", "tokens", lang === "es" ? "Color, tipografía y espacio" : "Color, type and spacing", false],
+                [design.documentation, lang === "es" ? "Documentación" : "Documentation", "documentation", lang === "es" ? "Guías de uso del sistema" : "System usage guides", false],
+                [design.icons.length, lang === "es" ? "Iconos" : "Icons", "icons", lang === "es" ? "Librerías de iconos detectadas" : "Detected icon libraries", false],
+              ].map(([value, label, category, tooltip, capped]) => {
                 const isActive = activeCategory === category;
                 return (
                   <button
                     key={category}
-                    className={"metric-card" + (isActive ? " active" : "")}
+                    className={"metric-card has-tooltip" + (isActive ? " active" : "")}
+                    data-tooltip={tooltip}
                     onClick={() => onSelectCategory(isActive ? null : category)}
                   >
-                    <strong>{value}</strong>
+                    <strong>{value}{capped ? <span style={{ fontSize: "0.75em", marginLeft: "1px", color: "var(--color-accent, #6366f1)" }}>+</span> : null}</strong>
                     <span>{label}</span>
                   </button>
                 );
@@ -571,49 +655,100 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                   {design.icons && design.icons.length > 0 && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Iconos: " : "Icons: "}</strong>
-                      {design.icons.join(", ")}
+                      {design.icons.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.icons.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.icons.length - 1 ? ", " : ""}</span>; })}
                     </p>
                   )}
                   {design.componentsList && design.componentsList.length > 0 && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Componentes: " : "Components: "}</strong>
-                      {design.componentsList.join(", ")}
+                      {design.componentsList.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.componentsList.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.componentsList.length - 1 ? ", " : ""}</span>; })}
                     </p>
                   )}
                   {design.tokensList && design.tokensList.length > 0 && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Tokens: " : "Tokens: "}</strong>
-                      {design.tokensList.join(", ")}
+                      {design.tokensList.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.tokensList.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.tokensList.length - 1 ? ", " : ""}</span>; })}
                     </p>
                   )}
                   {design.animations.length > 0 && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Animaciones: " : "Animations: "}</strong>
-                      {design.animations.join(", ")}
+                      {design.animations.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.animations.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.animations.length - 1 ? ", " : ""}</span>; })}
                     </p>
                   )}
                   {design.charts.length > 0 && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Gráficos: " : "Charts: "}</strong>
-                      {design.charts.join(", ")}
+                      {design.charts.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.charts.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.charts.length - 1 ? ", " : ""}</span>; })}
                     </p>
                   )}
                   {design.tables.length > 0 && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Tablas/Filtros: " : "Tables/Filters: "}</strong>
-                      {design.tables.join(", ")}
+                      {design.tables.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.tables.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.tables.length - 1 ? ", " : ""}</span>; })}
                     </p>
                   )}
                   {design.core.length > 0 && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Otros/Frameworks: " : "Others/Frameworks: "}</strong>
-                      {design.core.join(", ")}
+                      {design.core.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.core.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.core.length - 1 ? ", " : ""}</span>; })}
                     </p>
                   )}
-                  {(!design.icons?.length && !design.componentsList?.length && !design.tokensList?.length && !design.animations.length && !design.charts.length && !design.tables.length && !design.core.length) && (
+                  {(design.storybookUrl || design.figmaUrl || repoUrl || design.docsUrl) && (
+                    <>
+                      {repoUrl && (
+                        <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                          <strong>GitHub: </strong>
+                          <a href={repoUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>{lang === "es" ? "Ver repositorio" : "View repository"}</a>
+                        </p>
+                      )}
+                      {design.storybookUrl && (
+                        <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                          <strong>Storybook: </strong>
+                          <a href={design.storybookUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{lang === "es" ? "Ver Storybook" : "See Storybook"}</a>
+                        </p>
+                      )}
+                      {design.figmaUrl && (
+                        <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                          <strong>Figma: </strong>
+                          <a href={design.figmaUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>{lang === "es" ? "Ver Figma" : "See Figma"}</a>
+                        </p>
+                      )}
+                      {design.docsUrl && (
+                        <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
+                          <strong>Docs: </strong>
+                          <a href={design.docsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>{lang === "es" ? "Ver documentación" : "See documentation"}</a>
+                        </p>
+                      )}
+                    </>
+                  )}
+                  {(!design.icons?.length && !design.componentsList?.length && !design.tokensList?.length && !design.animations.length && !design.charts.length && !design.tables.length && !design.core.length && !design.storybookUrl && !design.figmaUrl && !repoUrl && !design.docsUrl) && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#6b7280", fontStyle: "italic" }}>
                       {lang === "es" ? "No se detectaron librerías externas." : "No external libraries detected."}
                     </p>
+                  )}
+                  {data?.iconAnalysis && (
+                    <div style={{ marginTop: "12px", padding: "10px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
+                      <strong style={{ display: "block", fontSize: "11px", color: "#1e293b", marginBottom: "6px" }}>
+                        {lang === "es" ? "📦 Fuente de Iconos y Registro" : "📦 Icon Source & Inventory"}
+                      </strong>
+                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: "10px", color: "#475569" }}>
+                        <div><strong>{lang === "es" ? "Tiene iconos: " : "Has icons: "}</strong>{data.iconAnalysis.hasIcons}</div>
+                        <div><strong>{lang === "es" ? "Modelo: " : "Model: "}</strong>{data.iconAnalysis.sourceModel}</div>
+                        <div style={{ gridColumn: "span 2" }}>
+                          <strong>{lang === "es" ? "Archivo evidencia primaria: " : "Primary evidence file: "}</strong>
+                          <span style={{ fontFamily: "monospace", color: "#2563eb", background: "#eff6ff", padding: "1px 4px", borderRadius: "4px" }}>
+                            {data.iconAnalysis.primaryEvidenceFile}
+                          </span>
+                        </div>
+                        <div style={{ gridColumn: "span 2" }}><strong>{lang === "es" ? "Origen: " : "Source: "}</strong>{data.iconAnalysis.iconSource}</div>
+                        {data.iconAnalysis.externalPackage !== "None" && (
+                          <div style={{ gridColumn: "span 2" }}><strong>{lang === "es" ? "Paquete: " : "Package: "}</strong><code>{data.iconAnalysis.externalPackage}</code></div>
+                        )}
+                        <div><strong>{lang === "es" ? "Conteo oficial: " : "Official count: "}</strong>{data.iconAnalysis.officialIconCount}</div>
+                        <div><strong>{lang === "es" ? "Confianza: " : "Confidence: "}</strong>{data.iconAnalysis.confidence}</div>
+                      </div>
+                    </div>
                   )}
                 </div>
               </div>
@@ -639,17 +774,21 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                   </button>
                 </div>
                 {disclaimerExpanded && (
-                  <p style={{ margin: "6px 0 0 0", fontSize: "11px", color: "var(--text-sub)", lineHeight: "1.5" }}>
+                  <div style={{ margin: "6px 0 0 0", fontSize: "11px", color: "var(--text-sub)", lineHeight: "1.5" }}>
                     {lang === "es" ? (
                       <>
-                        Puede ser que no se mencionen todos los componentes o detalles del design system y que cada proyecto es completamente distinto. Esta web está entrenada para leer y buscar sobre nomenclatura muy genérica; si un CDS usa una estructura fuera de la habitual o usa otra nomenclatura, seguramente cueste encontrarla. Además, esto sirve únicamente como punto de partida para entender tu sistema. Se recomienda siempre hacer una auditoría para poder entenderlo; esto es una navegación para darte un overview pero no una fuente de verdad única e infalible.
+                        <p style={{ margin: "4px 0" }}>Puede ser que no se mencionen todos los componentes o detalles del design system y que cada proyecto es completamente distinto.</p>
+                        <p style={{ margin: "4px 0" }}>Esta web está entrenada para leer y buscar sobre nomenclatura muy genérica; si un DS usa una estructura fuera de la habitual o usa otra nomenclatura, seguramente cueste encontrarla.</p>
+                        <p style={{ margin: "4px 0" }}>Esto sirve únicamente como punto de partida para entender tu sistema. Se recomienda siempre hacer una auditoría para poder entenderlo; esto no es una fuente de verdad única e infalible.</p>
                       </>
                     ) : (
                       <>
-                        Some components or design system details might not be mentioned, and every project is completely distinct. This tool is trained to search and read generic nomenclature; if a design system uses a custom structure or custom naming conventions, it may be harder to detect. Additionally, this serves only as a starting point to understand your system. Conducting a manual audit is always recommended to fully understand it; this view is meant to provide a quick navigation overview but not a single source of absolute truth.
+                        <p style={{ margin: "4px 0" }}>Some components or design system details might not be mentioned, and every project is completely distinct.</p>
+                        <p style={{ margin: "4px 0" }}>This tool is trained to search and read generic nomenclature; if a DS uses a custom structure or custom naming conventions, it may be harder to detect.</p>
+                        <p style={{ margin: "4px 0" }}>This serves only as a starting point to understand your system. Conducting a manual audit is always recommended to fully understand it; this is not a single source of absolute truth.</p>
                       </>
                     )}
-                  </p>
+                  </div>
                 )}
               </div>
             </div>

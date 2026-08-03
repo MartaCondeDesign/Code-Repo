@@ -26,18 +26,20 @@ export default function LabeledEdge({
   return (
     <>
       <BaseEdge id={id} path={path} markerEnd={markerEnd} style={style} />
-      <EdgeLabelRenderer>
-        <div
-          className={"edge-label" + (data?.dimmed ? " dimmed" : "")}
-          style={{
-            transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
-            color,
-            borderColor: color,
-          }}
-        >
-          {data.verb}
-        </div>
-      </EdgeLabelRenderer>
+      {!data?.hideLabel && (
+        <EdgeLabelRenderer>
+          <div
+            className={"edge-label" + (data?.dimmed ? " dimmed" : "")}
+            style={{
+              transform: `translate(-50%, -50%) translate(${labelX}px, ${labelY}px)`,
+              color,
+              borderColor: color,
+            }}
+          >
+            {data.verb}
+          </div>
+        </EdgeLabelRenderer>
+      )}
     </>
   );
 }

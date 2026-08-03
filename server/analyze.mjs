@@ -10,7 +10,13 @@ const SKIP_DIRS = new Set([
 const CONTAINER_DIRS = new Set([
   "src", "components", "packages", "ui", "lib", "app", "core", "react",
   "frontend", "web", "source", "libs", "public",
+  // Atomic design categories (each file inside gets its own node)
+  "atoms", "molecules", "organisms", "primitives", "base", "elements",
+  "generic", "common", "shared",
 ]);
+
+// Directories that are never components — excluded from candidate scan
+const UTILITY_DIRS = /(?:^|\/)(?:utils?|helpers?|hooks?|typings?|types?|constants?|contexts?|services?|api|store|stores?|configs?|assets|styles?|themes?|scripts?|middleware|guards?|directives?|adapters?|metadata|selectors?|reducers?|actions?|providers?|generators?|seeds?|migrations?)(\/|$)/i;
 
 const TOP_LEVEL_BASENAMES = new Set([
   "main", "app", "index", "vite-env", "react-app-env", "reportWebVitals",
@@ -71,7 +77,7 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   const fileSet = new Set(files);
   const fileContents = collectFileContents(repoDir, files);
 
-  const components = collectComponents(files);
+  const components = collectComponents(files, repoDir);
   const tokens = files.filter(isTokenFile);
   const stories = collectStories(files);
   const scripts = collectScripts(files);
@@ -79,13 +85,18 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   const docs = collectDocs(files);
   const skills = collectSkills(files);
 
+  const MAX_COMPONENT_NODES = 200;
+  const componentTotal = components.length;
+  const componentsCapped = componentTotal > MAX_COMPONENT_NODES;
+  const displayComponents = componentsCapped ? components.slice(0, MAX_COMPONENT_NODES) : components;
+
   const raw = [];
   for (const s of skills) raw.push(skillNode(s));
   const ruleFiles = configFiles.filter((f) => /^(agenta?|claude)\.md$/i.test(path.basename(f)));
   if (ruleFiles.length > 0) raw.push(ruleNode(ruleFiles));
   for (const d of docs.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)))) raw.push(docNode(d));
   for (const t of tokens) raw.push(tokenNode(t));
-  for (const c of components) raw.push(componentNode(c));
+  for (const c of displayComponents) raw.push(componentNode(c));
   for (const s of stories) raw.push(storyNode(s, components));
   for (const s of scripts) raw.push(scriptNode(s));
   for (const f of configFiles.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)))) raw.push(configNode(f));
@@ -103,6 +114,8 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   });
 
   const verbs = new Set(edges.map((e) => e.verb));
+  const iconAnalysis = detectIcons(files, fileContents);
+
   return {
     repoName,
     repoUrl,
@@ -111,10 +124,113 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
     layers,
     nodes,
     edges,
+    componentTotal,
+    componentsCapped,
+    iconAnalysis,
     verbDefs: {
       es: Object.fromEntries([...verbs].map((v) => [v, VERB_DEFS_ES[v] || v])),
       en: Object.fromEntries([...verbs].map((v) => [v, VERB_DEFS_EN[v] || v])),
     },
+  };
+}
+
+const KNOWN_ICON_PACKAGES = [
+  { name: "Lucide", pkg: "lucide-react", pattern: /lucide-react|lucide-vue|lucide-svelte|lucide/i },
+  { name: "Heroicons", pkg: "@heroicons/react", pattern: /@heroicons\/react|@heroicons\/vue|heroicons/i },
+  { name: "Phosphor Icons", pkg: "@phosphor-icons/react", pattern: /@phosphor-icons\/react|@phosphor-icons\/vue|phosphor-icons/i },
+  { name: "Radix Icons", pkg: "@radix-ui/react-icons", pattern: /@radix-ui\/react-icons|radix-icons/i },
+  { name: "Feather Icons", pkg: "feather-icons", pattern: /feather-icons|react-feather/i },
+  { name: "Remix Icon", pkg: "remixicon", pattern: /remixicon|remixicon-react|remix-icon/i },
+  { name: "Tabler Icons", pkg: "@tabler/icons-react", pattern: /@tabler\/icons-react|tabler-icons/i },
+  { name: "Bootstrap Icons", pkg: "bootstrap-icons", pattern: /bootstrap-icons|react-bootstrap-icons/i },
+  { name: "Iconoir", pkg: "iconoir", pattern: /iconoir|iconoir-react/i },
+  { name: "Carbon Icons", pkg: "@carbon/icons", pattern: /@carbon\/icons|@carbon\/icons-react/i },
+  { name: "Fluent UI Icons", pkg: "@fluentui/react-icons", pattern: /@fluentui\/react-icons/i },
+  { name: "Font Awesome", pkg: "@fortawesome/react-fontawesome", pattern: /@fortawesome\/react-fontawesome|fontawesome|font-awesome/i },
+  { name: "Material Icons", pkg: "@mui/icons-material", pattern: /@mui\/icons-material|material-symbols|material-icons/i },
+];
+
+const EXCLUDED_ASSET_PATTERN = /(?:logo|brand|partner|wordmark|illustration|marketing|artwork|banner|hero|photo|screenshot|empty-state|favicon|apple-touch-icon|app-icon|launcher)/i;
+
+export function detectIcons(files, fileContents) {
+  let externalLib = null;
+  const packageJsonFile = files.find((f) => f.endsWith("package.json"));
+  
+  if (packageJsonFile && fileContents[packageJsonFile]) {
+    const content = fileContents[packageJsonFile];
+    for (const item of KNOWN_ICON_PACKAGES) {
+      if (item.pattern.test(content)) {
+        externalLib = { name: item.name, pkg: item.pkg, evidenceFile: packageJsonFile };
+        break;
+      }
+    }
+  }
+
+  if (!externalLib) {
+    for (const [filePath, content] of Object.entries(fileContents || {})) {
+      for (const item of KNOWN_ICON_PACKAGES) {
+        if (item.pattern.test(content)) {
+          externalLib = { name: item.name, pkg: item.pkg, evidenceFile: filePath };
+          break;
+        }
+      }
+      if (externalLib) break;
+    }
+  }
+
+  const internalIconFiles = files.filter((f) => {
+    const lower = f.toLowerCase();
+    if (EXCLUDED_ASSET_PATTERN.test(lower)) return false;
+    const isSvg = lower.endsWith(".svg");
+    const isIconDir = /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(lower);
+    const isIconFile = /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(lower);
+    return isIconDir || isIconFile;
+  });
+
+  const hasInternal = internalIconFiles.length > 0;
+  const hasExternal = Boolean(externalLib);
+
+  let hasIcons = "No";
+  let sourceModel = "Unknown";
+  let confidence = "Low";
+  let primaryEvidenceFile = "None";
+  let iconSource = "None";
+  let officialIconCount = "0";
+
+  if (hasInternal && hasExternal) {
+    hasIcons = "Yes";
+    sourceModel = "Mixed";
+    confidence = "High";
+    primaryEvidenceFile = internalIconFiles.find((f) => /index\.(tsx?|jsx?|ts|js)/i.test(f)) || externalLib.evidenceFile || internalIconFiles[0];
+    iconSource = `Internal (${internalIconFiles.length} files) + ${externalLib.name}`;
+    officialIconCount = `At least ${internalIconFiles.length}`;
+  } else if (hasInternal) {
+    hasIcons = "Yes";
+    sourceModel = "Internal";
+    confidence = "High";
+    primaryEvidenceFile = internalIconFiles.find((f) => /index\.(tsx?|jsx?|ts|js)/i.test(f)) || internalIconFiles[0];
+    iconSource = internalIconFiles[0].includes("/") ? internalIconFiles[0].split("/").slice(0, -1).join("/") : "Local repository";
+    officialIconCount = String(internalIconFiles.length);
+  } else if (hasExternal) {
+    hasIcons = "Yes";
+    sourceModel = "External";
+    confidence = "High";
+    const wrapper = files.find((f) => /(?:^|\/)Icon\.(tsx?|jsx?|vue|svelte)$/i.test(f)) || files.find((f) => /icons?\.(tsx?|jsx?|ts|js)$/i.test(f));
+    primaryEvidenceFile = wrapper || externalLib.evidenceFile;
+    iconSource = `${externalLib.name} (${externalLib.pkg})`;
+    officialIconCount = "Unknown";
+  }
+
+  return {
+    hasIcons,
+    sourceModel,
+    primaryEvidenceFile,
+    iconSource,
+    internalIconFiles: internalIconFiles.slice(0, 50),
+    externalLibrary: externalLib ? externalLib.name : "None",
+    externalPackage: externalLib ? externalLib.pkg : "None",
+    officialIconCount,
+    confidence
   };
 }
 
@@ -182,9 +298,135 @@ function cap(arr, n) {
 
 /* ---------------- collection ---------------- */
 
-function collectComponents(files) {
+/* ---- Barrel-based component inventory (Contract: detect-component-inventory.md) ---- */
+
+function findBarrelCandidates(files) {
+  return files
+    .filter((f) => {
+      const name = path.basename(f);
+      if (!/^index\.[tj]sx?$/.test(name)) return false;
+      if (/(^|\/)(__tests__|__mocks__|e2e|examples?|\.storybook)(\/|$)/i.test(f)) return false;
+      if (UTILITY_DIRS.test(f)) return false;
+      return true;
+    })
+    .sort((a, b) => {
+      // Shallowest paths first (most likely to be public entry points)
+      const diff = a.split("/").length - b.split("/").length;
+      if (diff !== 0) return diff;
+      // Prefer paths containing 'src'
+      return (a.includes("/src/") ? 0 : 1) - (b.includes("/src/") ? 0 : 1);
+    });
+}
+
+function resolveSourceFile(name, importPath, barrelDir, fileSet) {
+  const clean = importPath.replace(/^\.\//, "");
+  const base = barrelDir ? `${barrelDir}/${clean}` : clean;
+  const normalized = path.posix.normalize(base);
+  for (const ext of [".tsx", ".jsx", ".ts", ".js"]) {
+    if (fileSet.has(`${normalized}/${name}${ext}`)) return `${normalized}/${name}${ext}`;
+  }
+  for (const ix of ["index.tsx", "index.ts", "index.jsx", "index.js"]) {
+    if (fileSet.has(`${normalized}/${name}/${ix}`)) return `${normalized}/${name}/${ix}`;
+    if (fileSet.has(`${normalized}/${ix}`)) return `${normalized}/${ix}`;
+  }
+  for (const ext of [".tsx", ".jsx", ".ts", ".js"]) {
+    if (fileSet.has(`${normalized}${ext}`)) return `${normalized}${ext}`;
+  }
+  return null;
+}
+
+function parseComponentExports(content, barrelDir, fileSet, repoDir, depth) {
+  // Strip type-only export lines before parsing
+  const stripped = content.replace(/^\s*export\s+type\s+\{[^}]*\}[^;\n]*[;\n]/gm, "");
+  const components = new Map();
+
+  // export { Button, Input } from './path'
+  const namedRe = /export\s+\{([^}]+)\}\s+from\s+['"]([^'"]+)['"]/g;
+  let m;
+  while ((m = namedRe.exec(stripped))) {
+    const fromPath = m[2];
+    const names = m[1]
+      .split(",")
+      .map((n) => n.trim().replace(/.*?\bas\s+/, "").trim())
+      .filter((n) => /^[A-Z][a-zA-Z]/.test(n));
+    for (const name of names) {
+      if (!components.has(name)) {
+        const src = resolveSourceFile(name, fromPath, barrelDir, fileSet);
+        const fallback = barrelDir ? `${barrelDir}/${fromPath.replace(/^\.\//, "")}` : fromPath;
+        components.set(name, { name, files: [src || fallback] });
+      }
+    }
+  }
+
+  // export * from './path'  — follow one level deep when repoDir provided
+  if (depth > 0 && repoDir) {
+    const wildcardRe = /export\s+\*\s+from\s+['"]([^'"]+)['"]/g;
+    while ((m = wildcardRe.exec(stripped))) {
+      const fromPath = m[1];
+      const clean = fromPath.replace(/^\.\//, "");
+      const base = barrelDir ? `${barrelDir}/${clean}` : clean;
+      const normalized = path.posix.normalize(base);
+      let subFile = null;
+      for (const ix of ["index.tsx", "index.ts", "index.jsx", "index.js"]) {
+        if (fileSet.has(`${normalized}/${ix}`)) { subFile = `${normalized}/${ix}`; break; }
+        if (fileSet.has(`${normalized}.ts`)) { subFile = `${normalized}.ts`; break; }
+        if (fileSet.has(`${normalized}.tsx`)) { subFile = `${normalized}.tsx`; break; }
+      }
+      if (!subFile) continue;
+      try {
+        const stat = fs.statSync(path.join(repoDir, subFile));
+        if (stat.size > 100_000) continue;
+        const subContent = fs.readFileSync(path.join(repoDir, subFile), "utf8");
+        const subDir = subFile.split("/").slice(0, -1).join("/");
+        const subComponents = parseComponentExports(subContent, subDir, fileSet, null, 0);
+        for (const c of subComponents) {
+          if (!components.has(c.name)) components.set(c.name, c);
+        }
+      } catch { /* unreadable */ }
+    }
+  }
+
+  // export const/function/class PascalCase (direct implementations in the barrel)
+  const directRe = /^export\s+(?:const|function|class)\s+([A-Z][a-zA-Z]+)/mg;
+  while ((m = directRe.exec(stripped))) {
+    if (!components.has(m[1])) {
+      const fallback = barrelDir ? `${barrelDir}/index` : "index";
+      components.set(m[1], { name: m[1], files: [fallback] });
+    }
+  }
+
+  return [...components.values()];
+}
+
+function collectFromBarrel(files, repoDir) {
+  const fileSet = new Set(files);
+  const candidates = findBarrelCandidates(files);
+  let best = [];
+
+  for (const barrelPath of candidates.slice(0, 12)) {
+    try {
+      const stat = fs.statSync(path.join(repoDir, barrelPath));
+      if (stat.size > 300_000) continue;
+      const content = fs.readFileSync(path.join(repoDir, barrelPath), "utf8");
+      const barrelDir = barrelPath.split("/").slice(0, -1).join("/");
+      const result = parseComponentExports(content, barrelDir, fileSet, repoDir, 1);
+      if (result.length > best.length) best = result;
+    } catch { /* skip */ }
+  }
+
+  return best.sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/* ---- Directory-scan fallback ---- */
+
+function collectFromDirectories(files) {
   const cands = files.filter(
-    (f) => SOURCE_EXT.test(f) && !/\.(stories?|test|spec)\./.test(f) && !f.includes("__tests__")
+    (f) =>
+      SOURCE_EXT.test(f) &&
+      !/\.(stories?|test|spec)\./.test(f) &&
+      !/(^|\/)(__tests__|__mocks__|__testfixtures__|__fixtures__|e2e|examples?|transforms?)(\/|$)/i.test(f) &&
+      !/(^|\/)\.storybook/i.test(f) &&
+      !UTILITY_DIRS.test(f)
   );
   const groups = new Map();
   for (const f of cands) {
@@ -193,9 +435,18 @@ function collectComponents(files) {
     groups.get(key).files.push(f);
   }
   return [...groups.values()]
-    .filter((g) => !(TOP_LEVEL_BASENAMES.has(baseName(g.files[0])) && g.files.length === 1))
-    .sort((a, b) => a.name.localeCompare(b.name))
-    .slice(0, 24);
+    .filter((g) => !(TOP_LEVEL_BASENAMES.has(g.name.toLowerCase()) && g.files.length === 1))
+    .sort((a, b) => a.name.localeCompare(b.name));
+}
+
+function collectComponents(files, repoDir) {
+  // Priority 1: barrel / entry-point based inventory (most accurate)
+  if (repoDir) {
+    const barrelResult = collectFromBarrel(files, repoDir);
+    if (barrelResult.length >= 3) return barrelResult;
+  }
+  // Priority 2: directory scanning (fallback for repos without clear barrel)
+  return collectFromDirectories(files);
 }
 
 function compRoot(relPath) {

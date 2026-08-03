@@ -1,77 +1,406 @@
-# Contrato de detección — Design Tokens
+# Detect Token Source
 
-## Definición
+## Objective
 
-Un Design Token es un valor reutilizable que representa una decisión de diseño del sistema.
+Analyze a repository and locate exclusively where Design Tokens are DEFINED.
 
-No es un token: una constante de programación (`MAX_RETRIES`), un valor hardcoded sin nombre semántico, ni un valor que solo se usa una vez.
-
----
-
-## Niveles
-
-| Nivel | Descripción | Ejemplo |
-|---|---|---|
-| **Primitive** | Valor base sin intención contextual | `blue.500 = #0066FF` |
-| **Semantic** | Intención de uso | `background.primary → blue.500` |
-| **Component** | Específico de un componente | `button.background.hover` |
+Do not search for every file related to tokens.
+Do not confuse files with tokens.
+Do not confuse consumer files with source files.
 
 ---
 
-## Señales de archivo
+# Main rule
 
-### Directorios que indican tokens
-
-```
-/tokens/
-/design-tokens/
-/variables/
-/theme/ o /themes/
-/primitives/
-/semantic/
-/foundations/
-/palette/
-/colors/
-/typography/
-/spacing/
-/dimensions/
-/shadows/
+```text
+FILE ≠ TOKEN
 ```
 
-### Nombres de archivo que indican tokens
+A single file can contain many tokens.
 
-```
-colors.{json,yaml,yml,js,ts}
-spacing.{json,yaml,yml,js,ts}
-typography.{json,yaml,yml,js,ts}
-tokens.{json,json5}
-variables.css
-theme.{js,ts}
-palette.{js,ts}
-*.tokens.json
-```
-
-### Extensiones en contexto DS
-
-`.json` `.json5` `.yaml` `.yml` `.js` `.ts` `.mjs` `.css` (solo si contiene Custom Properties en `:root`)
-
----
-
-## Señales de contenido
-
-### CSS Custom Properties en `:root` o `[data-theme]`
+Example:
 
 ```css
 :root {
-  --color-brand-primary: #0066ff;
+  --color-primary: #0066FF;
   --spacing-md: 16px;
-  --radius-sm: 4px;
+  --radius-md: 8px;
 }
 ```
 
-Clasifica como token si el nombre sigue un patrón semántico (`--color-`, `--spacing-`, `--font-`, `--radius-`, `--shadow-`, `--motion-`, `--z-`).
+This means:
 
-### Formato DTCG (Design Tokens Community Group)
+```text
+1 file
+3 tokens
+```
+
+Never:
+
+```text
+3 tokens = 3 files
+```
+
+---
+
+# What you must find
+
+First answer:
+
+```text
+TOKENS LOCATION
+
+Primary source:
+<exact path>
+
+Source type:
+<Source of Truth / Definition Source / Generated / Unknown>
+
+Definition files:
+- <path>
+- <path>
+
+Number of definition files:
+X
+
+Number of actual tokens:
+X
+```
+
+If tokens are spread across a folder:
+
+```text
+Primary source:
+/packages/tokens/src/
+
+Definition files:
+- colors.json
+- spacing.json
+- typography.json
+- radius.json
+```
+
+Do not invent a single file if it does not exist.
+
+---
+
+# What is a Design Token
+
+A Design Token is a reusable design decision defined as:
+
+```text
+TOKEN_NAME → VALUE
+```
+
+or:
+
+```text
+TOKEN_NAME → TOKEN_REFERENCE
+```
+
+Examples:
+
+```css
+--color-primary: #0066FF;
+```
+
+```scss
+$spacing-md: 16px;
+```
+
+```json
+{
+  "color": {
+    "primary": {
+      "$type": "color",
+      "$value": "#0066FF"
+    }
+  }
+}
+```
+
+```ts
+export const spacing = {
+  md: "16px"
+}
+```
+
+---
+
+# Formats where tokens may be defined
+
+Look for real definitions in:
+
+- `.json`
+- `.json5`
+- `.yaml`
+- `.yml`
+- `.css`
+- `.scss`
+- `.sass`
+- `.less`
+- `.js`
+- `.ts`
+- `.mjs`
+- `.cjs`
+- `.tsx`
+- `.jsx`
+- `.xml`
+- `.kt`
+- `.swift`
+- `.dart`
+- `.plist`
+- `.toml`
+
+The extension is only a hint.
+
+Never classify a file as Token Source solely based on its name or extension.
+
+---
+
+# Token categories
+
+Detect and classify:
+
+- Color
+- Typography
+- Spacing
+- Sizing
+- Radius
+- Border
+- Shadow
+- Elevation
+- Opacity
+- Motion
+- Duration
+- Easing
+- Breakpoints
+- Z-index
+- Icon sizing
+- Other
+
+---
+
+# Token levels
+
+When possible, classify:
+
+## Primitive
+
+Example:
+
+```text
+blue.500 = #0066FF
+```
+
+## Semantic
+
+Example:
+
+```text
+background.primary = blue.500
+```
+
+## Component
+
+Example:
+
+```text
+button.background.default = background.primary
+```
+
+---
+
+# What counts as Token Source
+
+A file is `TOKEN_SOURCE` when it directly contains:
+
+```text
+token name → raw value
+```
+
+or:
+
+```text
+token name → token reference
+```
+
+Valid examples:
+
+```css
+--color-primary: #0066FF;
+```
+
+```json
+"spacing-md": {
+  "$value": "16px"
+}
+```
+
+```ts
+export const radius = {
+  md: 8
+}
+```
+
+---
+
+# What does NOT count as Token Source
+
+Do not classify as Token Source a file that only:
+
+- imports tokens
+- re-exports tokens
+- consumes tokens
+- uses CSS variables
+- references `theme.colors`
+- contains components
+- contains documentation
+- contains stories
+- contains demos
+- contains tests
+- contains fixtures
+- contains snapshots
+- configures a build
+- contains generated outputs when an original source exists
+
+Example:
+
+```css
+.button {
+  background: var(--color-primary);
+}
+```
+
+This file consumes a token.
+
+It is NOT proof of where the token is defined.
+
+---
+
+# Token references
+
+Detect references such as:
+
+```css
+var(--color-primary)
+```
+
+```text
+{color.blue.500}
+```
+
+```ts
+theme.colors.primary
+```
+
+```ts
+tokens.color.primary
+```
+
+But:
+
+```text
+REFERENCE ≠ DEFINITION
+```
+
+If you find a reference, trace its origin to locate the definition.
+
+---
+
+# Source of Truth
+
+When you find tokens:
+
+1. Locate where the name and value are defined.
+2. Check whether the file is generated.
+3. Check whether values come from another source.
+4. Follow imports, transforms or generators upstream.
+5. Identify the most original source.
+
+Look for clues:
+
+- `generated`
+- `autogenerated`
+- `do not edit`
+- `dist`
+- `build`
+- `output`
+- `generated from`
+- Style Dictionary
+- Tokens Studio
+- transformations
+
+Classify as:
+
+- `Source of Truth`
+- `Definition Source`
+- `Generated`
+- `Unknown`
+
+---
+
+# Themes and modes
+
+A single token can have multiple values depending on the theme or mode.
+
+Example:
+
+```css
+:root {
+  --background: white;
+}
+
+.dark {
+  --background: black;
+}
+```
+
+This may represent:
+
+```text
+1 token
+2 mode values
+```
+
+Do not automatically count each mode as a separate token.
+
+Extract:
+
+- Token
+- Theme
+- Mode
+- Value
+
+---
+
+# Tailwind
+
+Do not automatically classify every:
+
+```text
+tailwind.config.*
+```
+
+as a token source.
+
+Check whether it actually DEFINES design decisions.
+
+Also look for tokens in:
+
+- CSS variables
+- `@theme`
+- theme configuration
+- shared presets
+- generated theme files
+
+Always follow the real definition.
+
+---
+
+# DTCG
+
+Recognize structures such as:
 
 ```json
 {
@@ -84,78 +413,123 @@ Clasifica como token si el nombre sigue un patrón semántico (`--color-`, `--sp
 }
 ```
 
-La presencia de `$value` + `$type` es señal fuerte.
+Relevant properties:
 
-### Objetos JS/TS exportados
-
-```ts
-export const colors = {
-  blue500: "#0066FF",
-  textPrimary: "#111111"
-}
-export const spacing = { xs: "4px", sm: "8px", md: "16px" }
-```
-
-### Referencias entre tokens (alias)
-
-```css
-var(--color-blue-500)
-```
-```json
-{ "$value": "{color.blue.500}" }
-```
-```ts
-theme.colors.primary
-```
+- `$value`
+- `$type`
+- `$description`
+- `$extensions`
 
 ---
 
-## Tags de nodo en el mapa DS
+# Counting
 
-| Campo | Valores |
+`Tokens: X` means:
+
+```text
+number of individual token definitions
+```
+
+Never:
+
+- number of files
+- number of imports
+- number of references
+- number of consumers
+- number of themes
+- number of configurations
+
+---
+
+# DS node map tags
+
+| Field | Values |
 |---|---|
 | `node.tag` | `"tokens"` |
 | `node.layer` | `"tokens"`, `"foundation"` |
 
-Los archivos de estos nodos son la fuente principal del conteo.
+Files in these nodes are the primary source for counting.
 
 ---
 
-## Origen del archivo
+# Information to extract
 
-| Clasificación | Señales |
-|---|---|
-| **Source of Truth** | Fichero editado manualmente, fuente del sistema |
-| **Generated** | Contiene `generated`, `do not edit`, `dist/`, `build/`, `output/` |
-| **Unknown** | Sin señales claras |
+For each token:
 
-No contar el mismo token varias veces si aparece en formatos transformados (Web, iOS, Android).
-
----
-
-## Nivel de confianza
-
-| Nivel | Criterio |
-|---|---|
-| **High** | DTCG `$value`+`$type`, CSS Custom Properties en `:root` con naming semántico, directorio `/tokens/` con estructura de categorías |
-| **Medium** | Objeto JS exportado con valores de diseño, archivo `.json` con claves de categoría (color, spacing…) |
-| **Low** | Constante aislada sin estructura de sistema, valor sin naming semántico |
-
-No presentar elementos `Low` como tokens confirmados.
+- Token name
+- Full path
+- Category
+- Level
+- Type
+- Raw value
+- Referenced token
+- Resolved value
+- Theme / Mode
+- Platform
+- Source file
+- Exact file path
+- Source type
+- Confidence
 
 ---
 
-## Qué NO es un token
+# Required output
 
-- `const MAX_ITEMS = 10` — constante funcional
-- `padding: 17px` en un selector CSS — valor hardcoded
-- Un archivo `.css` con selectores y propiedades de componentes — eso es un Style
-- Un archivo `.json` de configuración de herramientas (Babel, ESLint, Vite…)
+## 1. Location
+
+```text
+TOKENS LOCATION
+
+Primary source:
+...
+
+Definition files:
+...
+
+Number of definition files:
+...
+
+Actual tokens:
+...
+```
+
+## 2. Categories
+
+```text
+Color: X
+Typography: X
+Spacing: X
+Radius: X
+Shadow: X
+Motion: X
+Other: X
+```
+
+## 3. Evidence
+
+Show between 3 and 10 real definitions:
+
+| Token | Value / Reference | Category | Level | File |
+|---|---|---|---|---|
+
+## 4. Related files
+
+If relevant, separate them:
+
+```text
+Consumer files: X
+Generated files: X
+Configuration files: X
+```
+
+Never add them to the total token count.
 
 ---
 
-## Regla principal
+# Final rule
 
-**Token = decisión de diseño reutilizable y nombrada.**
+Before marking a file as Token Source, ask:
 
-Evalúa siempre: formato + estructura + naming + reutilización + relaciones + contexto del repositorio.
+> Does this file DIRECTLY DEFINE the name and value or reference of a design decision?
+
+If the answer is no, it is not a Token Source.
