@@ -270,8 +270,8 @@ button { color: inherit; }
 .clear-focus { font-family: var(--font-code); }
 .graph { position: relative; flex: 1; min-height: 0; isolation: isolate; }
 .graph .react-flow { --xy-background-color: var(--paper); --xy-controls-button-background-color-default: #fff; --xy-controls-button-color-default: #555; --xy-controls-button-border-color-default: var(--line); }
-.graph .react-flow__controls { bottom: 44px !important; left: 14px !important; overflow: visible; border: 1px solid var(--line) !important; border-radius: 4px !important; box-shadow: 0 6px 20px rgba(40,30,60,.08); }
-.graph .react-flow__controls-button { position: relative; overflow: visible; border-radius: 0 !important; border-bottom: 1px solid var(--line) !important; }
+.graph .react-flow__controls { bottom: 44px !important; left: 14px !important; overflow: visible; border: 1px solid #cbd5e1 !important; border-radius: 4px !important; box-shadow: 0 6px 20px rgba(40,30,60,.08); }
+.graph .react-flow__controls-button { position: relative; overflow: visible; border-radius: 0 !important; border-bottom: 1px solid #cbd5e1 !important; }
 .graph .react-flow__controls-button:first-child { border-top-left-radius: 3px !important; border-top-right-radius: 3px !important; }
 .graph .react-flow__controls-button:last-child { border-bottom: 0 !important; border-bottom-left-radius: 3px !important; border-bottom-right-radius: 3px !important; }
 .graph .react-flow__controls-button::after { content: attr(aria-label); position: absolute; left: calc(100% + 8px); top: 50%; z-index: 2000; transform: translateY(-50%) translateX(-3px); width: max-content; max-width: 180px; padding: 6px 8px; border-radius: 5px; background: #172033; color: #fff; box-shadow: 0 4px 14px rgba(15,23,42,.18); font-family: var(--font-ui); font-size: 10px; line-height: 1.25; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .14s, transform .14s; }
