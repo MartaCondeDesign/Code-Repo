@@ -671,7 +671,7 @@ export default function App() {
           x: rect.right + 8,
           y: midY,
         });
-      }, 5000);
+      }, 150);
     };
     const hide = (event) => {
       const target = event.target.closest?.(".has-tooltip[data-tooltip]");
