@@ -246,9 +246,9 @@ const KNOWN_ICON_PACKAGES = [
 
 const EXCLUDED_ASSET_PATTERN = /(?:logo|brand|partner|wordmark|illustration|marketing|artwork|banner|hero|photo|screenshot|empty-state|favicon|apple-touch-icon|app-icon|launcher)/i;
 
-// Hosts that are package registries or CI services — never documentation sites
+// Hosts that are package registries, CI services, or excluded domains — never documentation sites
 const REJECTED_DOC_HOSTS = [
-  "npmjs.com", "pkg.go.dev", "crates.io", "pypi.org", "rubygems.org",
+  "fast.design", "npmjs.com", "npmjs.org", "yarnpkg.com", "pkg.go.dev", "crates.io", "pypi.org", "rubygems.org",
   "pub.dev", "packagist.org", "shields.io", "badges.gitter.im",
   "coveralls.io", "travis-ci.org", "travis-ci.com", "github.com",
   "gitlab.com", "raw.githubusercontent.com",

@@ -24,6 +24,7 @@ PACKAGE REGISTRY URL ≠ DOCUMENTATION URL
 The detector must NEVER classify these as official documentation:
 
 img.shields.io
+fast.design
 npmjs.com
 npmjs.org
 yarnpkg.com
@@ -119,7 +120,7 @@ Always prefer the `href` over the `src`.
 
 Before evaluating documentation candidates, reject any URL when:
 
-1. **Hostname is:** `npmjs.com`, `npmjs.org`, `yarnpkg.com`, `img.shields.io`, `pkg.go.dev`, `crates.io`, `pypi.org`, `rubygems.org`, `pub.dev`, `packagist.org` or other package registries/badge services (`badges.gitter.im`, `coveralls.io`, `travis-ci.org`, `raw.githubusercontent.com`).
+1. **Hostname is:** `fast.design`, `npmjs.com`, `npmjs.org`, `yarnpkg.com`, `img.shields.io`, `pkg.go.dev`, `crates.io`, `pypi.org`, `rubygems.org`, `pub.dev`, `packagist.org` or other package registries/badge services (`badges.gitter.im`, `coveralls.io`, `travis-ci.org`, `raw.githubusercontent.com`).
 2. **URL path ends with:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp`, `.ico`.
 3. **URL was extracted from:**
    - `<img src="">`
