@@ -427,9 +427,15 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
     const hasStorybook = !!storybookUrl;
     const componentTotal = data.componentTotal ?? dsComponentFiles.size;
-    const componentsCapped = data.componentsCapped ?? false;
-    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, dsIconFiles: dsIconFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core: finalCore, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
-  }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, lang]);
+    const componentsCapped = data.componentsCapped ?? (componentTotal > 200);
+    const tokenTotal = data.tokenTotal ?? dsTokenFiles.size;
+    const tokensCapped = data.tokensCapped ?? (tokenTotal > 200);
+    const docTotal = data.docTotal ?? documentationFiles.size;
+    const docsCapped = data.docsCapped ?? (docTotal > 200);
+    const iconTotal = data.iconAnalysis?.iconTotal ?? dsIconFiles.size;
+    const iconsCapped = data.iconAnalysis?.iconsCapped ?? (iconTotal > 200);
+    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: tokenTotal, tokensCapped, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: docTotal, docsCapped, layouts: dsLayoutFiles.size, dsIconFiles: iconTotal, iconsCapped, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core: finalCore, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
+  }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, data.tokenTotal, data.tokensCapped, data.docTotal, data.docsCapped, data.iconAnalysis, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();
     (data.files || []).forEach((file) => {
@@ -623,14 +629,16 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
             <div className="design-metrics">
               {[
                 [design.components, lang === "es" ? "Componentes" : "Components", "components", design.componentsCapped ? (lang === "es" ? `Hay más de 200 componentes en este repositorio. El canvas muestra los primeros 200.` : `This repository has more than 200 components. The canvas shows the first 200.`) : (lang === "es" ? "Piezas reutilizables de UI" : "Reusable UI pieces"), design.componentsCapped],
-                [design.tokens, "Tokens", "tokens", lang === "es" ? "Color, tipografía y espacio" : "Color, type and spacing", false],
-                [design.documentation, lang === "es" ? "Documentación" : "Documentation", "documentation", lang === "es" ? "Guías de uso del sistema" : "System usage guides", false],
+                [design.tokens, "Tokens", "tokens", design.tokensCapped ? (lang === "es" ? `Hay más de 200 tokens en este repositorio. El canvas muestra los primeros 200.` : `This repository has more than 200 tokens. The canvas shows the first 200.`) : (lang === "es" ? "Color, tipografía y espacio" : "Color, type and spacing"), design.tokensCapped],
+                [design.documentation, lang === "es" ? "Documentación" : "Documentation", "documentation", design.docsCapped ? (lang === "es" ? `Hay más de 200 archivos de documentación. El canvas muestra los primeros 200.` : `This repository has more than 200 documentation files. The canvas shows the first 200.`) : (lang === "es" ? "Guías de uso del sistema" : "System usage guides"), design.docsCapped],
                 [
                   design.dsIconFiles,
                   lang === "es" ? "Iconos" : "Icons",
                   "icons",
-                  lang === "es" ? "Archivos que hacen referencia a iconos" : "Files referencing icons",
-                  false
+                  design.iconsCapped
+                    ? (lang === "es" ? `Hay más de 200 iconos en este repositorio. El canvas muestra los primeros 200.` : `This repository has more than 200 icon files. The canvas shows the first 200.`)
+                    : (lang === "es" ? "Archivos que hacen referencia a iconos" : "Files referencing icons"),
+                  design.iconsCapped
                 ],
               ].map(([value, label, category, tooltip, capped]) => {
                 const isActive = activeCategory === category;

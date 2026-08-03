@@ -85,17 +85,27 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   const docs = collectDocs(files);
   const skills = collectSkills(files);
 
-  const MAX_COMPONENT_NODES = 200;
+  const MAX_CATEGORY_NODES = 200;
+
   const componentTotal = components.length;
-  const componentsCapped = componentTotal > MAX_COMPONENT_NODES;
-  const displayComponents = componentsCapped ? components.slice(0, MAX_COMPONENT_NODES) : components;
+  const componentsCapped = componentTotal > MAX_CATEGORY_NODES;
+  const displayComponents = componentsCapped ? components.slice(0, MAX_CATEGORY_NODES) : components;
+
+  const tokenTotal = tokens.length;
+  const tokensCapped = tokenTotal > MAX_CATEGORY_NODES;
+  const displayTokens = tokensCapped ? tokens.slice(0, MAX_CATEGORY_NODES) : tokens;
+
+  const nonRuleDocs = docs.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)));
+  const docTotal = nonRuleDocs.length;
+  const docsCapped = docTotal > MAX_CATEGORY_NODES;
+  const displayDocs = docsCapped ? nonRuleDocs.slice(0, MAX_CATEGORY_NODES) : nonRuleDocs;
 
   const raw = [];
   for (const s of skills) raw.push(skillNode(s));
   const ruleFiles = configFiles.filter((f) => /^(agenta?|claude)\.md$/i.test(path.basename(f)));
   if (ruleFiles.length > 0) raw.push(ruleNode(ruleFiles));
-  for (const d of docs.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)))) raw.push(docNode(d));
-  for (const t of tokens) raw.push(tokenNode(t));
+  for (const d of displayDocs) raw.push(docNode(d));
+  for (const t of displayTokens) raw.push(tokenNode(t));
   for (const c of displayComponents) raw.push(componentNode(c));
   for (const s of stories) raw.push(storyNode(s, components));
   for (const s of scripts) raw.push(scriptNode(s));
@@ -126,6 +136,10 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
     edges,
     componentTotal,
     componentsCapped,
+    tokenTotal,
+    tokensCapped,
+    docTotal,
+    docsCapped,
     iconAnalysis,
     verbDefs: {
       es: Object.fromEntries([...verbs].map((v) => [v, VERB_DEFS_ES[v] || v])),
@@ -261,7 +275,9 @@ export function detectIcons(files, fileContents) {
     primaryEvidenceFile,
     iconSource,
     officialIconCount,
-    internalIconFiles: internalIconFiles.slice(0, 50),
+    iconTotal: internalIconFiles.length,
+    iconsCapped: internalIconFiles.length > 200,
+    internalIconFiles: internalIconFiles.slice(0, 200),
     externalLibrary: externalLib ? externalLib.name : "None",
     externalPackage: externalLib ? externalLib.pkg : "None",
     externalDocUrl: externalDocUrl || null,
