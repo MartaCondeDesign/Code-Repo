@@ -1220,7 +1220,7 @@ export default function App() {
                 <FileVisualPreview path={selectedPath} content={selectedCode} lang={lang} />
 
                 <div className="inspector-block">
-                  <span>{lang === "es" ? "QUÉ ES Y QUÉ CONTIENE" : "WHAT IT IS & CONTAINS"}</span>
+                  <span>{lang === "es" ? "QUÉ ES" : "WHAT IT IS"}</span>
                   <p>{getFileExplanation(selectedPath, lang, selected, selectedCode)}</p>
                 </div>
 
@@ -1287,7 +1287,7 @@ export default function App() {
                 </p>
                 <div className="inspector-header-divider" />
                 <div className="inspector-block">
-                  <span>{lang === "es" ? "QUÉ ES Y QUÉ CONTIENE" : "WHAT IT IS & CONTAINS"}</span>
+                  <span>{lang === "es" ? "QUÉ ES" : "WHAT IT IS"}</span>
                   <p>{getFolderExplanation(selectedPath, lang)}</p>
                 </div>
                 {selected && <div className="code-context"><span>{lang === "es" ? "RELACIONADO CON" : "RELATED TO"}</span><strong>{selected.title}</strong><p>{explanationLevel > 0 ? alternateExplanation(selected, lang, explanationLevel) : whatFor(selected, lang)}</p><ExplanationActions lang={lang} level={explanationLevel} onAlternate={() => setExplanationLevel((level) => Math.min(3, level + 1))} onReset={() => setExplanationLevel(0)} /></div>}
