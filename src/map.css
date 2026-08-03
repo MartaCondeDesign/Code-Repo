@@ -169,7 +169,7 @@ button { color: inherit; }
 .workspace { flex: 1; min-height: 0; display: grid; grid-template-columns: var(--tree-width, 360px) minmax(0, 1fr); position: relative; }
 .workspace:has(.inspector) { grid-template-columns: var(--tree-width, 360px) minmax(0, 1fr) var(--inspector-width, 340px); }
 .workspace.code-open:has(.inspector) { grid-template-columns: var(--tree-width, 360px) minmax(320px, 1fr) var(--inspector-width, 340px); }
-.repo-tree { min-width: 0; min-height: 0; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; }
+.repo-tree { min-width: 0; min-height: 0; height: 100%; background: #fff; border-right: 1px solid var(--line); display: flex; flex-direction: column; overflow: hidden; }
 .panel-resizer { position: absolute; left: var(--tree-width, 360px); top: 0; bottom: 0; transform: translateX(-50%); z-index: 15; width: 7px; cursor: col-resize; background: transparent; border: 0; outline: none; touch-action: none; }
 .panel-resizer::before { content: ""; position: absolute; inset: 0 -4px; }
 .panel-resizer span { position: absolute; left: 2px; top: 50%; width: 3px; height: 38px; transform: translateY(-50%) translateX(4px); border-radius: 99px; background: #c9c3d2; transition: background .15s, height .15s; }
@@ -180,11 +180,15 @@ button { color: inherit; }
 .pane-heading { height: 62px; flex-shrink: 0; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
 .pane-kicker { display: block; margin-bottom: 4px; color: #7b7680; font-size: 8px; font-weight: 800; letter-spacing: 1.25px; }
 .pane-heading h2 { font-size: 13px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-count { min-width: 28px; padding: 4px 7px; text-align: center; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 9px; }
-.tree-scroll { padding: 9px 8px 80px; overflow: auto; scrollbar-width: thin; scrollbar-color: transparent transparent; }
+.file-count { min-width: 28px; padding: 4px 7px; text-align: center; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 9px; cursor: help; }
+.tree-scroll { flex: 1; min-height: 0; height: 100%; padding: 9px 8px 40px; overflow: auto; scrollbar-width: thin; scrollbar-color: transparent transparent; }
 .tree-scroll:hover { scrollbar-color: #cbd5e1 transparent; }
+.tree-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
+.tree-scroll::-webkit-scrollbar-thumb { background: #cbd5e1; border-radius: 999px; }
+.tree-scroll::-webkit-scrollbar-track { background: transparent; }
+
 /* Search area wraps the input row + filter dropdown so dropdown can span full width */
-.tree-search-area { position: relative; margin: 9px 9px 4px; }
+.tree-search-area { flex-shrink: 0; position: relative; margin: 9px 9px 4px; }
 .tree-search-wrap { display: flex; align-items: center; gap: 6px; padding: 0 8px; min-height: 34px; border: 1px solid #d8dbe2; border-radius: 7px; background: #fff; color: #6b7280; }
 .tree-search-wrap:focus-within { border-color: #60a5fa; box-shadow: 0 0 0 2px #dbeafe; }
 .tree-search-wrap input { min-width: 0; flex: 1; border: 0; outline: 0; background: transparent; color: #25222a; font: inherit; font-size: 10px; }
@@ -239,7 +243,7 @@ button { color: inherit; }
 .tree-filter-no-results { padding: 12px 10px; text-align: center; font-size: 9px; color: #9ca3af; }
 
 /* Larger, transparent badge with black text and clear cross button */
-.tree-active-badge { display: inline-flex; align-items: center; gap: 8px; margin: 8px 0 4px; padding: 5px 12px; border-radius: 999px; background: transparent; border: 1px solid #cbd5e1; font-family: var(--font-code); font-size: 12px; font-weight: 500; color: #000000; width: fit-content; max-width: 100%; box-sizing: border-box; }
+.tree-active-badge { flex-shrink: 0; display: inline-flex; align-items: center; gap: 8px; margin: 8px 0 4px; padding: 5px 12px; border-radius: 999px; background: transparent; border: 1px solid #cbd5e1; font-family: var(--font-code); font-size: 12px; font-weight: 500; color: #000000; width: fit-content; max-width: 100%; box-sizing: border-box; }
 .tree-active-badge .tree-badge-name { overflow: hidden; text-overflow: ellipsis; white-space: nowrap; max-width: 180px; }
 .tree-active-badge button { border: 0; background: transparent; color: #64748b; font-size: 14px; font-weight: 500; cursor: pointer; padding: 1px 5px; border-radius: 999px; display: flex; align-items: center; justify-content: center; line-height: 1; transition: color 0.15s, background-color 0.15s; }
 .tree-active-badge button:hover, .tree-active-badge button:focus-visible, .tree-active-badge button:active { color: #334155 !important; background: #e2e8f0 !important; }
