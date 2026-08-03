@@ -133,7 +133,19 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
         {results ? <div className="tree-results">
           {visibleDirect.map((path) => <SearchResult key={path} path={path} />)}
           {hasMoreDirect && <small className="tree-no-results">{lang === "es" ? `Mostrando los primeros ${MAX_SEARCH_RESULTS} resultados...` : `Showing first ${MAX_SEARCH_RESULTS} results...`}</small>}
-          {!results.direct.length && <small className="tree-no-results">{lang === "es" ? "Sin resultados. Prueba con otra palabra." : "No results. Try another word."}</small>}
+          {!results.direct.length && (
+            <div className="tree-empty-state">
+              <div className="tree-empty-icon" aria-hidden="true">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                  <line x1="8" y1="11" x2="14" y2="11"></line>
+                </svg>
+              </div>
+              <strong>{lang === "es" ? "Sin resultados" : "No results found"}</strong>
+              <p>{lang === "es" ? "No encontramos archivos que coincidan con tu búsqueda." : "No matching files were found for your search."}</p>
+            </div>
+          )}
         </div> : children.map((item) => (
           <TreeRow key={item.path} item={item} depth={0} selectedPath={selectedPath} onSelect={onSelect} defaultOpen={defaultOpen} highlightedPaths={highlightedPaths} />
         ))}
