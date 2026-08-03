@@ -1154,11 +1154,12 @@ export default function App() {
             <button className="wizard-close" onClick={() => setTokenModalOpen(false)}>×</button>
             <div className="wizard-body">
               <div className="wizard-icon" style={{ display: "flex", justifyContent: "center" }}>
-                <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
-                  <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+                <svg width="32" height="32" viewBox="0 0 24 24" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"/>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"/>
                 </svg>
               </div>
-              <h3 className="wizard-title" style={{ marginTop: "12px", fontSize: "16px", fontWeight: "700" }}>
+              <h3 className="wizard-title" style={{ marginTop: "12px", fontSize: "16px", fontWeight: "700", color: "#000000" }}>
                 {lang === "es" ? "Introduce tu token de acceso" : "Enter your access token"}
               </h3>
               <p className="wizard-text" style={{ fontSize: "11px", color: "var(--text-sub)", margin: "8px 0 16px", lineHeight: "1.5" }}>
@@ -1216,17 +1217,17 @@ export default function App() {
                   </span>
                 </label>
 
-                <div style={{ width: "100%", marginTop: "12px", padding: "10px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "left" }}>
+                <div style={{ width: "100%", marginTop: "12px", padding: "10px 12px", background: "#eff6ff", borderRadius: "8px", border: "1px solid #bfdbfe", textAlign: "left" }}>
                   <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
                       <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
                       <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
                     </svg>
-                    <strong style={{ fontSize: "11px", color: "#0f172a" }}>
+                    <strong style={{ fontSize: "11px", color: "#1e40af" }}>
                       {lang === "es" ? "Garantía de Privacidad y Seguridad" : "Privacy & Security Guarantee"}
                     </strong>
                   </div>
-                  <p style={{ margin: 0, fontSize: "10px", color: "#475569", lineHeight: "1.45" }}>
+                  <p style={{ margin: 0, fontSize: "10px", color: "#1e3a8a", lineHeight: "1.45" }}>
                     {lang === "es"
                       ? "Esta aplicación NO almacena ni conserva ningún dato de repositorios, código fuente ni tokens en servidores externos ni bases de datos. Todo el análisis se ejecuta en memoria volátil de sesión única y tu token solo se utiliza localmente para autenticar las llamadas a la API de GitHub."
                       : "This application DOES NOT store or retain any repository data, source code, or tokens on external servers or databases. All analysis runs strictly in single-session volatile memory and your token is used locally only for GitHub API requests."}
