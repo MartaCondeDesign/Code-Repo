@@ -199,12 +199,76 @@ button { color: inherit; }
 .graph .react-flow__controls-button { position: relative; overflow: visible; }
 .graph .react-flow__controls-button::after { content: attr(aria-label); position: absolute; left: calc(100% + 8px); top: 50%; z-index: 2000; transform: translateY(-50%) translateX(-3px); width: max-content; max-width: 180px; padding: 6px 8px; border-radius: 5px; background: #172033; color: #fff; box-shadow: 0 4px 14px rgba(15,23,42,.18); font-family: var(--font-ui); font-size: 10px; line-height: 1.25; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .14s, transform .14s; }
 .graph .react-flow__controls-button:hover::after, .graph .react-flow__controls-button:focus-visible::after { opacity: 1; visibility: visible; transform: translateY(-50%) translateX(0); }
-.loading-overlay { position: absolute; inset: 0; z-index: 50; display: grid; place-content: center; gap: 18px; background: rgba(251,250,252,.94); color: var(--muted); text-align: center; font-size: 14px; }
-.loading-overlay p { font-size: 14px !important; margin: 0; line-height: 1.5; }
-.loading-overlay .loading-sub { display: block; margin-top: 6px; color: var(--muted); font-size: 14px !important; }
-.scan-line { width: 210px; height: 2px; overflow: hidden; background: #e3dff0; }
-.scan-line::after { content: ""; display: block; width: 42%; height: 100%; background: var(--violet); animation: scan 1.2s ease-in-out infinite alternate; }
-@keyframes scan { to { transform: translateX(140%); } }
+.loading-overlay { position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; background: rgba(251,250,252,.96); backdrop-filter: blur(4px); color: var(--muted); text-align: center; font-size: 14px; transition: opacity .35s ease, visibility .35s ease; }
+.loading-overlay p { font-size: 14px !important; margin: 0; line-height: 1.5; font-weight: 500; color: #334155; }
+.loading-overlay .loading-sub { display: block; margin-top: 6px; color: #64748b; font-size: 12px !important; }
+
+/* Alien Reading Books Line-Art Animation */
+.alien-loader-wrapper {
+  display: flex;
+  justify-content: center;
+  align-items: center;
+}
+
+.alien-reader-svg {
+  animation: alienBob 2.4s ease-in-out infinite alternate;
+}
+
+@keyframes alienBob {
+  0% { transform: translateY(0); }
+  100% { transform: translateY(-8px); }
+}
+
+.alien-antenna-tip {
+  animation: antennaGlow 1.4s ease-in-out infinite alternate;
+  transform-origin: 80px 16px;
+}
+
+@keyframes antennaGlow {
+  0% { stroke: #2563eb; fill: none; r: 4px; }
+  100% { stroke: #3b82f6; fill: #93c5fd; r: 6px; }
+}
+
+.alien-flipping-page {
+  transform-origin: 80px 103.5px;
+}
+
+.alien-flipping-page.page-1 {
+  animation: flipPage 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) infinite;
+}
+
+.alien-flipping-page.page-2 {
+  animation: flipPage 1.6s cubic-bezier(0.45, 0.05, 0.55, 0.95) 0.5s infinite;
+}
+
+@keyframes flipPage {
+  0% {
+    transform: rotateY(0deg) scaleX(1);
+    opacity: 0.9;
+  }
+  50% {
+    transform: rotateY(-80deg) scaleX(0.4);
+    opacity: 0.7;
+  }
+  100% {
+    transform: rotateY(-180deg) scaleX(1);
+    opacity: 0;
+  }
+}
+
+.alien-sparkle {
+  animation: sparklePulse 2s ease-in-out infinite alternate;
+}
+.alien-sparkle.s1 { animation-delay: 0.1s; }
+.alien-sparkle.s2 { animation-delay: 0.4s; }
+.alien-sparkle.s3 { animation-delay: 0.7s; }
+.alien-sparkle.s4 { animation-delay: 1s; }
+
+@keyframes sparklePulse {
+  0% { opacity: 0.2; transform: scale(0.8); }
+  100% { opacity: 1; transform: scale(1.4); }
+}
+
 
 .lane { position: relative; border: 1px solid; border-radius: 8px; pointer-events: none; background-clip: padding-box; }
 .lane-head { position: absolute; top: 12px; left: 14px; display: flex; flex-direction: column; gap: 2px; }

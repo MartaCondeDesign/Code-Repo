@@ -7,6 +7,7 @@ import LaneNode from "./LaneNode.jsx";
 import LabeledEdge from "./LabeledEdge.jsx";
 import RepoTree from "./RepoTree.jsx";
 import ProjectGuide from "./ProjectGuide.jsx";
+import AlienReader from "./AlienReader.jsx";
 import { getFileExplanation, getFolderExplanation } from "./file-descriptions.js";
 
 const nodeTypes = { chip: ChipNode, lane: LaneNode };
@@ -946,7 +947,7 @@ export default function App() {
             {selectedPath && <button className="clear-focus" onClick={() => { setSelectedPath(""); setRelatedIds(new Set()); setSelected(null); setActiveCategory(null); }}>× {selectedPath}</button>}
           </div>
           <div className="graph">
-            {busy && <div className="loading-overlay"><div className="scan-line" /><p>{t.repoAnalyzing}<br /><span className="loading-sub">{t.repoAnalyzingSub}</span></p></div>}
+            {busy && <div className="loading-overlay"><AlienReader /><p>{t.repoAnalyzing}<br /><span className="loading-sub">{t.repoAnalyzingSub}</span></p></div>}
             <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodeClick={(_, node) => { setActiveCategory(null); node.type === "chip" && focusCard(node.id); }} onInit={setFlow} onPaneClick={() => { setRelatedIds(new Set()); setSelected(null); setActiveCategory(null); }} fitView fitViewOptions={{ padding: 0.12 }} nodesConnectable={false} elementsSelectable={false} proOptions={{ hideAttribution: true }} colorMode="light">
               <Background color="#d9d6e4" gap={24} size={1} />
               <Controls />
