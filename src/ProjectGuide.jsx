@@ -345,8 +345,8 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
           }
         }
       }
-      const docsMatch = source.match(/https?:\/\/(?:docs\.[^\s)>"'\]]+|[^\s)>"'\]]+\.github\.io[^\s)>"'\]]*|[^\s)>"'\]]+\.(?:vercel|netlify)\.app[^\s)>"'\]]*)/i);
-      if (docsMatch && (!storybookUrl || docsMatch[0] !== storybookUrl)) docsUrl = docsMatch[0].replace(/[,.)]+$/, "");
+      const docsMatch = source.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com[^\s)>"'\]]*|primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|docs\.[^\s)>"'\]]+|[^\s)>"'\]]+\/docs(?:\/[^\s)>"'\]]*)?)/i);
+      if (docsMatch && (!storybookUrl || docsMatch[0] !== storybookUrl) && !docsMatch[0].includes("github.com")) docsUrl = docsMatch[0].replace(/[,.)]+$/, "");
     }
 
     const packages = new Set();
@@ -664,11 +664,11 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
               <div className="design-libraries" style={{ display: "grid", gap: "8px", marginTop: "20px" }}>
                 <span>{lang === "es" ? "Información" : "Information"}</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {data?.iconAnalysis?.externalDocUrl && (
+                  {(data?.iconAnalysis?.externalDocUrl || design.docsUrl) && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
-                      <strong>{lang === "es" ? "Documentación externa: " : "External documentation: "}</strong>
-                      <a href={data.iconAnalysis.externalDocUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)", wordBreak: "break-all" }}>
-                        {data.iconAnalysis.externalDocUrl}
+                      <strong>{lang === "es" ? "Documentación: " : "Documentation: "}</strong>
+                      <a href={data?.iconAnalysis?.externalDocUrl || design.docsUrl} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
+                        {lang === "es" ? "Ver documentación" : "View documentation"}
                       </a>
                     </p>
                   )}

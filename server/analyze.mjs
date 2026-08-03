@@ -175,9 +175,17 @@ export function detectIcons(files, fileContents) {
   const packageJsonFile = files.find((f) => f.endsWith("package.json"));
   const readmeFiles = files.filter((f) => /(^|\/)(readme|contributing|architecture|guidelines?)\.(md|mdx)$/i.test(f));
 
-  // 1. Scan package.json for official package dependencies
+  // 1. Scan package.json for official package dependencies & documentation URL
   if (packageJsonFile && fileContents[packageJsonFile]) {
     const content = fileContents[packageJsonFile];
+    try {
+      const pkgObj = JSON.parse(content);
+      const hp = pkgObj.homepage || pkgObj.documentation;
+      if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !hp.includes("github.com")) {
+        externalDocUrl = hp.replace(/[,.)]+$/, "");
+      }
+    } catch {}
+
     for (const item of KNOWN_ICON_PACKAGES) {
       if (item.pattern.test(content)) {
         externalLib = { name: item.name, pkg: item.pkg, evidenceFile: packageJsonFile };
@@ -191,10 +199,10 @@ export function detectIcons(files, fileContents) {
     const content = fileContents[readmeFile] || "";
     if (!content) continue;
 
-    // Scan for external human documentation URLs (e.g. primer.style, zeroheight.com, supernova.io, *.style, *.design)
+    // Scan for external human documentation URLs (e.g. atmeta.com, primer.style, zeroheight.com, supernova.io, *.style, *.design, /docs/)
     if (!externalDocUrl) {
-      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*)/i);
-      if (docMatch) {
+      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com[^\s)>"'\]]*|primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*|\/docs(?:\/[^\s)>"'\]]*)?)/i);
+      if (docMatch && !docMatch[0].includes("github.com")) {
         externalDocUrl = docMatch[0].replace(/[,.)]+$/, "");
       }
     }

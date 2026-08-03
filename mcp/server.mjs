@@ -184,8 +184,17 @@ function handleAnalyzeDesignSystem({ files = [], fileContents = {}, repoName = "
   // Scan package.json
   const pkgJson = files.find(f => f.endsWith("package.json"));
   if (pkgJson && fileContents[pkgJson]) {
+    const content = fileContents[pkgJson];
+    try {
+      const pkgObj = JSON.parse(content);
+      const hp = pkgObj.homepage || pkgObj.documentation;
+      if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !hp.includes("github.com")) {
+        externalDocUrl = hp.replace(/[,.)]+$/, "");
+      }
+    } catch {}
+
     for (const item of KNOWN_ICON_PACKAGES) {
-      if (item.pattern.test(fileContents[pkgJson])) {
+      if (item.pattern.test(content)) {
         externalLib = item;
         break;
       }
@@ -197,8 +206,8 @@ function handleAnalyzeDesignSystem({ files = [], fileContents = {}, repoName = "
   for (const rf of readmeFiles) {
     const content = fileContents[rf] || "";
     if (!externalDocUrl) {
-      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*)/i);
-      if (docMatch) externalDocUrl = docMatch[0].replace(/[,.)]+$/, "");
+      const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com[^\s)>"'\]]*|primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*|\/docs(?:\/[^\s)>"'\]]*)?)/i);
+      if (docMatch && !docMatch[0].includes("github.com")) externalDocUrl = docMatch[0].replace(/[,.)]+$/, "");
     }
     if (!externalLib) {
       for (const item of KNOWN_ICON_PACKAGES) {
