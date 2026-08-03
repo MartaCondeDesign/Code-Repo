@@ -1210,9 +1210,10 @@ export default function App() {
             {selectedIsFile ? (
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
-                <p className="inspector-sub code-path" style={{ margin: "6px 0 4px" }}>{selectedPath}</p>
+                <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
+                <p className="inspector-sub code-path">{selectedPath}</p>
                 <p className="inspector-file-type">
-                  {lang === "es" ? "Tipo:" : "Type:"} <strong>{selectedPath.split("/").pop()}</strong> ({lang === "es" ? "Archivo del sistema de diseño" : "Design system file"})
+                  {lang === "es" ? "Tipo: Archivo del sistema de diseño" : "Type: Design system file"}
                 </p>
 
                 <FileVisualPreview path={selectedPath} content={selectedCode} lang={lang} />
@@ -1278,9 +1279,10 @@ export default function App() {
             ) : selectedIsFolder ? (
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
-                <p className="inspector-sub code-path" style={{ margin: "6px 0 4px" }}>{selectedPath}</p>
+                <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
+                <p className="inspector-sub code-path">{selectedPath}</p>
                 <p className="inspector-file-type">
-                  {lang === "es" ? "Tipo:" : "Type:"} <strong>{selectedPath.split("/").pop()}</strong> ({lang === "es" ? "Carpeta del proyecto" : "Project folder"})
+                  {lang === "es" ? "Tipo: Carpeta del proyecto" : "Type: Project folder"}
                 </p>
                 <div className="inspector-block">
                   <span>{lang === "es" ? "QUÉ ES Y QUÉ CONTIENE" : "WHAT IT IS & CONTAINS"}</span>
@@ -1291,9 +1293,10 @@ export default function App() {
             ) : selected ? (
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
-                <p className="inspector-sub" style={{ margin: "6px 0 4px" }}>{subFor(selected, lang)}</p>
+                <h2>{selected.title}</h2>
+                <p className="inspector-sub">{subFor(selected, lang)}</p>
                 <p className="inspector-file-type">
-                  {lang === "es" ? "Tipo:" : "Type:"} <strong>{selected.title}</strong> ({data.layers.find((layer) => layer.id === selected.layer)?.label})
+                  {lang === "es" ? "Tipo: " : "Type: "}{data.layers.find((layer) => layer.id === selected.layer)?.label}
                 </p>
                 {selected.files?.length > 0 && <div className="linked-files">{selected.files.map((file) => <button key={file} onClick={() => selectPath(file, false)}>↳ {file}</button>)}</div>}
                 {explanationLevel > 0 ? <div className="alternate-explanation"><span>{lang === "es" ? `EXPLICACIÓN ${explanationLevel} DE 3` : `EXPLANATION ${explanationLevel} OF 3`}</span><p>{alternateExplanation(selected, lang, explanationLevel)}</p></div> : <><div className="inspector-block"><span>{t.what}</span><p>{whatFor(selected, lang)}</p></div>{selected.does && <div className="inspector-block"><span>{t.does}</span><p>{doesFor(selected, lang)}</p></div>}</>}
