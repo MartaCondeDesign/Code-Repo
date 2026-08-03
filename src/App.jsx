@@ -578,6 +578,9 @@ export default function App() {
         if (["rule", "skill", "doc"].includes(tag) || layer === "docs") match = true;
       } else if (activeCategory === "stories") {
         if (tag === "story" || layer === "stories") match = true;
+      } else if (activeCategory === "icons") {
+        const isIconNode = tag === "icon" || layer === "icons" || node.files?.some(f => /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(f) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(f));
+        if (isIconNode) match = true;
       }
 
       if (match) {
@@ -605,6 +608,10 @@ export default function App() {
         if (/(^|\/)docs?\//i.test(filePath) || /^(readme|agents|claude)\.md$/i.test(filePath.split("/").pop())) filePaths.add(filePath);
       } else if (activeCategory === "styles") {
         if (["css", "scss", "sass", "less", "styl"].includes(ext)) filePaths.add(filePath);
+      } else if (activeCategory === "icons") {
+        const isIconFile = /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(filePath) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(filePath);
+        const EXCLUDED_ASSET_PATTERN = /(?:logo|brand|partner|wordmark|illustration|marketing|artwork|banner|hero|photo|screenshot|empty-state|favicon|apple-touch-icon|app-icon|launcher)/i;
+        if (isIconFile && !EXCLUDED_ASSET_PATTERN.test(filePath)) filePaths.add(filePath);
       }
     });
 

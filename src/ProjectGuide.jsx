@@ -35,6 +35,13 @@ function selectSystemVoice(persona, lang) {
 const LIBRARY_URLS = {
   "Lucide Icons": "https://lucide.dev",
   "Lucide": "https://lucide.dev",
+  "Tabler Icons": "https://tabler-icons.io",
+  "Phosphor Icons": "https://phosphoricons.com",
+  "Radix Icons": "https://icons.radix-ui.com",
+  "Iconoir": "https://iconoir.com",
+  "Carbon Icons": "https://carbondesignsystem.com",
+  "Fluent UI Icons": "https://github.com/microsoft/fluentui-system-icons",
+  "Bootstrap Icons": "https://icons.getbootstrap.com",
   "Font Awesome": "https://fontawesome.com",
   "Font Awesome Pro": "https://fontawesome.com",
   "Font Awesome Pro (Pago)": "https://fontawesome.com",
@@ -633,7 +640,17 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                 [design.components, lang === "es" ? "Componentes" : "Components", "components", design.componentsCapped ? (lang === "es" ? `Hay más de 200 componentes en este repositorio. El canvas muestra los primeros 200.` : `This repository has more than 200 components. The canvas shows the first 200.`) : (lang === "es" ? "Piezas reutilizables de UI" : "Reusable UI pieces"), design.componentsCapped],
                 [design.tokens, "Tokens", "tokens", lang === "es" ? "Color, tipografía y espacio" : "Color, type and spacing", false],
                 [design.documentation, lang === "es" ? "Documentación" : "Documentation", "documentation", lang === "es" ? "Guías de uso del sistema" : "System usage guides", false],
-                [design.icons.length, lang === "es" ? "Iconos" : "Icons", "icons", lang === "es" ? "Librerías de iconos detectadas" : "Detected icon libraries", false],
+                [
+                  data?.iconAnalysis?.sourceModel === "External"
+                    ? "Link"
+                    : (data?.iconAnalysis?.internalIconFiles?.length || design.icons.length),
+                  lang === "es" ? "Iconos" : "Icons",
+                  "icons",
+                  data?.iconAnalysis?.sourceModel === "External"
+                    ? (lang === "es" ? `Librería abierta: ${data.iconAnalysis.externalLibrary}` : `Open library: ${data.iconAnalysis.externalLibrary}`)
+                    : (lang === "es" ? "Archivos de iconos locales" : "Local icon files"),
+                  false
+                ],
               ].map(([value, label, category, tooltip, capped]) => {
                 const isActive = activeCategory === category;
                 return (
@@ -652,10 +669,12 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
               <div className="design-libraries" style={{ display: "grid", gap: "8px", marginTop: "20px" }}>
                 <span>{lang === "es" ? "Librerías de interfaz" : "Interface libraries"}</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
-                  {design.icons && design.icons.length > 0 && (
+                  {data?.iconAnalysis?.externalLibrary && data.iconAnalysis.externalLibrary !== "None" && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
                       <strong>{lang === "es" ? "Iconos: " : "Icons: "}</strong>
-                      {design.icons.map((name, i) => { const url = LIBRARY_URLS[name]; return url ? <span key={name}><a href={url} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>{name}</a>{i < design.icons.length - 1 ? ", " : ""}</span> : <span key={name}>{name}{i < design.icons.length - 1 ? ", " : ""}</span>; })}
+                      <a href={LIBRARY_URLS[data.iconAnalysis.externalLibrary] || "#"} target="_blank" rel="noopener noreferrer" style={{ color: "var(--primary)" }}>
+                        {data.iconAnalysis.externalLibrary}
+                      </a>
                     </p>
                   )}
                   {design.componentsList && design.componentsList.length > 0 && (
@@ -722,33 +741,10 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                       )}
                     </>
                   )}
-                  {(!design.icons?.length && !design.componentsList?.length && !design.tokensList?.length && !design.animations.length && !design.charts.length && !design.tables.length && !design.core.length && !design.storybookUrl && !design.figmaUrl && !repoUrl && !design.docsUrl) && (
+                  {(!data?.iconAnalysis?.externalLibrary || data.iconAnalysis.externalLibrary === "None") && !design.componentsList?.length && !design.tokensList?.length && !design.animations.length && !design.charts.length && !design.tables.length && !design.core.length && !design.storybookUrl && !design.figmaUrl && !repoUrl && !design.docsUrl && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#6b7280", fontStyle: "italic" }}>
                       {lang === "es" ? "No se detectaron librerías externas." : "No external libraries detected."}
                     </p>
-                  )}
-                  {data?.iconAnalysis && (
-                    <div style={{ marginTop: "12px", padding: "10px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0" }}>
-                      <strong style={{ display: "block", fontSize: "11px", color: "#1e293b", marginBottom: "6px" }}>
-                        {lang === "es" ? "📦 Fuente de Iconos y Registro" : "📦 Icon Source & Inventory"}
-                      </strong>
-                      <div style={{ display: "grid", gridTemplateColumns: "1fr 1fr", gap: "6px", fontSize: "10px", color: "#475569" }}>
-                        <div><strong>{lang === "es" ? "Tiene iconos: " : "Has icons: "}</strong>{data.iconAnalysis.hasIcons}</div>
-                        <div><strong>{lang === "es" ? "Modelo: " : "Model: "}</strong>{data.iconAnalysis.sourceModel}</div>
-                        <div style={{ gridColumn: "span 2" }}>
-                          <strong>{lang === "es" ? "Archivo evidencia primaria: " : "Primary evidence file: "}</strong>
-                          <span style={{ fontFamily: "monospace", color: "#2563eb", background: "#eff6ff", padding: "1px 4px", borderRadius: "4px" }}>
-                            {data.iconAnalysis.primaryEvidenceFile}
-                          </span>
-                        </div>
-                        <div style={{ gridColumn: "span 2" }}><strong>{lang === "es" ? "Origen: " : "Source: "}</strong>{data.iconAnalysis.iconSource}</div>
-                        {data.iconAnalysis.externalPackage !== "None" && (
-                          <div style={{ gridColumn: "span 2" }}><strong>{lang === "es" ? "Paquete: " : "Package: "}</strong><code>{data.iconAnalysis.externalPackage}</code></div>
-                        )}
-                        <div><strong>{lang === "es" ? "Conteo oficial: " : "Official count: "}</strong>{data.iconAnalysis.officialIconCount}</div>
-                        <div><strong>{lang === "es" ? "Confianza: " : "Confidence: "}</strong>{data.iconAnalysis.confidence}</div>
-                      </div>
-                    </div>
                   )}
                 </div>
               </div>
