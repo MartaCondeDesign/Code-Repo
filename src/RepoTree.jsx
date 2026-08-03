@@ -294,7 +294,11 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
     setFilterSearch("");
   };
 
-  const clearFilter = () => { setFilterExt(""); setFilterSearch(""); };
+  const clearFilter = () => {
+    setFilterExt("");
+    setFilterSearch("");
+    setFilterOpen(false);
+  };
 
   const toggleCollapse = (id) => {
     setCollapsed(prev => {
@@ -408,7 +412,16 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
                 const isCollapsed = collapsed.has(cat.id);
                 return (
                   <div key={cat.id} className="tree-filter-cat">
-                    <button className="tree-filter-cat-header" onClick={() => toggleCollapse(cat.id)}>
+                    <button
+                      className="tree-filter-cat-header"
+                      onClick={() => {
+                        if (cat.exts.length === 1) {
+                          applyExt(cat.exts[0]);
+                        } else {
+                          toggleCollapse(cat.id);
+                        }
+                      }}
+                    >
                       <span className="tree-filter-cat-chevron">{isCollapsed ? "›" : "⌄"}</span>
                       <span>{cat.label[lang === "es" ? "es" : "en"]}</span>
                     </button>
