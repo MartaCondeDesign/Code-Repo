@@ -140,7 +140,7 @@ Para mantener la consistencia estética y visual del proyecto, sigue estas espec
 22. Al hacer clic en cualquier nodo (chip) del canvas, siempre se deben producir dos efectos simultáneos: (a) iluminar/seleccionar el archivo correspondiente en el árbol del repositorio izquierdo (tree), expandiendo las carpetas necesarias para que sea visible; y (b) abrir el panel de información derecho (inspector) mostrando los detalles de ese nodo.
 23. El buscador del árbol de repositorio (tree) filtra únicamente por coincidencia directa de texto en el nombre de ruta del archivo. No realiza expansión conceptual ni búsqueda semántica por sinónimos; solo devuelve archivos cuya ruta normalizada contiene exactamente la cadena de búsqueda introducida.
 24. La detección de componentes del Design System sigue dos contratos en orden: primero `contracts/detect-component-inventory.md` (¿cuántos componentes oficiales?) priorizando barrel files, registries y package.json exports; después `contracts/detect-components.md` (¿dónde está construido cada uno?). El número mostrado en la card siempre proviene del inventario, no del conteo de archivos.
-25. Iconos sin emojis: No se deben usar emojis para representar iconos ni acciones visuales en la interfaz. Utilizar únicamente iconos vectoriales SVG. El icono de la llave (SVG) en el buscador solo se muestra en repositorios que requieran un token. La detección de iconos del Design System se rige por el contrato `contracts/detect-design-system-icon-source-inventory-v2.md`.
+25. Iconos sin emojis: No se deben usar emojis para representar iconos ni acciones visuales en la interfaz. Utilizar únicamente iconos vectoriales SVG. El icono de la llave (SVG) en el buscador solo se muestra en repositorios que requieran un token. La detección de iconos del Design System se rige por el contrato `contracts/detect-icons.md`.
 26. Storybook no es un framework UI: Storybook es una herramienta de entorno de desarrollo y documentación, por lo que nunca debe listarse dentro de la categoría Otros/Frameworks en la guía del proyecto. Storybook solo se muestra en su enlace dedicado si se detecta la URL oficial de despliegue propia del repositorio (ej. Chromatic, GitHub Pages), y jamás se debe enlazar a la web genérica storybook.js.org.
 27. Análisis de README y Documentación Externa: El sistema debe analizar el `README.md` y archivos de documentación para detectar la presencia de librerías de iconos externas o repositorios de iconos, así como enlaces a portales de documentación externa para humanos (Zeroheight, Supernova, web propia del DS). Si existen enlaces de documentación externa o librerías/repositorios de iconos externos, se muestran en la sección Información de Project Guide con su enlace correcto.
 
@@ -159,7 +159,7 @@ Cada parte del Design System que aparece como card de métrica en la guía del p
 | Design Tokens | [`contracts/detect-tokens.md`](contracts/detect-tokens.md) | Tokens |
 | Styles | [`contracts/detect-styles.md`](contracts/detect-styles.md) | — |
 | Storybook | [`contracts/detect-storybook.md`](contracts/detect-storybook.md) | — (link only) |
-| Icon Source & Inventory | [`contracts/detect-design-system-icon-source-inventory-v2.md`](contracts/detect-design-system-icon-source-inventory-v2.md) | Iconos |
+| Icon Source & Inventory | [`contracts/detect-icons.md`](contracts/detect-icons.md) | Iconos |
 
 ### Reglas generales de detección
 
