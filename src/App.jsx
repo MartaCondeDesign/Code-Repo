@@ -1352,11 +1352,7 @@ export default function App() {
               {step.hint && <p className="wizard-hint">{step.hint}</p>}
             </div>
             <div className="wizard-footer">
-              <div className="wizard-dots">
-                {WIZARD_STEPS[lang].map((_, i) => (
-                  <button key={i} className={"wizard-dot" + (i === wizardStep ? " active" : "")} aria-label={`Paso ${i + 1}`} onClick={() => setWizardStep(i)} />
-                ))}
-              </div>
+              <span className="wizard-step-counter">{wizardStep + 1} / {total}</span>
               <div className="wizard-nav">
                 {wizardStep > 0 && (
                   <button className="wizard-btn wizard-btn-sec" onClick={() => setWizardStep((s) => s - 1)}>

@@ -180,7 +180,7 @@ button { color: inherit; }
 .pane-heading { height: 62px; flex-shrink: 0; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
 .pane-kicker { display: block; margin-bottom: 4px; color: #7b7680; font-size: 8px; font-weight: 800; letter-spacing: 1.25px; }
 .pane-heading h2 { font-size: 13px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
-.file-count { min-width: 28px; padding: 4px 7px; text-align: center; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 9px; cursor: help; }
+.file-count { min-width: 28px; padding: 4px 7px; text-align: center; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 9px; cursor: default; }
 .tree-scroll { flex: 1; min-height: 0; height: 100%; padding: 9px 8px 40px; overflow: auto; scrollbar-width: thin; scrollbar-color: transparent transparent; }
 .tree-scroll:hover { scrollbar-color: #cbd5e1 transparent; }
 .tree-scroll::-webkit-scrollbar { height: 6px; width: 6px; }
@@ -454,9 +454,7 @@ button { color: inherit; }
 .wgm-copy-icon { flex: 0 0 auto; color: #57606a; font-size: 13px; cursor: pointer; }
 .wgm-caption { margin: 7px 0 0; color: #2563eb; font-size: 10px; font-family: var(--font-ui); font-weight: 700; }
 .wizard-footer { display: flex; align-items: center; justify-content: space-between; padding: 16px 24px; border-top: 1px solid var(--line); }
-.wizard-dots { display: flex; gap: 6px; align-items: center; }
-.wizard-dot { padding: 0; border: 0; border-radius: 99px; background: #d1d5db; width: 7px; height: 7px; cursor: pointer; transition: width .2s, background .2s; }
-.wizard-dot.active { background: #2563eb; width: 20px; }
+.wizard-step-counter { font-family: var(--font-code); font-size: 12px; font-weight: 700; color: #64748b; letter-spacing: 0.5px; }
 .wizard-nav { display: flex; gap: 8px; }
 .wizard-btn { height: 34px; border-radius: 7px; padding: 0 16px; font: inherit; font-size: 11px; font-weight: 700; cursor: pointer; }
 .wizard-btn-pri { border: 1px solid #2563eb; background: #2563eb; color: #fff; }

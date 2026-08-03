@@ -331,7 +331,6 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
         <span
           className="file-count has-tooltip"
           tabIndex={0}
-          title={lang === "es" ? "Número total de archivos en el repositorio" : "Total number of files in the repository"}
           data-tooltip={lang === "es" ? "Número total de archivos en el repositorio" : "Total number of files in the repository"}
           aria-label={lang === "es" ? "Número total de archivos en el repositorio" : "Total number of files in the repository"}
         >{files?.length || 0}</span>
