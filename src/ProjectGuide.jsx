@@ -175,8 +175,18 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const dsStoryFiles = new Set();
     const dsPatternFiles = new Set();
     const dsLayoutFiles = new Set();
+    const dsIconFiles = new Set();
     const codeFile = /\.(jsx?|tsx?|vue|svelte|rb|erb|haml|html|php|py|go)$/i;
     const styleExt = /\.(css|scss|sass|less|styl)$/i;
+    const EXCLUDED_ASSET_PATTERN = /(?:logo|brand|partner|wordmark|illustration|marketing|artwork|banner|hero|photo|screenshot|empty-state|favicon|apple-touch-icon|app-icon|launcher)/i;
+
+    files.forEach((file) => {
+      const lower = file.toLowerCase();
+      if (!EXCLUDED_ASSET_PATTERN.test(lower)) {
+        const isIconFile = /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(lower) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(lower);
+        if (isIconFile) dsIconFiles.add(file);
+      }
+    });
     // contracts/detect-tokens.md — directory + filename signals
     const isTokenPath = (file) =>
       /(^|\/)(tokens?|design-tokens?|variables?|theme[s]?|primitives?|semantic|foundations?|palette|colors?|typography|spacing|dimensions?|shadows?|borders?|breakpoints?)(\/|\.|-)/i.test(file) ||
@@ -221,6 +231,10 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
       }
       if (["layout", "template"].includes(node.tag)) {
         nodeFiles.forEach((file) => { layoutFiles.add(file); dsLayoutFiles.add(file); });
+      }
+      const isIconNode = node.tag === "icon" || node.layer === "icons" || nodeFiles.some(f => /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(f) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(f));
+      if (isIconNode) {
+        nodeFiles.filter((file) => !EXCLUDED_ASSET_PATTERN.test(file.toLowerCase())).forEach((file) => dsIconFiles.add(file));
       }
       // contracts/detect-styles.md: CSS in token nodes are tokens, not styles
       if (!isTokenNode) {
@@ -443,7 +457,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const hasStorybook = !!storybookUrl;
     const componentTotal = data.componentTotal ?? dsComponentFiles.size;
     const componentsCapped = data.componentsCapped ?? false;
-    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
+    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: dsTokenFiles.size, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: documentationFiles.size, layouts: dsLayoutFiles.size, dsIconFiles: dsIconFiles.size, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
   }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();
@@ -641,14 +655,10 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
                 [design.tokens, "Tokens", "tokens", lang === "es" ? "Color, tipografía y espacio" : "Color, type and spacing", false],
                 [design.documentation, lang === "es" ? "Documentación" : "Documentation", "documentation", lang === "es" ? "Guías de uso del sistema" : "System usage guides", false],
                 [
-                  data?.iconAnalysis?.sourceModel === "External"
-                    ? "Link"
-                    : (data?.iconAnalysis?.internalIconFiles?.length || design.icons.length),
+                  design.dsIconFiles,
                   lang === "es" ? "Iconos" : "Icons",
                   "icons",
-                  data?.iconAnalysis?.sourceModel === "External"
-                    ? (lang === "es" ? `Librería abierta: ${data.iconAnalysis.externalLibrary}` : `Open library: ${data.iconAnalysis.externalLibrary}`)
-                    : (lang === "es" ? "Archivos de iconos locales" : "Local icon files"),
+                  lang === "es" ? "Archivos que hacen referencia a iconos" : "Files referencing icons",
                   false
                 ],
               ].map(([value, label, category, tooltip, capped]) => {
