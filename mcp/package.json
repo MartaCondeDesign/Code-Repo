@@ -1,0 +1,19 @@
+{
+  "name": "design-system-analyzer-mcp",
+  "version": "1.0.0",
+  "description": "MCP Server for Design System Contract Analysis via GitHub API",
+  "main": "server.mjs",
+  "type": "module",
+  "scripts": {
+    "start": "node server.mjs"
+  },
+  "keywords": [
+    "mcp",
+    "design-system",
+    "github-api",
+    "analyzer",
+    "contracts"
+  ],
+  "author": "Marta Conde",
+  "license": "MIT"
+}
