@@ -1178,7 +1178,7 @@ export default function App() {
         ><span /></div>
         <section className="visual-pane">
           <div className="pane-heading map-heading">
-            <div><span className="pane-kicker">{t.map}</span><h2>{data.repoName}</h2></div>
+            <div><span className="pane-kicker">{t.map}</span></div>
           </div>
           <div className="graph">
             {busy && (
