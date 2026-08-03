@@ -645,7 +645,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
               })}
             </div>
               <div className="design-libraries" style={{ display: "grid", gap: "8px", marginTop: "20px" }}>
-                <span>{lang === "es" ? "Librerías de interfaz" : "Interface libraries"}</span>
+                <span>{lang === "es" ? "Información" : "Information"}</span>
                 <div style={{ display: "flex", flexDirection: "column", gap: "6px" }}>
                   {data?.iconAnalysis?.externalLibrary && data.iconAnalysis.externalLibrary !== "None" && (
                     <p style={{ display: "block", margin: 0, fontSize: "11px", color: "#48444f", lineHeight: "1.4" }}>
