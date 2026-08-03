@@ -352,19 +352,19 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
             placeholder={lang === "es" ? "Buscar archivo…" : "Search file…"}
             aria-label={lang === "es" ? "Buscar en el repositorio" : "Search repository"}
           />
-          {query && (
-            <button className="tree-clear-btn has-tooltip" data-tooltip={lang === "es" ? "Limpiar búsqueda" : "Clear search"} aria-label={lang === "es" ? "Limpiar búsqueda" : "Clear search"} onClick={() => setQuery("")}>
-              <svg width="12" height="12" viewBox="0 0 12 12" fill="none" stroke="#000000" strokeWidth="2" strokeLinecap="round">
-                <line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/>
-              </svg>
-            </button>
-          )}
           <div className="tree-filter-wrap">
-            <button className={"tree-filter-clear" + (hasFilter ? " active" : "")} onClick={clearFilter} aria-label={lang === "es" ? "Limpiar filtro" : "Clear filter"}>
-              <svg width="10" height="10" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round">
-                <line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/>
-              </svg>
-            </button>
+            {(query || hasFilter) && (
+              <button
+                className="tree-filter-clear active has-tooltip"
+                data-tooltip={lang === "es" ? "Limpiar búsqueda y filtro" : "Clear search and filter"}
+                aria-label={lang === "es" ? "Limpiar búsqueda y filtro" : "Clear search and filter"}
+                onClick={() => { setQuery(""); clearFilter(); }}
+              >
+                <svg width="11" height="11" viewBox="0 0 12 12" fill="none" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round">
+                  <line x1="2" y1="2" x2="10" y2="10"/><line x1="10" y1="2" x2="2" y2="10"/>
+                </svg>
+              </button>
+            )}
             <button
               className={"tree-filter-toggle has-tooltip" + (filterOpen ? " open" : "") + (hasFilter ? " has-filter" : "")}
               data-tooltip={hasFilter ? (lang === "es" ? `Filtro: .${filterExt}` : `Filter: .${filterExt}`) : (lang === "es" ? "Filtrar por tipo" : "Filter by type")}
