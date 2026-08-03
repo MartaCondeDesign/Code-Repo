@@ -331,8 +331,8 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
         <span
           className="file-count has-tooltip"
           tabIndex={0}
-          data-tooltip={lang === "es" ? `${files?.length || 0} archivos en el árbol del repositorio` : `${files?.length || 0} files in the repository tree`}
-          aria-label={lang === "es" ? `${files?.length || 0} archivos en el árbol del repositorio` : `${files?.length || 0} files in the repository tree`}
+          data-tooltip={lang === "es" ? `Número total de archivos en el repositorio (${files?.length || 0})` : `Total number of files in the repository (${files?.length || 0})`}
+          aria-label={lang === "es" ? `Número total de archivos en el repositorio (${files?.length || 0})` : `Total number of files in the repository (${files?.length || 0})`}
         >{files?.length || 0}</span>
       </div>
 
