@@ -436,6 +436,88 @@ function ExplanationActions({ lang, level, onAlternate, onReset }) {
   );
 }
 
+function FileVisualPreview({ path, content, lang }) {
+  if (!path) return null;
+  const ext = path.split(".").pop().toLowerCase();
+  const isSvg = ext === "svg";
+  const isImage = ["png", "jpg", "jpeg", "gif", "webp", "ico", "avif"].includes(ext);
+  const isPdf = ext === "pdf";
+  const isComponent = ["tsx", "jsx", "vue", "svelte", "html"].includes(ext) && !path.includes("stories") && !path.includes("test");
+
+  if (isSvg && content && content.includes("<svg")) {
+    const svgDataUrl = `data:image/svg+xml;utf8,${encodeURIComponent(content)}`;
+    return (
+      <div className="inspector-media-preview">
+        <span className="media-preview-title">{lang === "es" ? "PREVISUALIZACIÓN VECTORIAL SVG" : "SVG VECTOR PREVIEW"}</span>
+        <div className="media-preview-box svg-box">
+          <img src={svgDataUrl} alt={path.split("/").pop()} style={{ maxWidth: "140px", maxHeight: "140px", objectFit: "contain", display: "block", margin: "0 auto" }} />
+        </div>
+      </div>
+    );
+  }
+
+  if (isImage) {
+    return (
+      <div className="inspector-media-preview">
+        <span className="media-preview-title">{lang === "es" ? "PREVISUALIZACIÓN DE IMAGEN" : "IMAGE PREVIEW"}</span>
+        <div className="media-preview-box image-box">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#2563eb" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <rect x="3" y="3" width="18" height="18" rx="2" ry="2"/>
+            <circle cx="8.5" cy="8.5" r="1.5"/>
+            <polyline points="21 15 16 10 5 21"/>
+          </svg>
+          <div style={{ textAlign: "left" }}>
+            <strong style={{ display: "block", fontSize: "11px", color: "#0f172a" }}>{path.split("/").pop()}</strong>
+            <span style={{ fontSize: "10px", color: "#64748b" }}>{lang === "es" ? "Recurso gráfico bitmap" : "Bitmap graphic asset"}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isPdf) {
+    return (
+      <div className="inspector-media-preview">
+        <span className="media-preview-title">{lang === "es" ? "DOCUMENTO PDF" : "PDF DOCUMENT"}</span>
+        <div className="media-preview-box pdf-box">
+          <svg width="36" height="36" viewBox="0 0 24 24" fill="none" stroke="#dc2626" strokeWidth="1.6" strokeLinecap="round" strokeLinejoin="round">
+            <path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/>
+            <polyline points="14 2 14 8 20 8"/>
+            <line x1="16" y1="13" x2="8" y2="13"/>
+            <line x1="16" y1="17" x2="8" y2="17"/>
+          </svg>
+          <div style={{ textAlign: "left" }}>
+            <strong style={{ display: "block", fontSize: "11px", color: "#0f172a" }}>{path.split("/").pop()}</strong>
+            <span style={{ fontSize: "10px", color: "#64748b" }}>{lang === "es" ? "Documentación PDF descargable" : "Downloadable PDF documentation"}</span>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  if (isComponent) {
+    const compName = path.split("/").pop().replace(/\.[^/.]+$/, "");
+    return (
+      <div className="inspector-media-preview">
+        <span className="media-preview-title">{lang === "es" ? "PREVISUALIZACIÓN DEL COMPONENTE UI" : "UI COMPONENT PREVIEW"}</span>
+        <div className="media-preview-box component-box">
+          <div className="component-mockup-header">
+            <span className="mockup-tag">Component</span>
+            <span className="mockup-name">{compName}</span>
+          </div>
+          <div className="component-mockup-body">
+            <button className="component-preview-demo-btn" type="button">
+              {compName}
+            </button>
+          </div>
+        </div>
+      </div>
+    );
+  }
+
+  return null;
+}
+
 export default function App() {
   const [map, setMap] = useState(null);
   const [repoUrl, setRepoUrl] = useState("");
@@ -1143,13 +1225,28 @@ export default function App() {
             <button className="icon-btn inspector-close has-tooltip" data-tooltip={lang === "es" ? "Cerrar panel" : "Close panel"} aria-label={lang === "es" ? "Cerrar panel" : "Close panel"} onClick={() => { setSelected(null); setSelectedPath(""); setSelectedIsFolder(false); setRelatedIds(new Set()); setActiveCategory(null); }}>×</button>
             {selectedIsFile ? (
               <>
-                <span className="pane-kicker">{lang === "es" ? "ARCHIVO DE CÓDIGO" : "CODE FILE"}</span>
+                <span className="pane-kicker">{lang === "es" ? "ARCHIVO DEL SISTEMA DE DISEÑO" : "DESIGN SYSTEM FILE"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
                 <p className="inspector-sub code-path">{selectedPath}</p>
+
+                <FileVisualPreview path={selectedPath} content={selectedCode} lang={lang} />
+
                 <div className="inspector-block">
-                  <span>{lang === "es" ? "QUÉ ES" : "WHAT IT IS"}</span>
+                  <span>{lang === "es" ? "QUÉ ES Y QUÉ CONTIENE" : "WHAT IT IS & CONTAINS"}</span>
                   <p>{getFileExplanation(selectedPath, lang, selected, selectedCode)}</p>
                 </div>
+
+                <div className="file-details-grid">
+                  <div className="file-detail-item">
+                    <small>{lang === "es" ? "Tipo / Lenguaje" : "Type / Language"}</small>
+                    <strong>{codeLanguage(selectedPath)}</strong>
+                  </div>
+                  <div className="file-detail-item">
+                    <small>{lang === "es" ? "Líneas de código" : "Code lines"}</small>
+                    <strong>{selectedCode == null ? "—" : `${selectedCode.split("\n").length}`}</strong>
+                  </div>
+                </div>
+
                 <div className="code-shell">
                   <div className="code-toolbar"><span>{codeLanguage(selectedPath)}</span><span>{selectedCode == null ? "—" : `${selectedCode.split("\n").length} ${lang === "es" ? "líneas" : "lines"}`}</span></div>
                   {selectedCode != null ? <pre className="code-view"><code>{selectedCode}</code></pre> : <div className="code-unavailable">{lang === "es" ? "La vista previa no está disponible para este archivo binario o de gran tamaño." : "Preview is unavailable for this binary or large file."}</div>}
@@ -1158,11 +1255,11 @@ export default function App() {
               </>
             ) : selectedIsFolder ? (
               <>
-                <span className="pane-kicker">{lang === "es" ? "CARPETA DE PROYECTO" : "PROJECT FOLDER"}</span>
+                <span className="pane-kicker">{lang === "es" ? "CARPETA DEL PROYECTO" : "PROJECT FOLDER"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
                 <p className="inspector-sub code-path">{selectedPath}</p>
                 <div className="inspector-block">
-                  <span>{lang === "es" ? "QUÉ ES" : "WHAT IT IS"}</span>
+                  <span>{lang === "es" ? "QUÉ ES Y QUÉ CONTIENE" : "WHAT IT IS & CONTAINS"}</span>
                   <p>{getFolderExplanation(selectedPath, lang)}</p>
                 </div>
                 {selected && <div className="code-context"><span>{lang === "es" ? "RELACIONADO CON" : "RELATED TO"}</span><strong>{selected.title}</strong><p>{explanationLevel > 0 ? alternateExplanation(selected, lang, explanationLevel) : whatFor(selected, lang)}</p><ExplanationActions lang={lang} level={explanationLevel} onAlternate={() => setExplanationLevel((level) => Math.min(3, level + 1))} onReset={() => setExplanationLevel(0)} /></div>}
