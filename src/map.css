@@ -178,6 +178,8 @@ button { color: inherit; }
 .inspector-resizer::before { content: ""; position: absolute; inset: 0 -4px; }
 .inspector-resizer span { position: absolute; left: 2px; top: 50%; width: 3px; height: 38px; transform: translateY(-50%) translateX(-4px); border-radius: 99px; background: #c9c3d2; transition: background .15s, height .15s; }
 .pane-heading { height: 62px; flex-shrink: 0; padding: 13px 16px; display: flex; align-items: center; justify-content: space-between; border-bottom: 1px solid var(--line); }
+.pane-heading.map-heading { height: 34px; padding: 0 16px; }
+.pane-heading.map-heading .pane-kicker { margin-bottom: 0; }
 .pane-kicker { display: block; margin-bottom: 4px; color: #7b7680; font-size: 8px; font-weight: 800; letter-spacing: 1.25px; }
 .pane-heading h2 { font-size: 13px; max-width: 360px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .file-count { min-width: 28px; padding: 4px 7px; text-align: center; border: 1px solid var(--line); border-radius: 99px; color: var(--muted); font-size: 9px; cursor: default; }
