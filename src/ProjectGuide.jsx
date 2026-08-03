@@ -424,17 +424,21 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const finalComponents = readmeLibraries.components.length ? [...new Set(readmeLibraries.components)] : [];
     const finalCore = core.filter((c) => c !== "Storybook");
 
-    const hasDesignSystem = tokenFiles.size > 0 || storyFiles.size > 0 || componentFiles.size >= 3 || files.some((file) => /design-system|storybook/i.test(file));
-    const hasStorybook = !!storybookUrl;
-    const componentTotal = data.componentTotal ?? dsComponentFiles.size;
-    const componentsCapped = data.componentsCapped ?? (componentTotal > 200);
-    const tokenTotal = data.tokenTotal ?? dsTokenFiles.size;
-    const tokensCapped = data.tokensCapped ?? (tokenTotal > 200);
-    const docTotal = data.docTotal ?? documentationFiles.size;
-    const docsCapped = data.docsCapped ?? (docTotal > 200);
-    const iconTotal = data.iconAnalysis?.iconTotal ?? dsIconFiles.size;
-    const iconsCapped = data.iconAnalysis?.iconsCapped ?? (iconTotal > 200);
-    return { components: componentTotal, componentsCapped, pages: dsPageFiles.size, tokens: tokenTotal, tokensCapped, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: docTotal, docsCapped, layouts: dsLayoutFiles.size, dsIconFiles: iconTotal, iconsCapped, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core: finalCore, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
+    const canvasComponentNodes = nodes.filter(n => n.tag === "component" || ["components", "ui"].includes(n.layer));
+    const canvasTokenNodes = nodes.filter(n => n.tag === "token" || n.tag === "tokens" || ["tokens", "foundation"].includes(n.layer));
+    const canvasDocNodes = nodes.filter(n => ["rule", "skill", "doc", "documentation"].includes(n.tag) || n.layer === "docs");
+    const canvasIconNodes = nodes.filter(n => n.tag === "icon" || n.layer === "icons" || n.files?.some(f => /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(f) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(f)));
+
+    const componentCount = canvasComponentNodes.length;
+    const tokenCount = canvasTokenNodes.length;
+    const docCount = canvasDocNodes.length;
+    const iconCount = canvasIconNodes.length > 0 ? canvasIconNodes.length : dsIconFiles.size;
+
+    const componentsCapped = data.componentsCapped ?? (data.componentTotal > 200);
+    const tokensCapped = data.tokensCapped ?? (data.tokenTotal > 200);
+    const docsCapped = data.docsCapped ?? (data.docTotal > 200);
+    const iconsCapped = data.iconAnalysis?.iconsCapped ?? (data.iconAnalysis?.iconTotal > 200);
+    return { components: componentCount, componentsCapped, pages: dsPageFiles.size, tokens: tokenCount, tokensCapped, styles: dsStyleFiles.size, stories: dsStoryFiles.size, patterns: dsPatternFiles.size, documentation: docCount, docsCapped, layouts: dsLayoutFiles.size, dsIconFiles: iconCount, iconsCapped, icons: finalIcons, tokensList: finalTokens, componentsList: finalComponents, charts, animations, tables, core: finalCore, hasDesignSystem, hasStorybook, storybookUrl, figmaUrl, docsUrl };
   }, [data.fileContents, data.files, data.nodes, data.componentTotal, data.componentsCapped, data.tokenTotal, data.tokensCapped, data.docTotal, data.docsCapped, data.iconAnalysis, lang]);
   const sectionOptions = useMemo(() => {
     const paths = new Set();
