@@ -1211,8 +1211,9 @@ export default function App() {
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
-                <p className="inspector-sub code-path">
-                  {selectedPath} · {lang === "es" ? "Archivo del sistema de diseño" : "Design system file"}
+                <p className="inspector-sub code-path">{selectedPath}</p>
+                <p className="inspector-file-type">
+                  {lang === "es" ? "Archivo del sistema de diseño" : "Design system file"}
                 </p>
                 <div className="inspector-header-divider" />
 
@@ -1280,8 +1281,9 @@ export default function App() {
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
-                <p className="inspector-sub code-path">
-                  {selectedPath} · {lang === "es" ? "Carpeta del proyecto" : "Project folder"}
+                <p className="inspector-sub code-path">{selectedPath}</p>
+                <p className="inspector-file-type">
+                  {lang === "es" ? "Carpeta del proyecto" : "Project folder"}
                 </p>
                 <div className="inspector-header-divider" />
                 <div className="inspector-block">
@@ -1294,8 +1296,9 @@ export default function App() {
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2>{selected.title}</h2>
-                <p className="inspector-sub">
-                  {subFor(selected, lang)} · {data.layers.find((layer) => layer.id === selected.layer)?.label}
+                <p className="inspector-sub">{subFor(selected, lang)}</p>
+                <p className="inspector-file-type">
+                  {data.layers.find((layer) => layer.id === selected.layer)?.label}
                 </p>
                 <div className="inspector-header-divider" />
                 {selected.files?.length > 0 && <div className="linked-files">{selected.files.map((file) => <button key={file} onClick={() => selectPath(file, false)}>↳ {file}</button>)}</div>}
