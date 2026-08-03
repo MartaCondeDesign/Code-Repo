@@ -1,47 +1,48 @@
-# Contrato: Detección de Documentación Oficial Externa
+# Contrato: Detección Universal de Documentación Oficial Externa
 
-Este contrato define las reglas y el algoritmo para descubrir, validar y presentar el enlace a la **Documentación Oficial para Humanos** de un Design System desde un repositorio de GitHub (ej. Astryx `https://astryx.atmeta.com/docs/getting-started`, Primer `https://primer.style`, Zeroheight, Supernova, etc.).
-
----
-
-## 1. Jerarquía de Fuentes para Descubrimiento
-
-El analizador debe inspeccionar el repositorio en la siguiente secuencia prioritaria:
-
-### 1.1 Campo `homepage` o `documentation` en `package.json`
-- Se examina la raíz `package.json` y paquetes principales (`packages/*/package.json`).
-- Si el campo `homepage` contiene un enlace HTTP/HTTPS válido que apunte a un sitio de documentación (ej. `https://astryx.atmeta.com`, `https://primer.style`, `https://mui.com`), se toma como fuente primaria oficial.
-
-### 1.2 Enlaces y Badges en `README.md`, `README.mdx` y `docs/*.md`
-- Se busca dentro de los primeros párrafos, badges y secciones de documentación en `README.md`.
-- Se extraen URLs que coincidan con los patrones de dominio y rutas oficiales.
+Este contrato define las reglas y el algoritmo universal para descubrir, validar y extraer el enlace a la **Documentación Oficial para Humanos** de cualquier Design System a partir de un repositorio de GitHub, considerando las diferencias estructurales de cada repositorio (Monorepos con workspaces, paquetes únicos, sitios estáticos de documentación, etc.).
 
 ---
 
-## 2. Patrones de Dominios y Rutas Reconocidos
+## 1. Dónde se encuentra la documentación en el repositorio de GitHub (Caso de Estudio: Astryx)
 
-1. **Dominios Corporativos y de Meta/Facebook:**
-   - `*.atmeta.com` (ej. `astryx.atmeta.com/docs/getting-started`)
-   - `*.facebook.com`, `*.fb.com`
-2. **Dominios dedicados a Design Systems (`.design`, `.style`):**
-   - `*.design` (ej. `polaris.shopify.design`)
-   - `*.style` (ej. `primer.style`)
-   - `*.design-system.*`, `ds.*`
-3. **Plataformas de Documentación de Design Systems:**
-   - `zeroheight.com`
-   - `supernova.io`
-   - `knapsack.cloud`
-   - `figma.com/@*`
-4. **Rutas de documentación en sitios de marca:**
-   - URLs que incluyan `/docs/`, `/getting-started`, `/components`, `/guidelines` en portales oficiales.
+En repositorios como **Astryx (`facebook/astryx`)** y otros repositorios de sistemas de diseño, la URL oficial (`https://astryx.atmeta.com/docs/getting-started`) se localiza en 3 puntos clave del repositorio:
+
+1. **`package.json` principal / `packages/docs/package.json`:**
+   - La propiedad `"homepage": "https://astryx.atmeta.com/docs/getting-started"` o `"documentation": "..."`.
+2. **`README.md` (Párrafo introductorio y Badges):**
+   - El enlace markdown en la primera sección: `[Documentation](https://astryx.atmeta.com/docs/getting-started)` o en botones/badges de lectura.
+3. **Archivos de configuración de sitio web (`docusaurus.config.js`, `astro.config.mjs`, `next.config.js`):**
+   - El parámetro `url` o `baseUrl` que define el dominio público de despliegue del portal de documentación.
 
 ---
 
-## 3. Regla de Presentación en Project Guide
+## 2. Algoritmo Universal de Extracción según el Tipo de Repositorio
 
-Cuando se detecte una URL oficial de documentación externa:
+Dado que cada repositorio de GitHub está estructurado de forma distinta, el analizador aplica el siguiente flujo jerárquico de inspección:
 
-1. **Ubicación:** Sección **Información** del Project Guide.
-2. **Formato de Texto Obligatorio:**
-   - Español: `Documentación: Ver documentación` (donde "Ver documentación" es un enlace hipervinculado a la URL descubierta).
-   - Inglés: `Documentation: View documentation` (donde "View documentation" es el enlace hipervinculado).
+### Nivel 1: Análisis de Manifiestos de Paquetes (`package.json`)
+- **Repositorio estándar:** Extrae `"homepage"`, `"documentation"` o `"website"` de la raíz `package.json`.
+- **Monorepos (Workspaces / `packages/*`):** Inspecciona los `package.json` dentro de carpetas como `packages/docs`, `apps/docs`, `website/package.json` o los paquetes core.
+- **Filtro:** Ignora URLs que apunten al repositorio fuente en `github.com`, priorizando sitios web externos dedicados para humanos.
+
+### Nivel 2: Extracción en Archivos de Documentación (`README.md`, `README.mdx`, `docs/*.md`)
+- Analiza todos los enlaces formateados en markdown `[Texto](https://...)` y etiquetas HTML `<a href="...">`.
+- Prioriza enlaces con texto ancla como "Documentation", "Documentación", "Getting Started", "Guía", "Website", "Official Site".
+
+### Nivel 3: Reconocimiento de Dominios y Rutas Oficiales
+El motor busca coincidencias con los siguientes patrones de URL:
+- **Dominios corporativos / Meta:** `*.atmeta.com`, `*.facebook.com`, `*.fb.com`
+- **Dominios dedicados a sistemas de diseño:** `*.design`, `*.style`, `*.design-system.*`, `ds.*`
+- **Portales de documentación SaaS:** `zeroheight.com`, `supernova.io`, `knapsack.cloud`
+- **Rutas de documentación:** URLs públicas que contengan `/docs/`, `/getting-started`, `/components`, `/guidelines`.
+
+---
+
+## 3. Regla de Presentación Unificada en Project Guide
+
+Cuando el sistema descubre la URL oficial de documentación por cualquiera de los métodos anteriores:
+
+- **Sección:** **Información** del Project Guide.
+- **Etiqueta Única:** `Documentación: Ver documentación` (en inglés: `Documentation: View documentation`).
+- **Comportamiento:** Solo se muestra una única línea sin duplicados.
