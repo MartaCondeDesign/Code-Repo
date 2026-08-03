@@ -470,6 +470,8 @@ button { color: inherit; }
 .app-footer-left span { color: var(--muted); }
 .footer-wizard-trigger { margin-top: 0; }
 .app-footer-credit { margin: 0; display: flex; align-items: center; gap: 8px; }
+.app-footer-credit a { color: #2563eb !important; font-weight: 600; text-decoration: underline; transition: color 0.12s; }
+.app-footer-credit a:hover { color: #1d4ed8 !important; }
 .app-footer-credit strong { font-weight: 400; }
 .footer-divider { display: inline-block; width: 1px; height: 10px; background: var(--line); vertical-align: middle; flex-shrink: 0; }
 
