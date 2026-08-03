@@ -367,6 +367,7 @@ export default function App() {
   const [map, setMap] = useState(null);
   const [repoUrl, setRepoUrl] = useState("");
   const [busy, setBusy] = useState(false);
+  const [progress, setProgress] = useState(0);
   const [err, setErr] = useState(null);
   const [lang, setLang] = useState("es");
   const [selected, setSelected] = useState(null);
@@ -723,7 +724,16 @@ export default function App() {
     setRepoUrl(url);
     setRepoMenuOpen(false);
     setBusy(true);
+    setProgress(8);
     setErr(null);
+
+    const progressTimer = setInterval(() => {
+      setProgress((prev) => {
+        if (prev >= 92) return 94;
+        return prev + Math.floor(Math.random() * 8 + 4);
+      });
+    }, 180);
+
     const tokenToSend = customToken !== undefined ? customToken : gitToken;
     try {
       const response = await fetch("/api/analyze", {
@@ -733,6 +743,8 @@ export default function App() {
       });
       const result = await response.json().catch(() => ({}));
       if (!response.ok) {
+        clearInterval(progressTimer);
+        setProgress(0);
         if (result.error && result.error.includes("AUTH_REQUIRED")) {
           setBusy(false);
           setModalToken(gitToken);
@@ -742,22 +754,30 @@ export default function App() {
         throw new Error(result.error || "Error");
       }
       
+      clearInterval(progressTimer);
+      setProgress(100);
+
       setRecentSearches((prev) => {
         const next = [url, ...prev.filter((u) => u !== url)].slice(0, 4);
         window.localStorage.setItem("recent-searches", JSON.stringify(next));
         return next;
       });
 
-      setBusy(false);
-      startTransition(() => {
-        setMap(result);
-        setSelected(null);
-        setSelectedPath("");
-        setRelatedIds(new Set());
-        setGuideOpen(true);
-      });
+      setTimeout(() => {
+        setBusy(false);
+        setProgress(0);
+        startTransition(() => {
+          setMap(result);
+          setSelected(null);
+          setSelectedPath("");
+          setRelatedIds(new Set());
+          setGuideOpen(true);
+        });
+      }, 250);
       return;
     } catch (error) {
+      clearInterval(progressTimer);
+      setProgress(0);
       setErr(error.message === "AUTH_REQUIRED" ? (lang === "es" ? "El repositorio requiere autenticación." : "Repository requires authentication.") : error.message);
     }
     setBusy(false);
@@ -946,7 +966,18 @@ export default function App() {
             {selectedPath && <button className="clear-focus" onClick={() => { setSelectedPath(""); setRelatedIds(new Set()); setSelected(null); setActiveCategory(null); }}>× {selectedPath}</button>}
           </div>
           <div className="graph">
-            {busy && <div className="loading-overlay"><div className="scan-line" /><p>{t.repoAnalyzing}<br /><span className="loading-sub">{t.repoAnalyzingSub}</span></p></div>}
+            {busy && (
+              <div className="loading-overlay">
+                <div className="progress-bar-container">
+                  <div className="progress-bar-fill" style={{ width: `${Math.min(100, Math.max(5, progress))}%` }} />
+                </div>
+                <p>
+                  {t.repoAnalyzing} <span className="progress-num">{Math.round(progress)}%</span>
+                  <br />
+                  <span className="loading-sub">{t.repoAnalyzingSub}</span>
+                </p>
+              </div>
+            )}
             <ReactFlow nodes={nodes} edges={edges} nodeTypes={nodeTypes} edgeTypes={edgeTypes} onNodeClick={(_, node) => { setActiveCategory(null); node.type === "chip" && focusCard(node.id); }} onInit={setFlow} onPaneClick={() => { setRelatedIds(new Set()); setSelected(null); setActiveCategory(null); }} fitView fitViewOptions={{ padding: 0.12 }} nodesConnectable={false} elementsSelectable={false} proOptions={{ hideAttribution: true }} colorMode="light">
               <Background color="#d9d6e4" gap={24} size={1} />
               <Controls />
