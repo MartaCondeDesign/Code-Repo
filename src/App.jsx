@@ -1596,7 +1596,7 @@ export default function App() {
           </button>
         </div>
         <span className="app-footer-credit">
-          {lang === "es" ? "Hecho por" : "Made by"}: <a href="https://www.martaconde.com" target="_blank" rel="noopener noreferrer" style={{ color: "#2563eb", textDecoration: "underline", fontWeight: "600" }}>Marta Conde</a> | {lang === "es" ? "Remix del proyecto de:" : "Remix of a project by:"} <a href="https://agentic-design-system-visualization.vercel.app/" target="_blank" rel="noopener noreferrer" style={{ color: "inherit", textDecoration: "underline", fontWeight: "400" }}>Cristian Morales</a>
+          {lang === "es" ? "Hecho por" : "Made by"}: <a href="https://www.martaconde.com" target="_blank" rel="noopener noreferrer" className="marta-link">Marta Conde</a> | {lang === "es" ? "Remix del proyecto de:" : "Remix of a project by:"} <a href="https://agentic-design-system-visualization.vercel.app/" target="_blank" rel="noopener noreferrer" className="cristian-link">Cristian Morales</a>
         </span>
       </footer>
     </div>
