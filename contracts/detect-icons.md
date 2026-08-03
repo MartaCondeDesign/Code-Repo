@@ -1,60 +1,41 @@
-# Detect Design System Icon Source and Inventory
+# Contrato: Detección de Iconos e Inventario (`detect-icons.md`)
 
 ## Objective
 
-Analyze a repository to determine how the Design System provides icons, locate any custom icon packages (such as GitHub Primer's Octicons), and discover official human documentation portals.
-
-The detector answers:
-
-1. Does the Design System have icons?
-2. Are icons stored internally in the repository (SVG files, custom icon components)?
-3. Are icons provided by an external or custom design system icon suite (e.g., Octicons `@primer/octicons-react`, Lucide, Tabler, Heroicons, FontAwesome)?
-4. What is the official documentation URL for the icon suite (e.g., `https://primer.style/octicons/`)?
-5. Is there an external human documentation website (Zeroheight, Supernova, custom `https://primer.style`, `https://*.design`, `https://*.style`) explaining the design system?
-6. Which repository files match/reference the icon set?
-7. What information must be rendered in the Project Guide?
+Analizar un repositorio para determinar cómo el Design System proporciona sus iconos, diferenciar los iconos de los componentes de interfaz, localizar archivos de activos vectoriales dedicados (`assets`, `icons`, `svg`) y reflejar con precisión la card de Iconos en el canvas visual y en la guía del proyecto.
 
 ---
 
-# Main rule
+## Reglas Críticas del Contrato
 
 ```text
-ASSET ≠ ICON
-FILE ≠ ICON
-ICON LIBRARY ≠ ICON FILE
-ICON IMPORT ≠ LOCAL ICON SOURCE
+IconButton ≠ ICON (IconButton es un COMPONENTE, NO un icono)
+COMPONENT ≠ ICON (Los componentes de UI usan iconos, pero no son iconos)
+ASSETS/ICONS/SVG = UBICACIÓN REAL DE ICONOS (Los iconos residen en archivos dedicados separados)
 ```
 
-Icons may come from:
+### 1. Regla de Exclusión de `IconButton`
+- **`IconButton` (y variantes como `IconButton.tsx`, `IconButtonActionBar`, `IconButtonFloating`, `IconButtonShowcase`) son COMPONENTES de interfaz.**
+- **REGLA ESTRICIA:** Ningún archivo nombrado `IconButton` o que implemente un botón con icono debe ser clasificado como archivo de icono. Se clasifica única y exclusivamente como **Componente (`component`)**.
 
-```text
-A. LOCAL ICON SOURCE (SVG files, icon components in repository)
-B. EXTERNAL / CUSTOM ICON SUITE (e.g. Octicons, Lucide, Tabler, Heroicons)
-C. MIXED SOURCE (Local SVG files + External/Custom library)
-```
+### 2. Ubicación de los Iconos en el Repositorio
+- Los iconos **NUNCA** se almacenan dentro de los componentes de UI.
+- Residen en archivos vectoriales o módulos de iconos dedicados y separados, típicamente ubicados en:
+  - Carpetas o archivos con nombres como `assets/`, `icons/`, `svg/`, `icon/`, `SVGIcon/`, `vectors/`.
+  - Archivos `.svg` individuales (excluyendo logos, favicons, ilustraciones o banners).
 
 ---
 
-# Detection Workflow
+## Nodos en el Canvas y Guía del Proyecto
 
-1. **Package Manifest & Code scanning:**
-   Scan `package.json` dependencies and source code imports for known icon packages (`@primer/octicons-react`, `@primer/octicons`, `octicons`, `lucide-react`, `@tabler/icons-react`, `@heroicons/react`, `font-awesome`, `@phosphor-icons/react`, `@radix-ui/react-icons`, `@ant-design/icons`, `@chakra-ui/icons`, etc.).
+1. **Carril de Iconos en el Canvas (`icon` / `icons`):**
+   - El canvas de ReactFlow debe categorizar los nodos de iconos en su correspondiente tag/layer de iconos (`n.tag === "icon"` o `n.layer === "icons"`).
 
-2. **README & Documentation scanning:**
-   Scan `README.md` and documentation markdown files (`.md`, `.mdx`) for explicit references to icon libraries as well as external human documentation site URLs (e.g. `https://primer.style/`, `https://primer.style/octicons/`, Zeroheight, Supernova, `https://*.design`, `https://*.style`).
-
-3. **SVG & Icon Component scanning:**
-   Scan `.svg` files in the repository while excluding non-icon assets (`logo`, `illustration`, `marketing`, `banner`, `hero`, `favicon`, `screenshot`, `artwork`). Valid vector SVG files and icon components belong to `internalIconFiles`.
+2. **Conteo en Project Guide:**
+   - La card de métrica **Iconos** en la guía del proyecto debe coincidir exactamente con el número de tarjetas (nodos) de la categoría de iconos presentes en el canvas (`nodes.filter(n => n.tag === "icon" || ["icons", "assets"].includes(n.layer))`).
+   - Al hacer clic en la tarjeta de métrica de Iconos, el canvas debe resaltar e iluminar únicamente las cards de la categoría de iconos.
 
 ---
 
-# What the Project Guide needs
-
-1. **Icons Metric Card (`design-metrics`):**
-   - Displays `design.dsIconFiles` — the exact count of files in the project/canvas referencing icons.
-   - Clicking on the Icons card highlights all matching canvas chips and left panel tree rows.
-
-2. **Información Section (`design-libraries`):**
-   - **External / Custom Icon Suites:** If an external or custom design system icon library (e.g. Octicons) is detected, render its name with its official documentation URL (e.g. `[Octicons](https://primer.style/octicons/)`) under `Información`.
-   - **External Documentation Portal:** If an external human documentation website is found in the README/docs (e.g. `https://primer.style/`), render `Documentación externa: [URL]`.
-   - **Internal Icons Only:** If icons are strictly local to the repository, do NOT render a duplicate external `Iconos:` line under `Información`.
+## Detección de Librerías Externas
+- Librerías externas o suites del sistema (ej. Octicons `@primer/octicons-react`, Lucide `lucide-react`, Tabler, Heroicons, FontAwesome) se muestran bajo la sección **Información** como `Iconos: Lucide` con su enlace oficial.

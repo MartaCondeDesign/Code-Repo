@@ -436,7 +436,7 @@ export default function ProjectGuide({ data, lang, selectedPath, open, onClose, 
     const canvasComponentNodes = nodes.filter(n => n.tag === "component" || ["components", "ui"].includes(n.layer));
     const canvasTokenNodes = nodes.filter(n => n.tag === "token" || n.tag === "tokens" || ["tokens", "foundation"].includes(n.layer));
     const canvasDocNodes = nodes.filter(n => ["rule", "skill", "doc", "documentation"].includes(n.tag) || n.layer === "docs");
-    const canvasIconNodes = nodes.filter(n => n.tag === "icon" || n.layer === "icons" || n.files?.some(f => /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(f) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(f)));
+    const canvasIconNodes = nodes.filter(n => n.tag === "icon" || n.layer === "icons" || n.files?.some(f => !/iconbutton/i.test(f) && (/(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(f) || /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(f))));
 
     const componentCount = canvasComponentNodes.length;
     const tokenCount = canvasTokenNodes.length;

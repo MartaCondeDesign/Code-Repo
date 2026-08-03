@@ -26,6 +26,7 @@ const TOP_LEVEL_BASENAMES = new Set([
 const LAYER_DEFS = [
   { id: "rules", label: "Rules & Docs", color: "#a78bfa" },
   { id: "tokens", label: "Tokens", color: "#fbbf24" },
+  { id: "icons", label: "Iconos", color: "#60a5fa" },
   { id: "components", label: "Components", color: "#34d399" },
   { id: "stories", label: "Stories", color: "#38bdf8" },
   { id: "scripts", label: "Scripts & Tooling", color: "#f472b6" },
@@ -35,6 +36,7 @@ const LAYER_DEFS = [
 const LAYER_SUB = {
   rules: ["Docs, reglas y skills de IA", "Docs, AI rules & skills"],
   tokens: ["Valores y definiciones del sistema", "System values and definitions"],
+  icons: ["Iconos vectoriales y recursos visuales", "Vector icons and visual assets"],
   components: ["Código fuente del design system", "Design system source code"],
   stories: ["Variantes y props visibles", "Visible variants & props"],
   scripts: ["Automatización y tooling", "Automation & tooling"],
@@ -100,12 +102,17 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   const docsCapped = docTotal > MAX_CATEGORY_NODES;
   const displayDocs = docsCapped ? nonRuleDocs.slice(0, MAX_CATEGORY_NODES) : nonRuleDocs;
 
+  const iconAnalysis = detectIcons(files, fileContents);
+  const internalIcons = iconAnalysis.internalIconFiles || [];
+  const displayIcons = internalIcons.length > MAX_CATEGORY_NODES ? internalIcons.slice(0, MAX_CATEGORY_NODES) : internalIcons;
+
   const raw = [];
   for (const s of skills) raw.push(skillNode(s));
   const ruleFiles = configFiles.filter((f) => /^(agenta?|claude)\.md$/i.test(path.basename(f)));
   if (ruleFiles.length > 0) raw.push(ruleNode(ruleFiles));
   for (const d of displayDocs) raw.push(docNode(d));
   for (const t of displayTokens) raw.push(tokenNode(t));
+  for (const iconFile of displayIcons) raw.push(iconNode(iconFile));
   for (const c of displayComponents) raw.push(componentNode(c));
   for (const s of stories) raw.push(storyNode(s, components));
   for (const s of scripts) raw.push(scriptNode(s));
@@ -295,6 +302,8 @@ export function detectIcons(files, fileContents) {
   // 4. Scan internal SVG & icon component files
   const internalIconFiles = files.filter((f) => {
     const lower = f.toLowerCase();
+    // IconButton is a UI Component, NOT an icon
+    if (/iconbutton/i.test(lower)) return false;
     if (EXCLUDED_ASSET_PATTERN.test(lower)) return false;
     const isSvg = lower.endsWith(".svg");
     const isIconDir = /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(lower);
@@ -689,6 +698,20 @@ function tokenNode(file) {
     what_en: "System tokens with color, typography and spacing values.",
     does: "Define los valores que consumen los componentes: es el contrato de diseño.",
     does_en: "Defines the values consumed by components: it is the design contract.",
+  };
+}
+
+function iconNode(file) {
+  return {
+    layer: "icons",
+    title: baseName(file),
+    sub: dirName(file),
+    tag: "icon",
+    files: [file],
+    what: "Activo o componente de icono vectorial del sistema de diseño.",
+    what_en: "Vector icon asset or component of the design system.",
+    does: "Proporciona simbología y recursos visuales separados de los componentes de UI.",
+    does_en: "Provides symbols and visual assets separated from UI components.",
   };
 }
 
