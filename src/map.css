@@ -271,9 +271,7 @@ button { color: inherit; }
 .graph { position: relative; flex: 1; min-height: 0; isolation: isolate; }
 .graph .react-flow { --xy-background-color: var(--paper); --xy-controls-button-background-color-default: #fff; --xy-controls-button-color-default: #555; --xy-controls-button-border-color-default: var(--line); }
 .graph .react-flow__controls { bottom: 44px !important; left: 14px !important; overflow: visible; border: 1px solid var(--line); border-radius: 4px !important; box-shadow: 0 6px 20px rgba(40,30,60,.08); }
-.graph .react-flow__controls-button { position: relative; overflow: visible; border-radius: 4px !important; }
-.graph .react-flow__controls-button:first-child { border-top-left-radius: 4px !important; border-top-right-radius: 4px !important; }
-.graph .react-flow__controls-button:last-child { border-bottom-left-radius: 4px !important; border-bottom-right-radius: 4px !important; }
+.graph .react-flow__controls-button { position: relative; overflow: visible; border-radius: 0 !important; }
 .graph .react-flow__controls-button::after { content: attr(aria-label); position: absolute; left: calc(100% + 8px); top: 50%; z-index: 2000; transform: translateY(-50%) translateX(-3px); width: max-content; max-width: 180px; padding: 6px 8px; border-radius: 5px; background: #172033; color: #fff; box-shadow: 0 4px 14px rgba(15,23,42,.18); font-family: var(--font-ui); font-size: 10px; line-height: 1.25; pointer-events: none; opacity: 0; visibility: hidden; transition: opacity .14s, transform .14s; }
 .graph .react-flow__controls-button:hover::after, .graph .react-flow__controls-button:focus-visible::after { opacity: 1; visibility: visible; transform: translateY(-50%) translateX(0); }
 .loading-overlay { position: absolute; inset: 0; z-index: 50; display: flex; flex-direction: column; justify-content: center; align-items: center; gap: 14px; background: rgba(251,250,252,.60); backdrop-filter: blur(3px); -webkit-backdrop-filter: blur(3px); color: var(--muted); text-align: center; font-size: 14px; transition: opacity .35s ease, visibility .35s ease; }
