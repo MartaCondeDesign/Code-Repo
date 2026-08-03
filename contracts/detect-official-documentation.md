@@ -1,128 +1,183 @@
-# Contrato: Detección Universal de Documentación Oficial Externa (`detect-official-documentation.md`)
+# Critical Documentation URL Validation Contract (`detect-official-documentation.md`)
 
 ## Objective
 
-Find the official public documentation website for the Design System.
+Prevent image URLs, badge URLs, screenshots, logos, SVG assets, and other non-navigable resources from being classified as official Design System documentation.
 
-Do NOT return image URLs, badge URLs, repository assets, screenshots, SVGs, or decorative links as documentation.
+The documentation detector must distinguish between:
+
+- image source URLs
+- badge URLs
+- clickable link destinations
+- actual documentation websites
 
 ---
 
-## Critical Rule
+## Critical rule
 
 ```text
 IMAGE URL ≠ DOCUMENTATION URL
 BADGE URL ≠ DOCUMENTATION URL
-REPOSITORY FILE ≠ DOCUMENTATION WEBSITE
+ASSET URL ≠ DOCUMENTATION URL
+
+The detector must NEVER classify these as official documentation:
+
+img.shields.io
+badge image URLs
+.png
+.jpg
+.jpeg
+.gif
+.svg
+.webp
+.ico
+screenshots
+logos
+image CDN URLs
+repository image assets
+
+Example:
+
+https://img.shields.io/badge/Docs-astryx.atmeta.com-6741d9?logo=readthedocs&logoColor=white
+
+must always be classified as:
+
+BADGE_IMAGE
+
+and must NEVER be returned as:
+
+OFFICIAL_DOCUMENTATION
 ```
 
-### Example:
-
-`https://img.shields.io/badge/Docs-astryx.atmeta.com-6741d9` is **NOT** documentation. It is a badge image.
-
-A valid documentation URL should resolve to an actual documentation page or documentation website, for example:
-`https://astryx.atmeta.com/docs/getting-started`
-
 ---
 
-## Reject URLs from Asset/Image Services
+## Markdown badges
 
-Do **NOT** classify URLs as documentation when they point to:
-- `img.shields.io`
-- `.png`
-- `.jpg`
-- `.jpeg`
-- `.gif`
-- `.svg`
-- `.webp`
-- `.ico`
-- Image CDNs
-- Badge generators
-- Screenshot services
-
-Classify these as: `DOCUMENTATION_BADGE` or `IMAGE_ASSET`.  
-**Never as: `OFFICIAL_DOCUMENTATION`**.
-
----
-
-## Inspect Markdown and HTML Links Correctly
-
-A `README.md` may contain linked badges:
+When parsing Markdown like:
 
 ```markdown
-[![Docs](https://img.shields.io/badge/Docs-astryx.atmeta.com-purple)](https://astryx.atmeta.com/docs/getting-started)
+[![Docs](https://img.shields.io/badge/Docs-example.com-purple)](
+  https://example.com/docs/getting-started
+)
 ```
 
-There are **TWO** URLs here:
-- **Badge image:** `https://img.shields.io/...` (REJECT)
-- **Link destination:** `https://astryx.atmeta.com/docs/getting-started` (ACCEPT)
+there are **TWO** different URLs.
 
-Always follow the **clickable link destination (`DESTINATION_URL` / `href`)**. Do NOT return the image source (`IMAGE_URL` / `src`).
+Interpret them as:
 
-### Markdown Rule
+- `https://img.shields.io/...`  
+  → **`IMAGE_SOURCE`**  
+  → **REJECT** as documentation
 
-For this structure:
+- `https://example.com/docs/getting-started`  
+  → **`LINK_DESTINATION`**  
+  → documentation candidate
+
+The clickable destination URL always has priority over the image URL.
+
+### Markdown parsing rule
+
+For:
+
 ```text
 [![label](IMAGE_URL)](DESTINATION_URL)
 ```
-Interpret:
-- `IMAGE_URL` → badge/image asset (reject)
-- `DESTINATION_URL` → candidate official documentation URL (priority)
 
-### HTML Equivalent
+classify:
+
+- `IMAGE_URL` → `BADGE_IMAGE` or `IMAGE_ASSET` (reject)
+- `DESTINATION_URL` → `DOCUMENTATION_CANDIDATE` (evaluate)
+
+Never return `IMAGE_URL` as the official documentation URL.
+
+---
+
+## HTML parsing rule
 
 For:
+
 ```html
-<a href="https://astryx.atmeta.com/docs/getting-started">
-  <img src="https://img.shields.io/...">
+<a href="https://example.com/docs/getting-started">
+  <img src="https://img.shields.io/..." />
 </a>
 ```
-Interpret:
-- `img src` → image only (reject)
-- `a href` → documentation candidate (accept)
 
-Never confuse `src` with `href`.
+classify:
 
----
+- `img src` → `IMAGE_ASSET` (reject)
+- `a href` → `DOCUMENTATION_CANDIDATE` (evaluate)
 
-## Where to Search & Priority
-
-Prioritize searching in:
-1. `README.md` links labelled:
-   - `Docs`
-   - `Documentation`
-   - `Get started` / `Getting started`
-   - `Website`
-   - `Design System`
-   - `Component docs`
-2. `package.json` (`homepage`, `repository`, `documentation`)
-3. Custom documentation metadata & configuration (`docusaurus.config.js`, `astro.config.mjs`, `next.config.js`)
-4. GitHub repository About/Homepage URL
-5. Documentation apps/directories (`apps/docsite`, `docs/`)
-6. Storybook links
+Always prefer the `href` over the `src`.
 
 ---
 
-## Documentation Website Signals
+## Hard rejection rules
 
-A strong documentation URL usually:
-- Uses `http` or `https`
-- Points to an HTML website
-- Has navigation or documentation routes such as `/docs`, `/getting-started`, `/components`, `/foundations`, `/guides`
-- Or is the documentation domain root (e.g. `https://design.example.com`)
+Before evaluating documentation candidates, reject any URL when:
 
-Supported documentation systems include Docusaurus, Storybook, Zeroheight, Supernova, GitBook, VitePress, Nextra, Astro, Next.js, and custom websites. (Do not require `/docs` to exist).
+1. **Hostname is:** `img.shields.io` or another known badge/image service (`badges.gitter.im`, `coveralls.io`, `travis-ci.org`, `raw.githubusercontent.com`).
+2. **URL path ends with:** `.png`, `.jpg`, `.jpeg`, `.gif`, `.svg`, `.webp`, `.ico`.
+3. **URL was extracted from:**
+   - `<img src="">`
+   - Markdown image syntax `![](...)`
+   - badge image source
+   - logo source
+   - screenshot source
+
+These URLs must be removed from the documentation candidate list before classification.
 
 ---
 
-## Classification Levels
+## Candidate selection
 
-- **`OFFICIAL_DOCUMENTATION`**: Strong evidence that the URL is the official Design System documentation.
-- **`DOCUMENTATION_CANDIDATE`**: Looks like documentation, but official status is uncertain.
-- **`STORYBOOK`**: Component documentation hosted in Storybook.
-- **`BADGE_IMAGE`**: Badge asset only (reject).
-- **`IMAGE_ASSET`**: Image, screenshot, logo, SVG, etc. (reject).
-- **`NOT_FOUND`**: No reliable documentation URL found.
+After rejecting image and badge URLs, prioritize actual navigable links whose context contains:
+
+- `Docs`
+- `Documentation`
+- `Getting Started` / `Get Started`
+- `Components`
+- `Design System`
+- `Component Library`
+- `Guidelines`
+- `Foundations`
+- `Usage`
+
+Possible valid documentation URLs include:
+- `https://design.example.com`
+- `https://design.example.com/docs`
+- `https://design.example.com/docs/getting-started`
+- `https://example.github.io/design-system/`
+- `https://astryx.atmeta.com/docs/getting-started`
+
+A documentation URL does NOT need to contain `/docs`, but it must represent a navigable website rather than an asset.
+
+---
+
+## Validation
+
+Before returning a URL as `OFFICIAL_DOCUMENTATION`, verify:
+
+1. It is an `http` or `https` link.
+2. It is not an image or asset URL.
+3. It is not a Shields.io badge.
+4. It came from a clickable link destination, homepage, deployment configuration, package metadata, or other documentation reference.
+5. Its context indicates documentation, Design System, components, guidelines, or getting started content.
+6. If a badge contains both an image URL and a clickable destination, use the clickable destination.
+
+---
+
+## Classification
+
+Use:
+
+- **`OFFICIAL_DOCUMENTATION`**
+- **`DOCUMENTATION_CANDIDATE`**
+- **`STORYBOOK`**
+- **`BADGE_IMAGE`**
+- **`IMAGE_ASSET`**
+- **`NOT_FOUND`**
+
+`BADGE_IMAGE` and `IMAGE_ASSET` can **NEVER** become `OFFICIAL_DOCUMENTATION`.
 
 ---
 
@@ -130,36 +185,26 @@ Supported documentation systems include Docusaurus, Storybook, Zeroheight, Super
 
 ```yaml
 DOCUMENTATION:
-  Status: OFFICIAL_DOCUMENTATION
+  Status: OFFICIAL_DOCUMENTATION # OFFICIAL_DOCUMENTATION | DOCUMENTATION_CANDIDATE | STORYBOOK | NOT_FOUND
   Official URL: "https://astryx.atmeta.com/docs/getting-started"
   Evidence file: "README.md"
-  Evidence: "Docs badge links to this destination."
-  Rejected URL: "https://img.shields.io/badge/Docs-astryx.atmeta.com-..."
+  Evidence type: "Markdown link destination" # Markdown link destination | HTML href | package homepage | deployment config | other
+  Rejected URLs:
+    - "https://img.shields.io/badge/Docs-astryx.atmeta.com-6741d9?logo=readthedocs&logoColor=white"
   Rejected reason: "Badge image, not documentation."
-  Confidence: High
+  Confidence: High # High | Medium | Low
 ```
 
 ---
 
 ## Final Rule
 
-When Markdown or HTML contains both an image and a link:
-**FOLLOW THE LINK DESTINATION (`DESTINATION_URL`), NOT THE IMAGE SOURCE (`IMAGE_URL`)**.
+**NEVER RETURN `img.shields.io` AS DOCUMENTATION.**
 
-And always validate:  
-*Can this URL represent a navigable documentation website?*  
-If the answer is no, do **not** classify it as official documentation.
+If the only URL found is a Shields.io badge or image asset:
 
----
-
-### Caso Astryx
-
-```text
-BADGE
-img.shields.io/...
-→ descartar como documentación
-
-DESTINATION / DOCS WEBSITE
-astryx.atmeta.com/docs/getting-started
-→ documentación oficial
+```yaml
+Official URL: NOT FOUND
 ```
+
+**Do not infer the documentation URL from the text encoded inside the badge URL.**
