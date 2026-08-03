@@ -315,8 +315,7 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
 
   const allKnownExts = useMemo(() => FILTER_CATEGORIES.flatMap(c => c.exts), []);
   const customNotInList = fsTerm && !allKnownExts.includes(fsTerm);
-
-  const selectedName = selectedPath ? selectedPath.split("/").pop() : (filterExt ? (filterExt === "folder" ? (lang === "es" ? "Carpetas" : "Folders") : `.${filterExt}`) : null);
+  const filterBadgeName = filterExt ? (filterExt === "folder" ? (lang === "es" ? "Carpetas" : "Folders") : `.${filterExt}`) : null;
 
   return (
     <aside className="repo-tree" aria-label={lang === "es" ? "Árbol del repositorio" : "Repository tree"}>
@@ -376,16 +375,13 @@ export default function RepoTree({ files, repoName, selectedPath, onSelect, lang
           </div>
         </div>
 
-        {/* Selected element badge: larger, transparent background with black text and clear cross button */}
-        {selectedName && (
+        {/* Filter badge: displays ONLY when a type filter is active */}
+        {filterBadgeName && (
           <div className="tree-active-badge">
-            <span className="tree-badge-name">{selectedName}</span>
+            <span className="tree-badge-name">{filterBadgeName}</span>
             <button
-              onClick={() => {
-                if (selectedPath) onSelect("", false);
-                if (filterExt) clearFilter();
-              }}
-              aria-label={lang === "es" ? "Quitar selección" : "Clear selection"}
+              onClick={clearFilter}
+              aria-label={lang === "es" ? "Quitar filtro" : "Clear filter"}
             >
               ×
             </button>

@@ -1113,7 +1113,6 @@ export default function App() {
         <section className="visual-pane">
           <div className="pane-heading map-heading">
             <div><span className="pane-kicker">{t.map}</span><h2>{data.repoName}</h2></div>
-            {selectedPath && <button className="clear-focus" onClick={() => { setSelectedPath(""); setRelatedIds(new Set()); setSelected(null); setActiveCategory(null); }}>× {selectedPath}</button>}
           </div>
           <div className="graph">
             {busy && (
