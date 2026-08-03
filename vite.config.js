@@ -15,7 +15,7 @@ function analyzerServer() {
 
 export default defineConfig({
   plugins: [react(), analyzerServer()],
-  base: "./",
+  base: "/",
   build: { outDir: "dist" },
   server: {
     port: 4311,
