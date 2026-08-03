@@ -221,12 +221,12 @@ button { color: inherit; }
 
 .alien-antenna-tip {
   animation: antennaGlow 1.4s ease-in-out infinite alternate;
-  transform-origin: 80px 16px;
+  transform-origin: 80px 14px;
 }
 
 @keyframes antennaGlow {
   0% { stroke: #2563eb; fill: none; r: 4px; }
-  100% { stroke: #3b82f6; fill: #93c5fd; r: 6px; }
+  100% { stroke: #3b82f6; fill: none; r: 6px; }
 }
 
 .alien-flipping-page {
@@ -254,19 +254,6 @@ button { color: inherit; }
     transform: rotateY(-180deg) scaleX(1);
     opacity: 0;
   }
-}
-
-.alien-sparkle {
-  animation: sparklePulse 2s ease-in-out infinite alternate;
-}
-.alien-sparkle.s1 { animation-delay: 0.1s; }
-.alien-sparkle.s2 { animation-delay: 0.4s; }
-.alien-sparkle.s3 { animation-delay: 0.7s; }
-.alien-sparkle.s4 { animation-delay: 1s; }
-
-@keyframes sparklePulse {
-  0% { opacity: 0.2; transform: scale(0.8); }
-  100% { opacity: 1; transform: scale(1.4); }
 }
 
 
