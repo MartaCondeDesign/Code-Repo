@@ -43,6 +43,30 @@ La aplicación organiza la información en tres capas principales:
 
 Do not assume a fixed folder structure.
 
+**Reading priority — always follow this order before running any detection contract:**
+
+**Step 0 — `README.md`:** Read the official root README.md first. It is the primary source of truth: repo purpose, structure, external links, tech stack, framework, icon library, Storybook URL, documentation site. If it already provides the needed information, use it directly and skip the heuristic contract for that element.
+
+**Step 1 — AI rules file:** After the README, read whichever AI rules/context file exists in the repository (first match wins):
+
+| Program | File(s) |
+|---|---|
+| Claude Code | `CLAUDE.md`, `claude.md`, `.claude/CLAUDE.md` |
+| Claude Code (agents) | `AGENTS.md`, `agents.md`, `agent.md` |
+| Cursor | `.cursorrules`, `.cursor/rules/*.mdc` |
+| Windsurf | `.windsurfrules`, `.windsurf/rules/*.md` |
+| GitHub Copilot | `.github/copilot-instructions.md`, `.github/instructions/*.instructions.md` |
+| Cline | `.clinerules`, `.cline/rules/*.md` |
+| Aider | `.aider.conf.yml`, `CONVENTIONS.md` (if Aider-style) |
+| Gemini CLI | `GEMINI.md`, `gemini.md` |
+| OpenAI Codex | `CODEX.md`, `.codex` |
+| Devin | `.devin/instructions.md` |
+| Generic / custom | `AI_RULES.md`, `ai_rules.md`, `.rules`, `project.rules`, `CONTRIBUTING.md` |
+
+The AI rules file describes how the repo is structured, its conventions, what tools it uses and how it organizes each layer (tokens, components, docs, icons…). This context improves every subsequent detection contract.
+
+**Step 2 — Detection contracts:** Only after steps 0 and 1, run the heuristic contracts in `/contracts/detect-*.md` for each element not already resolved.
+
 Before making UI changes, inspect the repository and identify where these resources live:
 
 - Design tokens
@@ -140,7 +164,8 @@ Para mantener la consistencia estética y visual del proyecto, sigue estas espec
 22. Al hacer clic en cualquier nodo (chip) del canvas, siempre se deben producir dos efectos simultáneos: (a) iluminar/seleccionar el archivo correspondiente en el árbol del repositorio izquierdo (tree), expandiendo las carpetas necesarias para que sea visible; y (b) abrir el panel de información derecho (inspector) mostrando los detalles de ese nodo.
 23. El buscador del árbol de repositorio (tree) filtra únicamente por coincidencia directa de texto en el nombre de ruta del archivo. No realiza expansión conceptual ni búsqueda semántica por sinónimos; solo devuelve archivos cuya ruta normalizada contiene exactamente la cadena de búsqueda introducida.
 24. La detección de componentes del Design System sigue dos contratos en orden: primero `contracts/detect-component-inventory.md` (¿cuántos componentes oficiales?) priorizando barrel files, registries y package.json exports; después `contracts/detect-components.md` (¿dónde está construido cada uno?). El número mostrado en la card siempre proviene del inventario, no del conteo de archivos.
-25. Iconos sin emojis: No se deben usar emojis para representar iconos ni acciones visuales en la interfaz. Utilizar únicamente iconos vectoriales SVG. El icono de la llave (SVG) en el buscador solo se muestra en repositorios que requieran un token. La detección de iconos del Design System se rige por el contrato `contracts/detect-icons.md`.
+25. Sin emojis en la interfaz: No se deben usar emojis para representar iconos ni acciones visuales en la interfaz. Utilizar únicamente iconos vectoriales SVG. El icono de la llave (SVG) en el buscador solo se muestra en repositorios que requieran un token. La detección de assets del Design System se rige por el contrato `contracts/detect-assets.md`.
+30. Assets en Project Guide — externos vs. internos: Si los assets de icono provienen de una librería externa (Lucide, Octicons, Heroicons, Tabler, etc.), se mencionan únicamente en la sección de Información del Project Guide (ej. "Assets: Lucide"). Si son internos (archivos `.svg` propios del repositorio), NO se mencionan en la sección de Información — ya están representados por su card de métrica "Assets" y su nodo en el canvas. Si coexisten ambos tipos, los externos van a Información y los internos a la card; nunca se duplica la información entre las dos secciones.
 26. Storybook no es un framework UI: Storybook es una herramienta de entorno de desarrollo y documentación, por lo que nunca debe listarse dentro de la categoría Otros/Frameworks en la guía del proyecto. Storybook solo se muestra en su enlace dedicado si se detecta la URL oficial de despliegue propia del repositorio (ej. Chromatic, GitHub Pages), y jamás se debe enlazar a la web genérica storybook.js.org.
 27. Análisis de README y Documentación Externa: El sistema debe analizar `package.json` (campos homepage y documentation), `README.md` y archivos de documentación para extraer enlaces a la documentación oficial externa para humanos (ej. `*.atmeta.com`, `primer.style`, Zeroheight, Supernova, web propia del DS). Cuando se detecte una URL oficial, se muestra en la sección Información de Project Guide etiquetada como `Documentación: Ver documentación` con su enlace activo.
 28. Límite de 200 elementos por categoría: En el canvas y en el Project Guide no se pueden mostrar más de 200 elementos por cada categoría (componentes, tokens, documentación o iconos). Si un repositorio excede de 200 elementos en cualquiera de estas categorías, el canvas renderiza únicamente los primeros 200 y la tarjeta de métricas de la guía del proyecto indica el total con el distintivo '+' (ej. 221+) e informa en su tooltip que el canvas muestra los primeros 200 elementos.
@@ -150,6 +175,10 @@ Para mantener la consistencia estética y visual del proyecto, sigue estas espec
 32. Detección Universal de Documentación Oficial Externa: Dado que cada repositorio de GitHub está estructurado de forma distinta (monorepos, paquetes únicos, carpetas de documentación), la detección de la web oficial de documentación se rige por el contrato `contracts/detect-official-documentation.md`. El analizador debe inspeccionar jerárquicamente: (1) `homepage` o `documentation` en `package.json` raíz y paquetes workspaces (`packages/*/package.json`), (2) enlaces markdown y badges en `README.md` o `docs/*.md`, y (3) patrones de dominios corporativos (`*.atmeta.com`, `primer.style`, `zeroheight.com`, `supernova.io`, `*.design`, `*.style` o rutas `/docs/`).
 33. Clasificación de Iconos vs Componentes y Carril de Iconos en el Canvas: `IconButton` es un COMPONENTE de interfaz, NO un icono. Queda strictly prohibido clasificar `IconButton` o sus variantes como archivos de icono. Los iconos residen en archivos vectoriales dedicados (`assets/`, `icons/`, `svg/`). En el canvas visual de ReactFlow debe existir un carril dedicado de Iconos (`icons`), y la tarjeta de métricas de Iconos del Project Guide debe contar y señalar exactamente las tarjetas de iconos presentes en el canvas.
 34. Tipografía y Color Unificado en la Pantalla de Carga: Ambas líneas de texto en el overlay de carga (`.loading-overlay p` y `.loading-overlay .loading-sub`) deben tener de manera obligatoria y uniforme un tamaño de fuente de `14px !important`, peso de fuente **regular** (`font-weight: 400 !important`) y color negro puro `#000000 !important`. No se permiten pesos en negrita ni colores grises en el texto de carga.
+35. Orden de lectura obligatorio — README → AI rules → contratos: Para detectar cualquier elemento del repositorio (componentes, assets, tokens, iconos, documentación, storybook, framework, gráficos u otros), el backend sigue siempre este orden: **(1)** leer el `README.md` raíz del repositorio; **(2)** leer el archivo de reglas/contexto de IA del repositorio (AGENTS.md, CLAUDE.md, .cursorrules, .windsurfrules, .github/copilot-instructions.md, .clinerules, GEMINI.md, CODEX.md, .devin/instructions.md, CONVENTIONS.md, AI_RULES.md, .rules, etc.); **(3)** solo si la información buscada no se ha encontrado en los pasos anteriores, ejecutar el contrato heurístico específico (`contracts/detect-*.md`). Los pasos 1 y 2 tienen prioridad absoluta sobre cualquier inferencia heurística.
+36. Sección Assets en el canvas — todos los SVG del repositorio: El mapa visual debe incluir una sección/carril dedicada a Assets (layer `icons`, label "Assets") que muestra TODOS los archivos `.svg` del repositorio, agrupados por carpeta (1 nodo por carpeta). Se excluyen únicamente los SVG dentro de directorios de tests (`__tests__`, `__mocks__`, `e2e`) y archivos de stories/spec. Se incluyen logos, ilustraciones, iconos, banners y cualquier otro SVG. Al hacer clic en la card "Assets" de Project Guide se iluminan todos los nodos de esta sección en el canvas y sus carpetas en el árbol.
+37. El repositorio es la fuente de verdad del canvas: Toda card (nodo) que aparezca en el mapa visual DEBE estar respaldada por al menos un archivo o carpeta real del repositorio (campo `files[]` del nodo). El árbol del repositorio izquierdo es la fuente de verdad: si un recurso no existe como archivo en el repositorio, no puede aparecer en el canvas. Al hacer clic en cualquier nodo del canvas, la carpeta o archivo correspondiente debe quedar seleccionado y visible en el árbol. Nunca se crean nodos con rutas inventadas o sin respaldo en el árbol de ficheros real.
+38. Detección y Conteo de Archivos `styles.css` como Tokens/Estilos: Los archivos de hojas de estilo globales o principales del sistema de diseño (tales como `styles.css`, `style.css`, `styles.scss`, `style.scss`, `styles.less`, `global.css`, `base.css`, `tokens.css` y similares) deben ser detectados obligatoriamente como archivos de tokens/estilos (`isTokenFile`). Deben aparecer representados en el mapa visual de ReactFlow en la capa de `tokens` y contarse en la tarjeta de métricas de 'TOKENS' de la guía del proyecto.
 
 ---
 
@@ -161,6 +190,7 @@ Cada parte del Design System que aparece como card de métrica en la guía del p
 
 | Parte DS | Contrato | Card en guía |
 |---|---|---|
+| Assets (SVG icons) | [`contracts/detect-assets.md`](contracts/detect-assets.md) | Assets |
 | Component Inventory | [`contracts/detect-component-inventory.md`](contracts/detect-component-inventory.md) | Componentes (número) |
 | Component Source | [`contracts/detect-components.md`](contracts/detect-components.md) | Componentes (archivos) |
 | Design Tokens | [`contracts/detect-tokens.md`](contracts/detect-tokens.md) | Tokens |
@@ -171,6 +201,7 @@ Cada parte del Design System que aparece como card de métrica en la guía del p
 
 ### Reglas generales de detección
 
+0. **Orden de lectura obligatorio antes de cualquier contrato:** (1) `README.md` raíz → (2) archivo de reglas de IA del repositorio (AGENTS.md, CLAUDE.md, .cursorrules, copilot-instructions.md, etc. — ver tabla completa en "Repository discovery") → (3) contratos `contracts/detect-*.md`. Si los pasos 0 o 1 ya resuelven la información buscada, el contrato correspondiente no se ejecuta.
 1. **Los conteos de las cards** usan archivos pertenecientes a **nodos del mapa DS** (node-based), no escaneo genérico de `/src`. La detección genérica solo sirve para `hasDesignSystem`.
 2. **Tokens vs Styles:** Un archivo `.css` que solo define Custom Properties en `:root` es un token, no un style. Un archivo `.module.css` con selectores de componente es un style.
 3. **Archivos generados:** No contar como fuente de verdad archivos en `dist/`, `build/`, `output/` o con comentario `do not edit`.

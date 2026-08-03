@@ -154,7 +154,19 @@ Look for real definitions in:
 
 The extension is only a hint.
 
-Never classify a file as Token Source solely based on its name or extension.
+---
+
+## Style Definition Files & `styles.css` Rule
+
+Files named:
+- `styles.css` / `style.css`
+- `styles.scss` / `style.scss`
+- `styles.less` / `styles.json`
+- `global.css` / `base.css` / `tokens.css`
+
+that define CSS variables, theme design decisions, or core Design System styling rules **MUST be detected as Token Source files**.
+
+They **MUST appear on the visual canvas map** under the `tokens` layer and **MUST be counted as token files** in the Project Guide metric card.
 
 ---
 

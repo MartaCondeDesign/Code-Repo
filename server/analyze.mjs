@@ -26,7 +26,7 @@ const TOP_LEVEL_BASENAMES = new Set([
 const LAYER_DEFS = [
   { id: "rules", label: "Rules & Docs", color: "#a78bfa" },
   { id: "tokens", label: "Tokens", color: "#fbbf24" },
-  { id: "icons", label: "Iconos", color: "#60a5fa" },
+  { id: "icons", label: "Assets", color: "#60a5fa" },
   { id: "components", label: "Components", color: "#34d399" },
   { id: "stories", label: "Stories", color: "#38bdf8" },
   { id: "scripts", label: "Scripts & Tooling", color: "#f472b6" },
@@ -36,7 +36,7 @@ const LAYER_DEFS = [
 const LAYER_SUB = {
   rules: ["Docs, reglas y skills de IA", "Docs, AI rules & skills"],
   tokens: ["Valores y definiciones del sistema", "System values and definitions"],
-  icons: ["Iconos vectoriales y recursos visuales", "Vector icons and visual assets"],
+  icons: ["Assets vectoriales y recursos visuales", "Vector assets and visual resources"],
   components: ["Código fuente del design system", "Design system source code"],
   stories: ["Variantes y props visibles", "Visible variants & props"],
   scripts: ["Automatización y tooling", "Automation & tooling"],
@@ -73,11 +73,74 @@ const VERB_DEFS_EN = {
 const SOURCE_EXT = /\.(tsx?|jsx?|mjs|vue|svelte)$/;
 const CSS_EXT = /\.(css|scss|sass)$/;
 
+// Step 0 — always read the root README.md before any detection contract runs.
+function readReadme(repoDir, files) {
+  const readmePath = files.find((f) => /^readme\.mdx?$/i.test(f));
+  if (!readmePath) return "";
+  try {
+    return fs.readFileSync(path.join(repoDir, readmePath), "utf8");
+  } catch {
+    return "";
+  }
+}
+
+// Step 1 — read the AI rules/context file of the repository (first match wins).
+// Covers Claude Code, Cursor, Windsurf, Copilot, Cline, Aider, Gemini, Codex, Devin, and generic formats.
+const AI_RULES_PATTERNS = [
+  // Claude Code
+  /^claude\.md$/i, /^agents?\.md$/i, /^\.claude\/claude\.md$/i,
+  // Cursor
+  /^\.cursorrules$/i, /^\.cursor\/rules\/[^/]+\.mdc$/i,
+  // Windsurf
+  /^\.windsurfrules$/i, /^\.windsurf\/rules\/[^/]+\.md$/i,
+  // GitHub Copilot
+  /^\.github\/copilot-instructions\.md$/i, /^\.github\/instructions\/[^/]+\.instructions\.md$/i,
+  // Cline
+  /^\.clinerules$/i, /^\.cline\/rules\/[^/]+\.md$/i,
+  // Aider
+  /^\.aider\.conf\.ya?ml$/i, /^conventions\.md$/i,
+  // Gemini CLI
+  /^gemini\.md$/i,
+  // OpenAI Codex
+  /^codex\.md$/i, /^\.codex$/i,
+  // Devin
+  /^\.devin\/instructions\.md$/i,
+  // Generic / custom
+  /^ai_rules\.md$/i, /^\.rules$/i, /^project\.rules$/i,
+];
+
+function readAiRules(repoDir, files) {
+  for (const pattern of AI_RULES_PATTERNS) {
+    const match = files.find((f) => pattern.test(f));
+    if (match) {
+      try {
+        return { path: match, content: fs.readFileSync(path.join(repoDir, match), "utf8") };
+      } catch {
+        // continue to next candidate
+      }
+    }
+  }
+  return { path: null, content: "" };
+}
+
 export function analyzeRepo(repoDir, repoName, repoUrl) {
   const files = [];
   walk(repoDir, files, "");
   const fileSet = new Set(files);
+
+  // Step 0: read README.md — primary source of truth
+  const readmeContent = readReadme(repoDir, files);
+
+  // Step 1: read AI rules file (AGENTS.md, CLAUDE.md, .cursorrules, etc.) — secondary context
+  const aiRules = readAiRules(repoDir, files);
+  const aiRulesContent = aiRules.content;
+
+  // Step 2 onwards: heuristic detection via contracts
   const fileContents = collectFileContents(repoDir, files);
+  // Guarantee README and AI rules file are always in fileContents regardless of budget
+  const readmePath = files.find((f) => /^readme\.mdx?$/i.test(f));
+  if (readmePath && readmeContent && !fileContents[readmePath]) fileContents[readmePath] = readmeContent;
+  if (aiRules.path && aiRulesContent && !fileContents[aiRules.path]) fileContents[aiRules.path] = aiRulesContent;
 
   const components = collectComponents(files, repoDir);
   const tokens = files.filter(isTokenFile);
@@ -102,9 +165,15 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   const docsCapped = docTotal > MAX_CATEGORY_NODES;
   const displayDocs = docsCapped ? nonRuleDocs.slice(0, MAX_CATEGORY_NODES) : nonRuleDocs;
 
-  const iconAnalysis = detectIcons(files, fileContents);
-  const internalIcons = iconAnalysis.internalIconFiles || [];
-  const displayIcons = internalIcons.length > MAX_CATEGORY_NODES ? internalIcons.slice(0, MAX_CATEGORY_NODES) : internalIcons;
+  const iconAnalysis = detectIcons(files, fileContents, readmeContent, aiRulesContent);
+
+  // Collect ALL SVG files as assets (not restricted to icon-named folders)
+  const allSvgAssets = collectAssets(files);
+  const assetFolderMap = groupAssetsByFolder(allSvgAssets);
+  const assetFolderEntries = [...assetFolderMap.entries()];
+  const assetTotal = assetFolderEntries.length;
+  const assetsCapped = assetTotal > MAX_CATEGORY_NODES;
+  const displayAssetFolders = assetFolderEntries.slice(0, MAX_CATEGORY_NODES);
 
   const raw = [];
   for (const s of skills) raw.push(skillNode(s));
@@ -112,7 +181,7 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   if (ruleFiles.length > 0) raw.push(ruleNode(ruleFiles));
   for (const d of displayDocs) raw.push(docNode(d));
   for (const t of displayTokens) raw.push(tokenNode(t));
-  for (const iconFile of displayIcons) raw.push(iconNode(iconFile));
+  for (const [dir, svgFiles] of displayAssetFolders) raw.push(assetFolderNode(dir, svgFiles));
   for (const c of displayComponents) raw.push(componentNode(c));
   for (const s of stories) raw.push(storyNode(s, components));
   for (const s of scripts) raw.push(scriptNode(s));
@@ -131,7 +200,6 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   });
 
   const verbs = new Set(edges.map((e) => e.verb));
-  const iconAnalysis = detectIcons(files, fileContents);
 
   return {
     repoName,
@@ -148,6 +216,8 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
     docTotal,
     docsCapped,
     iconAnalysis,
+    assetTotal,
+    assetsCapped,
     verbDefs: {
       es: Object.fromEntries([...verbs].map((v) => [v, VERB_DEFS_ES[v] || v])),
       en: Object.fromEntries([...verbs].map((v) => [v, VERB_DEFS_EN[v] || v])),
@@ -176,11 +246,79 @@ const KNOWN_ICON_PACKAGES = [
 
 const EXCLUDED_ASSET_PATTERN = /(?:logo|brand|partner|wordmark|illustration|marketing|artwork|banner|hero|photo|screenshot|empty-state|favicon|apple-touch-icon|app-icon|launcher)/i;
 
-export function detectIcons(files, fileContents) {
+// Hosts that are package registries or CI services — never documentation sites
+const REJECTED_DOC_HOSTS = [
+  "npmjs.com", "pkg.go.dev", "crates.io", "pypi.org", "rubygems.org",
+  "pub.dev", "packagist.org", "shields.io", "badges.gitter.im",
+  "coveralls.io", "travis-ci.org", "travis-ci.com", "github.com",
+  "gitlab.com", "raw.githubusercontent.com",
+];
+
+function isRejectedDocUrl(u) {
+  if (!u) return true;
+  if (/\.(png|jpg|jpeg|gif|svg|webp|ico)$/i.test(u)) return true;
+  return REJECTED_DOC_HOSTS.some((host) => u.includes(host));
+}
+
+function extractDocAndIcons(content, evidenceLabel, externalDocUrl, externalLib) {
+  if (!content) return { externalDocUrl, externalLib };
+  if (!externalDocUrl) {
+    const linkedBadge = content.match(/\[!\[[^\]]*\]\((https?:\/\/[^\s)>"'\]]+)\)\]\((https?:\/\/[^\s)>"'\]]+)\)/i);
+    if (linkedBadge?.[2]) {
+      const u = linkedBadge[2].replace(/[,.)]+$/, "");
+      if (!isRejectedDocUrl(u)) externalDocUrl = u;
+    }
+  }
+  if (!externalDocUrl) {
+    const htmlLink = content.match(/<a\s+[^>]*href=["'](https?:\/\/[^"']+)["'][^>]*>[\s\S]*?<img/i);
+    if (htmlLink?.[1]) {
+      const u = htmlLink[1].replace(/[,.)]+$/, "");
+      if (!isRejectedDocUrl(u)) externalDocUrl = u;
+    }
+  }
+  if (!externalDocUrl) {
+    const domainMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com|primer\.style|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design|[^\s)>"'\]]+\.style)[^\s)>"'\]]*/i);
+    if (domainMatch && !isRejectedDocUrl(domainMatch[0])) {
+      externalDocUrl = domainMatch[0].replace(/[,.)]+$/, "");
+    }
+  }
+  if (!externalDocUrl) {
+    const mdDoc = content.match(/\[(?:documentation|docs|getting\s+started|guide|website|official\s+site)[^\]]*\]\((https?:\/\/[^\s)>"'\]]+)\)/i);
+    if (mdDoc?.[1] && !isRejectedDocUrl(mdDoc[1])) {
+      externalDocUrl = mdDoc[1].replace(/[,.)]+$/, "");
+    }
+  }
+  if (!externalDocUrl) {
+    const docsPath = content.match(/https?:\/\/[^\s)>"'\]]+\/(?:docs|getting-started)(?:\/[^\s)>"'\]]*)?/i);
+    if (docsPath && !isRejectedDocUrl(docsPath[0])) {
+      externalDocUrl = docsPath[0].replace(/[,.)]+$/, "");
+    }
+  }
+  if (!externalLib) {
+    for (const item of KNOWN_ICON_PACKAGES) {
+      const pat = new RegExp(`(?:icons?\\s+(?:from|by|using|with)|library|pack|set)?[\\s:]*${item.name}`, "i");
+      if (pat.test(content) || item.pattern.test(content)) {
+        externalLib = { name: item.name, pkg: item.pkg, evidenceFile: evidenceLabel };
+        break;
+      }
+    }
+  }
+  return { externalDocUrl, externalLib };
+}
+
+export function detectIcons(files, fileContents, readmeContent = "", aiRulesContent = "") {
   let externalLib = null;
   let externalDocUrl = null;
   const packageJsonFile = files.find((f) => f.endsWith("package.json"));
-  const readmeFiles = files.filter((f) => /(^|\/)(readme|contributing|architecture|guidelines?)\.(md|mdx)$/i.test(f));
+
+  // Step 0: README.md — primary source of truth
+  ({ externalDocUrl, externalLib } = extractDocAndIcons(readmeContent, "README.md", externalDocUrl, externalLib));
+
+  // Step 1: AI rules file (AGENTS.md, CLAUDE.md, .cursorrules, etc.) — secondary context
+  ({ externalDocUrl, externalLib } = extractDocAndIcons(aiRulesContent, "AI rules file", externalDocUrl, externalLib));
+
+  // Remaining readme-like files (contributing, architecture, etc.) — skip root README already read above
+  const readmeFiles = files.filter((f) => /(^|\/)(readme|contributing|architecture|guidelines?)\.(md|mdx)$/i.test(f) && !/^readme\.mdx?$/i.test(f));
 
   // 1. Scan package.json for official package dependencies & documentation URL
   if (packageJsonFile && fileContents[packageJsonFile]) {
@@ -188,7 +326,7 @@ export function detectIcons(files, fileContents) {
     try {
       const pkgObj = JSON.parse(content);
       const hp = pkgObj.homepage || pkgObj.documentation;
-      if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !hp.includes("github.com") && !hp.includes("shields.io") && !hp.includes("badge") && !/\.(svg|png|jpg|jpeg|gif)$/i.test(hp)) {
+      if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !isRejectedDocUrl(hp)) {
         externalDocUrl = hp.replace(/[,.)]+$/, "");
       }
     } catch {}
@@ -275,15 +413,9 @@ export function detectIcons(files, fileContents) {
     }
   }
 
-  // 4. Sanitize externalDocUrl if it came from a shield badge URL
-  if (externalDocUrl && externalDocUrl.includes("shields.io")) {
-    const badgeMatch = externalDocUrl.match(/badge\/(?:Docs|Documentation)-([a-z0-9.-]+)/i);
-    if (badgeMatch && badgeMatch[1]) {
-      const cleanDomain = badgeMatch[1].replace(/-[0-9a-fA-F]{3,8}$/, "");
-      externalDocUrl = `https://${cleanDomain}/docs/getting-started`;
-    } else {
-      externalDocUrl = null;
-    }
+  // Final rejection pass — remove any package registry, badge, or image URL that slipped through
+  if (externalDocUrl && isRejectedDocUrl(externalDocUrl)) {
+    externalDocUrl = null;
   }
 
   // 3. Scan code file imports if external library still not found
@@ -299,16 +431,14 @@ export function detectIcons(files, fileContents) {
     }
   }
 
-  // 4. Scan internal SVG & icon component files
+  // 4. Scan internal SVG icon files — only .svg is a valid icon format
   const internalIconFiles = files.filter((f) => {
     const lower = f.toLowerCase();
-    // IconButton is a UI Component, NOT an icon
-    if (/iconbutton/i.test(lower)) return false;
-    if (EXCLUDED_ASSET_PATTERN.test(lower)) return false;
-    const isSvg = lower.endsWith(".svg");
-    const isIconDir = /(?:^|\/)(?:icons?|iconography|assets\/icons?|src\/icons?)(\/|$)/i.test(lower);
-    const isIconFile = /(?:^|\/)[A-Za-z0-9_-]*icon[A-Za-z0-9_-]*\.(tsx?|jsx?|vue|svelte|svg)$/i.test(lower);
-    return isIconDir || isIconFile || (isSvg && !lower.includes("logo") && !lower.includes("banner"));
+    if (!lower.endsWith(".svg")) return false;           // tsx/jsx/ts/js are components, not icons
+    if (/iconbutton/i.test(lower)) return false;         // IconButton is a UI component
+    if (EXCLUDED_ASSET_PATTERN.test(lower)) return false; // logos, banners, illustrations, etc.
+    if (lower.includes("logo") || lower.includes("banner")) return false;
+    return true;
   });
 
   const hasInternal = internalIconFiles.length > 0;
@@ -589,8 +719,8 @@ function compRoot(relPath) {
 
 function isTokenFile(f) {
   if (!(CSS_EXT.test(f) || /\.(json|ts|js)$/.test(f))) return false;
-  if (f.includes("stories") || f.includes("node_modules")) return false;
-  return /(variables|tokens|design-tokens|theme|tailwind|primitives|semantic|foundation)/i.test(f);
+  if (f.includes("stories") || f.includes("node_modules") || f.includes("dist") || f.includes("build")) return false;
+  return /(variables|tokens|design-tokens|theme|tailwind|primitives|semantic|foundation|styles?|global|base)/i.test(f);
 }
 
 function collectStories(files) {
@@ -701,18 +831,64 @@ function tokenNode(file) {
   };
 }
 
-function iconNode(file) {
+// Collect ALL SVG files from the repo as visual assets.
+// Excludes test/spec/story files and IconButton (a UI component, not an asset).
+function collectAssets(files) {
+  return files.filter((f) => {
+    const lower = f.toLowerCase();
+    if (!lower.endsWith(".svg")) return false;
+    if (/\.(stories?|test|spec)\./i.test(lower)) return false;
+    if (/(^|\/)(__tests__|__mocks__|__fixtures__|e2e)(\/|$)/i.test(lower)) return false;
+    if (/iconbutton/i.test(lower)) return false;
+    return true;
+  });
+}
+
+// Group SVG assets by their closest meaningful folder.
+// Anchors on known asset/icon/image folder names; falls back to immediate parent dir.
+function groupAssetsByFolder(svgFiles) {
+  const ASSET_FOLDER = /^(?:assets?|icons?|iconography|images?|svg|vectors?|glyphs?|media|static|public|pictures?|photos?|illustrations?|graphics?)$/i;
+  const folderMap = new Map();
+  for (const f of svgFiles) {
+    const parts = f.split("/");
+    let folderPath = "";
+    for (let i = 0; i < parts.length - 1; i++) {
+      if (ASSET_FOLDER.test(parts[i])) {
+        folderPath = parts.slice(0, i + 1).join("/");
+        break;
+      }
+    }
+    if (!folderPath) {
+      folderPath = parts.length > 1 ? parts.slice(0, -1).join("/") : "assets";
+    }
+    if (!folderMap.has(folderPath)) folderMap.set(folderPath, []);
+    folderMap.get(folderPath).push(f);
+  }
+  return folderMap;
+}
+
+function assetFolderNode(folderPath, svgFiles) {
+  const name = folderPath.split("/").pop() || folderPath;
   return {
     layer: "icons",
-    title: baseName(file),
-    sub: dirName(file),
-    tag: "icon",
-    files: [file],
-    what: "Activo o componente de icono vectorial del sistema de diseño.",
-    what_en: "Vector icon asset or component of the design system.",
-    does: "Proporciona simbología y recursos visuales separados de los componentes de UI.",
-    does_en: "Provides symbols and visual assets separated from UI components.",
+    title: name,
+    sub: folderPath,
+    tag: "asset",
+    files: [folderPath, ...svgFiles],
+    what: `Carpeta con ${svgFiles.length} archivos SVG del repositorio.`,
+    what_en: `Folder with ${svgFiles.length} SVG files from the repository.`,
+    does: "Contiene activos visuales vectoriales usados en el producto o el sistema de diseño.",
+    does_en: "Contains vector visual assets used in the product or design system.",
   };
+}
+
+// Keep old function for backward compatibility with detectIcons return value
+function iconFolderNode(folderPath, svgFiles) {
+  return assetFolderNode(folderPath, svgFiles);
+}
+
+function groupIconsByFolder(iconFiles) {
+  return groupAssetsByFolder(iconFiles);
 }
 
 function describeComponent(name) {
