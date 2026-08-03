@@ -319,7 +319,8 @@ button { color: inherit; }
 .inspector-type-pill { display: inline-block; margin: 3px 0 8px; padding: 2px 7px; border-radius: 99px; background: #f1f5f9; border: 1px solid #cbd5e1; color: #475569; font-family: var(--font-code); font-size: 9px; font-weight: 600; letter-spacing: 0.4px; width: fit-content; }
 .inspector-file-type { margin: 0 0 12px; color: #4b5563; font-size: 11px; line-height: 1.4; }
 .inspector-file-type strong { font-family: var(--font-code); font-weight: 600; color: #111827; }
-.inspector-sub { margin: 0 0 12px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.inspector-sub { margin: 0 0 4px; color: var(--muted); font-size: 10px; line-height: 1.4; }
+.inspector-header-divider { margin-left: -17px; margin-right: -17px; width: calc(100% + 34px); box-sizing: border-box; margin-top: 10px; margin-bottom: 12px; border-bottom: 1px solid var(--line); }
 .linked-files { display: flex; flex-direction: column; gap: 5px; margin-left: -17px; margin-right: -17px; width: calc(100% + 34px); box-sizing: border-box; padding: 10px 17px 15px; border-top: 1px solid var(--line); border-bottom: 1px solid var(--line); }
 .linked-files button { width: 100%; border: 0; background: transparent; color: #1d4ed8; padding: 0; text-align: left; cursor: pointer; font-family: var(--font-code); font-size: 9px; white-space: normal; overflow-wrap: anywhere; word-break: break-word; }
 .inspector-block { margin-top: 14px; }

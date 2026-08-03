@@ -1211,10 +1211,10 @@ export default function App() {
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
-                <p className="inspector-sub code-path">{selectedPath}</p>
-                <p className="inspector-file-type">
-                  {lang === "es" ? "Tipo: Archivo del sistema de diseño" : "Type: Design system file"}
+                <p className="inspector-sub code-path">
+                  {selectedPath} · {lang === "es" ? "Archivo del sistema de diseño" : "Design system file"}
                 </p>
+                <div className="inspector-header-divider" />
 
                 <FileVisualPreview path={selectedPath} content={selectedCode} lang={lang} />
 
@@ -1280,10 +1280,10 @@ export default function App() {
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2 className="code-file-name">{selectedPath.split("/").pop()}</h2>
-                <p className="inspector-sub code-path">{selectedPath}</p>
-                <p className="inspector-file-type">
-                  {lang === "es" ? "Tipo: Carpeta del proyecto" : "Type: Project folder"}
+                <p className="inspector-sub code-path">
+                  {selectedPath} · {lang === "es" ? "Carpeta del proyecto" : "Project folder"}
                 </p>
+                <div className="inspector-header-divider" />
                 <div className="inspector-block">
                   <span>{lang === "es" ? "QUÉ ES Y QUÉ CONTIENE" : "WHAT IT IS & CONTAINS"}</span>
                   <p>{getFolderExplanation(selectedPath, lang)}</p>
@@ -1294,10 +1294,10 @@ export default function App() {
               <>
                 <span className="pane-kicker">{lang === "es" ? "INFORMACIÓN" : "INFORMATION"}</span>
                 <h2>{selected.title}</h2>
-                <p className="inspector-sub">{subFor(selected, lang)}</p>
-                <p className="inspector-file-type">
-                  {lang === "es" ? "Tipo: " : "Type: "}{data.layers.find((layer) => layer.id === selected.layer)?.label}
+                <p className="inspector-sub">
+                  {subFor(selected, lang)} · {data.layers.find((layer) => layer.id === selected.layer)?.label}
                 </p>
+                <div className="inspector-header-divider" />
                 {selected.files?.length > 0 && <div className="linked-files">{selected.files.map((file) => <button key={file} onClick={() => selectPath(file, false)}>↳ {file}</button>)}</div>}
                 {explanationLevel > 0 ? <div className="alternate-explanation"><span>{lang === "es" ? `EXPLICACIÓN ${explanationLevel} DE 3` : `EXPLANATION ${explanationLevel} OF 3`}</span><p>{alternateExplanation(selected, lang, explanationLevel)}</p></div> : <><div className="inspector-block"><span>{t.what}</span><p>{whatFor(selected, lang)}</p></div>{selected.does && <div className="inspector-block"><span>{t.does}</span><p>{doesFor(selected, lang)}</p></div>}</>}
                 <ExplanationActions lang={lang} level={explanationLevel} onAlternate={() => setExplanationLevel((level) => Math.min(3, level + 1))} onReset={() => setExplanationLevel(0)} />
