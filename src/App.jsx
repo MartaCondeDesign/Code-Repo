@@ -1178,9 +1178,26 @@ export default function App() {
                     style={{ margin: 0 }}
                   />
                   <span>
-                    {lang === "es" ? "Guardar token para futuras búsquedas" : "Save token for future searches"}
+                    {lang === "es" ? "Guardar token localmente para futuras búsquedas" : "Save token locally for future searches"}
                   </span>
                 </label>
+
+                <div style={{ width: "100%", marginTop: "12px", padding: "10px 12px", background: "#f8fafc", borderRadius: "8px", border: "1px solid #e2e8f0", textAlign: "left" }}>
+                  <div style={{ display: "flex", alignItems: "center", gap: "6px", marginBottom: "4px" }}>
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="#16a34a" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+                      <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                      <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                    </svg>
+                    <strong style={{ fontSize: "11px", color: "#0f172a" }}>
+                      {lang === "es" ? "Garantía de Privacidad y Seguridad" : "Privacy & Security Guarantee"}
+                    </strong>
+                  </div>
+                  <p style={{ margin: 0, fontSize: "10px", color: "#475569", lineHeight: "1.45" }}>
+                    {lang === "es"
+                      ? "Esta aplicación NO almacena ni conserva ningún dato de repositorios, código fuente ni tokens en servidores externos ni bases de datos. Todo el análisis se ejecuta en memoria volátil de sesión única y tu token solo se utiliza localmente para autenticar las llamadas a la API de GitHub."
+                      : "This application DOES NOT store or retain any repository data, source code, or tokens on external servers or databases. All analysis runs strictly in single-session volatile memory and your token is used locally only for GitHub API requests."}
+                  </p>
+                </div>
               </div>
               <div className="wizard-nav" style={{ marginTop: "24px", display: "flex", gap: "10px", justifyContent: "flex-end", width: "100%" }}>
                 {gitToken && (
