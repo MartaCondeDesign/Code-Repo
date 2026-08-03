@@ -198,6 +198,7 @@ const WIZARD_STEPS = {
       title: "Explora los componentes desde la guía",
       body: "Dentro de la guía, las cards de métricas (Componentes, Patrones, Tokens…) resaltan esos elementos en el mapa y el árbol de archivos al hacer clic sobre ellas.",
       target: ".design-metrics",
+      openGuide: true,
     },
   ],
   en: [
@@ -252,6 +253,7 @@ const WIZARD_STEPS = {
       title: "Explore components from the guide",
       body: "Inside the guide, the metric cards (Components, Patterns, Tokens…) highlight those elements on the map and file tree when clicked.",
       target: ".design-metrics",
+      openGuide: true,
     },
   ],
 };
@@ -420,6 +422,7 @@ export default function App() {
   const [wizardOpen, setWizardOpen] = useState(false);
   const [wizardStep, setWizardStep] = useState(0);
   const [wizardRect, setWizardRect] = useState(null);
+  const wizardGuideOpenedForStep = useRef(-1);
   const [readingOptions, setReadingOptions] = useState(() => {
     try {
       const saved = JSON.parse(window.localStorage.getItem("repo-reading-options")) || {};
@@ -474,11 +477,18 @@ export default function App() {
 
   useLayoutEffect(() => {
     if (!wizardOpen) { setWizardRect(null); return; }
-    const target = WIZARD_STEPS[lang][wizardStep]?.target;
+    const step = WIZARD_STEPS[lang][wizardStep];
+    if (!step) return;
+    if (step.openGuide && !guideOpen && wizardGuideOpenedForStep.current !== wizardStep) {
+      wizardGuideOpenedForStep.current = wizardStep;
+      setGuideOpen(true);
+      return;
+    }
+    const target = step.target;
     if (!target) { setWizardRect(null); return; }
     const el = document.querySelector(target);
     setWizardRect(el ? el.getBoundingClientRect() : null);
-  }, [wizardOpen, wizardStep, lang]);
+  }, [wizardOpen, wizardStep, lang, guideOpen]);
 
   useEffect(() => {
     const show = (event) => {
