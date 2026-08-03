@@ -458,6 +458,19 @@ function FileVisualPreview({ path, content, lang }) {
 }
 
 export default function App() {
+  const [docFullscreenOpen, setDocFullscreenOpen] = useState(false);
+  const downloadSelectedFile = (filename, content) => {
+    if (!content) return;
+    const blob = new Blob([content], { type: "text/plain;charset=utf-8" });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement("a");
+    a.href = url;
+    a.download = filename || "file.txt";
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    URL.revokeObjectURL(url);
+  };
   const [map, setMap] = useState(null);
   const [repoUrl, setRepoUrl] = useState("");
   const [busy, setBusy] = useState(false);
@@ -1219,7 +1232,43 @@ export default function App() {
                 </div>
 
                 <div className={"code-shell" + (/\.(md|mdx)$/i.test(selectedPath) ? " is-markdown" : "")}>
-                  <div className="code-toolbar"><span>{codeLanguage(selectedPath)}</span><span>{selectedCode == null ? "—" : `${selectedCode.split("\n").length} ${lang === "es" ? "líneas" : "lines"}`}</span></div>
+                  <div className="code-toolbar">
+                    <div style={{ display: "flex", alignItems: "center", gap: "8px" }}>
+                      <span>{codeLanguage(selectedPath)}</span>
+                      <span>{selectedCode == null ? "—" : `${selectedCode.split("\n").length} ${lang === "es" ? "líneas" : "lines"}`}</span>
+                    </div>
+                    {selectedCode != null && (
+                      <div className="code-toolbar-actions">
+                        <button
+                          type="button"
+                          className="code-action-btn has-tooltip"
+                          data-tooltip={lang === "es" ? "Descargar archivo" : "Download file"}
+                          aria-label={lang === "es" ? "Descargar archivo" : "Download file"}
+                          onClick={() => downloadSelectedFile(selectedPath.split("/").pop(), selectedCode)}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                            <polyline points="7 10 12 15 17 10"/>
+                            <line x1="12" y1="15" x2="12" y2="3"/>
+                          </svg>
+                        </button>
+                        <button
+                          type="button"
+                          className="code-action-btn has-tooltip"
+                          data-tooltip={lang === "es" ? "Expandir a pantalla completa" : "Expand to fullscreen"}
+                          aria-label={lang === "es" ? "Expandir a pantalla completa" : "Expand to fullscreen"}
+                          onClick={() => setDocFullscreenOpen(true)}
+                        >
+                          <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                            <polyline points="15 3 21 3 21 9"/>
+                            <polyline points="9 21 3 21 3 15"/>
+                            <line x1="21" y1="3" x2="14" y2="10"/>
+                            <line x1="3" y1="21" x2="10" y2="14"/>
+                          </svg>
+                        </button>
+                      </div>
+                    )}
+                  </div>
                   {selectedCode != null ? <pre className="code-view"><code>{selectedCode}</code></pre> : <div className="code-unavailable">{lang === "es" ? "La vista previa no está disponible para este archivo binario o de gran tamaño." : "Preview is unavailable for this binary or large file."}</div>}
                 </div>
                 {selected && <div className="code-context"><span>{lang === "es" ? "RELACIONADO CON" : "RELATED TO"}</span><strong>{selected.title}</strong><p>{explanationLevel > 0 ? alternateExplanation(selected, lang, explanationLevel) : whatFor(selected, lang)}</p><ExplanationActions lang={lang} level={explanationLevel} onAlternate={() => setExplanationLevel((level) => Math.min(3, level + 1))} onReset={() => setExplanationLevel(0)} /></div>}
@@ -1483,6 +1532,47 @@ export default function App() {
                   {lang === "es" ? "Analizar repo" : "Analyze repo"}
                 </button>
               </div>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {docFullscreenOpen && selectedPath && (
+        <div className="wizard-overlay doc-fullscreen-overlay" onClick={(e) => e.target === e.currentTarget && setDocFullscreenOpen(false)}>
+          <div className="doc-fullscreen-modal" role="dialog" aria-modal="true">
+            <div className="doc-fullscreen-header">
+              <div className="doc-fullscreen-title">
+                <span className="mockup-tag">{codeLanguage(selectedPath)}</span>
+                <h2>{selectedPath.split("/").pop()}</h2>
+                <small>{selectedPath}</small>
+              </div>
+              <div className="doc-fullscreen-actions">
+                {selectedCode != null && (
+                  <button
+                    type="button"
+                    className="repo-btn has-tooltip"
+                    data-tooltip={lang === "es" ? "Descargar archivo" : "Download file"}
+                    aria-label={lang === "es" ? "Descargar archivo" : "Download file"}
+                    onClick={() => downloadSelectedFile(selectedPath.split("/").pop(), selectedCode)}
+                    style={{ display: "inline-flex", alignItems: "center", gap: "6px", padding: "6px 14px", background: "#2563eb", color: "#fff", fontSize: "11px" }}
+                  >
+                    <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+                      <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"/>
+                      <polyline points="7 10 12 15 17 10"/>
+                      <line x1="12" y1="15" x2="12" y2="3"/>
+                    </svg>
+                    <span>{lang === "es" ? "Descargar" : "Download"}</span>
+                  </button>
+                )}
+                <button className="wizard-close" onClick={() => setDocFullscreenOpen(false)} aria-label={lang === "es" ? "Cerrar" : "Close"}>×</button>
+              </div>
+            </div>
+            <div className="doc-fullscreen-body">
+              {selectedCode != null ? (
+                <pre className="doc-fullscreen-code"><code>{selectedCode}</code></pre>
+              ) : (
+                <div className="code-unavailable">{lang === "es" ? "La vista previa no está disponible para este archivo binario o de gran tamaño." : "Preview is unavailable for this binary or large file."}</div>
+              )}
             </div>
           </div>
         </div>

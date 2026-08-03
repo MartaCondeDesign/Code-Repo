@@ -804,3 +804,105 @@ button { color: inherit; }
   text-overflow: ellipsis;
   white-space: nowrap;
 }
+
+/* Code Toolbar Actions & Full-screen Document Modal */
+.code-toolbar-actions {
+  display: flex;
+  align-items: center;
+  gap: 4px;
+}
+.code-action-btn {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 22px;
+  height: 22px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  color: #64748b;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+.code-action-btn:hover {
+  background: #e2e8f0 !important;
+  color: #0f172a !important;
+}
+
+.doc-fullscreen-overlay {
+  position: fixed;
+  inset: 0;
+  z-index: 1200;
+  background: rgba(15, 23, 42, 0.65);
+  backdrop-filter: blur(4px);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 24px;
+}
+.doc-fullscreen-modal {
+  width: 100%;
+  max-width: 1100px;
+  height: calc(100vh - 48px);
+  background: #ffffff;
+  border-radius: 12px;
+  box-shadow: 0 20px 45px rgba(0, 0, 0, 0.3);
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
+  border: 1px solid var(--line);
+}
+.doc-fullscreen-header {
+  padding: 14px 20px;
+  border-bottom: 1px solid var(--line);
+  background: #f8fafc;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+}
+.doc-fullscreen-title {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.doc-fullscreen-title h2 {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 700;
+  color: #0f172a;
+  font-family: var(--font-code);
+}
+.doc-fullscreen-title small {
+  color: #64748b;
+  font-size: 11px;
+  font-family: var(--font-code);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  max-width: 400px;
+}
+.doc-fullscreen-actions {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+.doc-fullscreen-body {
+  flex: 1;
+  min-height: 0;
+  overflow-y: auto;
+  padding: 20px;
+  background: #ffffff;
+}
+.doc-fullscreen-code {
+  margin: 0;
+  font-family: var(--font-code);
+  font-size: 12px;
+  line-height: 1.65;
+  color: #1e293b;
+  tab-size: 2;
+  white-space: pre-wrap;
+  word-break: break-word;
+}
