@@ -700,13 +700,6 @@ button { color: inherit; }
 .repo-action-btn.is-key:hover {
   color: #2563eb;
 }
-.repo-action-btn.is-key.is-left {
-  opacity: 0.45;
-  flex-shrink: 0;
-}
-.repo-menu-item:hover .repo-action-btn.is-key.is-left {
-  opacity: 1;
-}
 
 /* Inspector Right Panel Visual Previews & Rich Metadata */
 .inspector-media-preview {
