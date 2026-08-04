@@ -550,7 +550,7 @@ button { color: inherit; }
 
 .repo-token-toggle {
   position: absolute;
-  right: 32px;
+  right: 60px;
   top: 4px;
   display: grid;
   place-items: center;
@@ -572,8 +572,8 @@ button { color: inherit; }
 .repo-input-wrap.has-reset.has-token .repo-input {
   padding-right: 92px;
 }
-.repo-input-wrap.has-token:not(.has-reset) .repo-input {
-  padding-right: 66px;
+.repo-input-wrap.has-token .repo-input {
+  padding-right: 92px;
 }
 .token-popover {
   position: absolute;
@@ -699,6 +699,13 @@ button { color: inherit; }
 }
 .repo-action-btn.is-key:hover {
   color: #2563eb;
+}
+.repo-action-btn.is-key.is-left {
+  opacity: 0.45;
+  flex-shrink: 0;
+}
+.repo-menu-item:hover .repo-action-btn.is-key.is-left {
+  opacity: 1;
 }
 
 /* Inspector Right Panel Visual Previews & Rich Metadata */

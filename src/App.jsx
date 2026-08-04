@@ -973,7 +973,7 @@ export default function App() {
             {requiresToken(repoUrl) && (
               <button
                 className="repo-token-toggle has-tooltip"
-                style={{ right: map ? "60px" : "32px" }}
+                style={{ right: "60px" }}
                 aria-label={lang === "es" ? "Modificar token de GitHub" : "Modify GitHub token"}
                 data-tooltip={lang === "es" ? "Modificar token" : "Modify token"}
                 onClick={() => {
@@ -1008,15 +1008,15 @@ export default function App() {
                     <span>{lang === "es" ? "Guardados" : "Saved"}</span>
                     {repoMenuFiltered.saved.map((repo) => (
                       <div key={repo.url} className="repo-menu-item">
+                        {repo.requiresToken && (
+                          <button className="repo-action-btn is-key is-left" onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
+                            <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                          </button>
+                        )}
                         <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
                           <strong>{repo.name}</strong>
                         </button>
                         <div className="repo-menu-item-actions">
-                          {repo.requiresToken && (
-                            <button className="repo-action-btn is-key" onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
-                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                            </button>
-                          )}
                           <button className="repo-action-btn is-active" onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, repo.requiresToken); }} title={lang === "es" ? "Quitar de guardados" : "Remove from saved"}>★</button>
                         </div>
                       </div>
@@ -1033,15 +1033,15 @@ export default function App() {
                       const isPrivate = requiresToken(url);
                       return (
                         <div key={url} className="repo-menu-item">
+                          {isPrivate && (
+                            <button className="repo-action-btn is-key is-left" onClick={(e) => { e.stopPropagation(); setRepoUrl(url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            </button>
+                          )}
                           <button className="repo-menu-item-left" onClick={() => { setRepoUrl(url); setRepoMenuOpen(false); analyzeRepo(url); }}>
                             <strong>{repoName}</strong>
                           </button>
                           <div className="repo-menu-item-actions">
-                            {isPrivate && (
-                              <button className="repo-action-btn is-key" onClick={(e) => { e.stopPropagation(); setRepoUrl(url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                              </button>
-                            )}
                             <button className={"repo-action-btn" + (isSaved ? " is-active" : "")} onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repoName, url, isPrivate); }} title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}>{isSaved ? "★" : "☆"}</button>
                           </div>
                         </div>
@@ -1058,15 +1058,15 @@ export default function App() {
                       const isPrivate = requiresToken(repo.url);
                       return (
                         <div key={repo.url} className="repo-menu-item">
+                          {isPrivate && (
+                            <button className="repo-action-btn is-key is-left" onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
+                              <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
+                            </button>
+                          )}
                           <button className="repo-menu-item-left" onClick={() => { setRepoUrl(repo.url); setRepoMenuOpen(false); analyzeRepo(repo.url); }}>
                             <strong>{repo.name}</strong>
                           </button>
                           <div className="repo-menu-item-actions">
-                            {isPrivate && (
-                              <button className="repo-action-btn is-key" onClick={(e) => { e.stopPropagation(); setRepoUrl(repo.url); setModalToken(gitToken); setTokenModalOpen(true); }} title={lang === "es" ? "Configurar token" : "Configure token"}>
-                                <svg width="11" height="11" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true" style={{ display: "block" }}><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 0-7.778 7.778 5.5 5.5 0 0 0 7.777-7.778zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/></svg>
-                              </button>
-                            )}
                             <button className={"repo-action-btn" + (isSaved ? " is-active" : "")} onClick={(e) => { e.stopPropagation(); toggleSaveRepo(repo.name, repo.url, isPrivate); }} title={isSaved ? (lang === "es" ? "Quitar de guardados" : "Remove from saved") : (lang === "es" ? "Guardar repositorio" : "Save repository")}>{isSaved ? "★" : "☆"}</button>
                           </div>
                         </div>
