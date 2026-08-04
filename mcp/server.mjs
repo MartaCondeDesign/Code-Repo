@@ -157,6 +157,19 @@ async function handleFetchFiles({ repoUrl, paths, token, branch }) {
   return { repoOwner: owner, repoName: repo, fileContents };
 }
 
+// AI rules file patterns (all AI assistant formats)
+const AI_RULES_PATTERNS = [
+  /^claude\.md$/i, /^agents?\.md$/i, /^\.claude\/claude\.md$/i,
+  /^\.cursorrules$/i, /^\.cursor\/rules\/[^/]+\.mdc$/i,
+  /^\.windsurfrules$/i, /^\.windsurf\/rules\/[^/]+\.md$/i,
+  /^\.github\/copilot-instructions\.md$/i, /^\.github\/instructions\/[^/]+\.instructions\.md$/i,
+  /^\.clinerules$/i, /^\.cline\/rules\/[^/]+\.md$/i,
+  /^\.aider\.conf\.ya?ml$/i, /^conventions\.md$/i,
+  /^gemini\.md$/i, /^codex\.md$/i, /^\.codex$/i,
+  /^\.devin\/instructions\.md$/i,
+  /^ai_rules\.md$/i, /^\.rules$/i, /^project\.rules$/i,
+];
+
 // Tool Implementation 3: Contract Analyzer
 function handleAnalyzeDesignSystem({ files = [], fileContents = {}, repoName = "project", repoUrl = "" }) {
   const MAX_CAP = 200;
@@ -181,43 +194,59 @@ function handleAnalyzeDesignSystem({ files = [], fileContents = {}, repoName = "
   let externalLib = null;
   let externalDocUrl = null;
 
-  // Scan package.json
-  const pkgJson = files.find(f => f.endsWith("package.json"));
-  if (pkgJson && fileContents[pkgJson]) {
-    const content = fileContents[pkgJson];
-    try {
-      const pkgObj = JSON.parse(content);
-      const hp = pkgObj.homepage || pkgObj.documentation;
-      if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !hp.includes("github.com")) {
-        externalDocUrl = hp.replace(/[,.)]+$/, "");
-      }
-    } catch {}
-
-    for (const item of KNOWN_ICON_PACKAGES) {
-      if (item.pattern.test(content)) {
-        externalLib = item;
-        break;
-      }
-    }
-  }
-
-  // Scan READMEs
-  const readmeFiles = files.filter(f => /(^|\/)(readme|contributing|architecture)\.(md|mdx)$/i.test(f));
-  for (const rf of readmeFiles) {
-    const content = fileContents[rf] || "";
+  // Helper: extract doc URL and icon lib from text content
+  function scanContent(content) {
+    if (!content) return;
     if (!externalDocUrl) {
       const docMatch = content.match(/https?:\/\/[^\s)>"'\]]*(?:atmeta\.com[^\s)>"'\]]*|primer\.style[^\s)>"'\]]*|zeroheight\.com|supernova\.io|knapsack\.cloud|[^\s)>"'\]]+\.design[^\s)>"'\]]*|[^\s)>"'\]]+\.style[^\s)>"'\]]*|[^\s)>"'\]]*ds\.[^\s)>"'\]]+|[^\s)>"'\]]*design-system[^\s)>"'\]]*|\/docs(?:\/[^\s)>"'\]]*)?)/i);
-      if (docMatch && !docMatch[0].includes("github.com")) externalDocUrl = docMatch[0].replace(/[,.)]+$/, "");
-    }
-    if (!externalLib) {
-      for (const item of KNOWN_ICON_PACKAGES) {
-        if (item.pattern.test(content)) {
-          externalLib = item;
-          break;
+      if (docMatch) {
+        const u = docMatch[0].replace(/[,.)]+$/, "");
+        if (!u.includes("github.com") && !u.includes("chromatic.com") && !u.includes("storybook.")) {
+          externalDocUrl = u;
         }
       }
     }
+    if (!externalLib) {
+      for (const item of KNOWN_ICON_PACKAGES) {
+        if (item.pattern.test(content)) { externalLib = item; break; }
+      }
+    }
   }
+
+  // Step 1: Root README.md — always first
+  const rootReadme = files.find(f => /^readme\.mdx?$/i.test(f));
+  if (rootReadme) scanContent(fileContents[rootReadme] || "");
+
+  // Step 2: AI rules file (claude.md, agents.md, .cursorrules, etc.) — second
+  const aiRulesFile = files.find(f => AI_RULES_PATTERNS.some(p => p.test(f)));
+  if (aiRulesFile) scanContent(fileContents[aiRulesFile] || "");
+
+  // Step 3: package.json — third
+  const pkgJson = files.find(f => f.endsWith("package.json"));
+  if (pkgJson && fileContents[pkgJson]) {
+    const content = fileContents[pkgJson];
+    if (!externalDocUrl) {
+      try {
+        const pkgObj = JSON.parse(content);
+        const hp = pkgObj.homepage || pkgObj.documentation;
+        if (hp && typeof hp === "string" && /^https?:\/\//i.test(hp) && !hp.includes("github.com")) {
+          externalDocUrl = hp.replace(/[,.)]+$/, "");
+        }
+      } catch {}
+    }
+    if (!externalLib) {
+      for (const item of KNOWN_ICON_PACKAGES) {
+        if (item.pattern.test(content)) { externalLib = item; break; }
+      }
+    }
+  }
+
+  // Step 4: Other README / doc files — last
+  const readmeFiles = files.filter(f =>
+    /(^|\/)(readme|contributing|architecture)\.(md|mdx)$/i.test(f) &&
+    !/^readme\.mdx?$/i.test(f)
+  );
+  for (const rf of readmeFiles) scanContent(fileContents[rf] || "");
 
   // Internal icon files
   const internalIconFiles = files.filter(f => {
