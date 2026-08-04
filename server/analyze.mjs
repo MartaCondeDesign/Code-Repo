@@ -225,6 +225,98 @@ export function analyzeRepo(repoDir, repoName, repoUrl) {
   };
 }
 
+// Serverless variant: accepts pre-fetched file list and contents instead of a local directory.
+export function analyzeFromData(files, fileContents, repoName, repoUrl) {
+  const fileSet = new Set(files);
+
+  const readmePath = files.find((f) => /^readme\.mdx?$/i.test(f));
+  const readmeContent = readmePath ? (fileContents[readmePath] || "") : "";
+
+  const aiRulesPath = AI_RULES_PATTERNS.reduce((found, pat) => found || files.find((f) => pat.test(f)), null);
+  const aiRulesContent = aiRulesPath ? (fileContents[aiRulesPath] || "") : "";
+
+  const components = collectComponents(files, null);
+  const tokens = files.filter(isTokenFile);
+  const stories = collectStories(files);
+  const scripts = collectScripts(files);
+  const configFiles = files.filter(isConfigFile);
+  const docs = collectDocs(files);
+  const skills = collectSkills(files);
+
+  const MAX_CATEGORY_NODES = 200;
+
+  const componentTotal = components.length;
+  const componentsCapped = componentTotal > MAX_CATEGORY_NODES;
+  const displayComponents = componentsCapped ? components.slice(0, MAX_CATEGORY_NODES) : components;
+
+  const tokenTotal = tokens.length;
+  const tokensCapped = tokenTotal > MAX_CATEGORY_NODES;
+  const displayTokens = tokensCapped ? tokens.slice(0, MAX_CATEGORY_NODES) : tokens;
+
+  const nonRuleDocs = docs.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)));
+  const docTotal = nonRuleDocs.length;
+  const docsCapped = docTotal > MAX_CATEGORY_NODES;
+  const displayDocs = docsCapped ? nonRuleDocs.slice(0, MAX_CATEGORY_NODES) : nonRuleDocs;
+
+  const iconAnalysis = detectIcons(files, fileContents, readmeContent, aiRulesContent);
+
+  const allSvgAssets = collectAssets(files);
+  const assetFolderMap = groupAssetsByFolder(allSvgAssets);
+  const assetFolderEntries = [...assetFolderMap.entries()];
+  const assetTotal = assetFolderEntries.length;
+  const assetsCapped = assetTotal > MAX_CATEGORY_NODES;
+  const displayAssetFolders = assetFolderEntries.slice(0, MAX_CATEGORY_NODES);
+
+  const raw = [];
+  for (const s of skills) raw.push(skillNode(s));
+  const ruleFiles = configFiles.filter((f) => /^(agenta?|claude)\.md$/i.test(path.basename(f)));
+  if (ruleFiles.length > 0) raw.push(ruleNode(ruleFiles));
+  for (const d of displayDocs) raw.push(docNode(d));
+  for (const t of displayTokens) raw.push(tokenNode(t));
+  for (const [dir, svgFiles] of displayAssetFolders) raw.push(assetFolderNode(dir, svgFiles));
+  for (const c of displayComponents) raw.push(componentNode(c));
+  for (const s of stories) raw.push(storyNode(s, components));
+  for (const s of scripts) raw.push(scriptNode(s));
+  for (const f of configFiles.filter((f) => !/^(agenta?|claude)\.md$/i.test(path.basename(f)))) raw.push(configNode(f));
+
+  const nodes = assignIds(raw);
+  const fileToNode = new Map();
+  for (const n of nodes) for (const f of n.files) fileToNode.set(f, n);
+
+  const edges = buildEdges(nodes, fileToNode, fileSet, null, fileContents);
+
+  const usedLayerIds = new Set(nodes.map((n) => n.layer));
+  const layers = LAYER_DEFS.filter((l) => usedLayerIds.has(l.id)).map((l) => {
+    const [subEs, subEn] = LAYER_SUB[l.id];
+    return { id: l.id, label: l.label, color: l.color, sub: subEs, sub_en: subEn };
+  });
+
+  const verbs = new Set(edges.map((e) => e.verb));
+
+  return {
+    repoName,
+    repoUrl,
+    files: files.slice(0, 4000),
+    fileContents,
+    layers,
+    nodes,
+    edges,
+    componentTotal,
+    componentsCapped,
+    tokenTotal,
+    tokensCapped,
+    docTotal,
+    docsCapped,
+    iconAnalysis,
+    assetTotal,
+    assetsCapped,
+    verbDefs: {
+      es: Object.fromEntries([...verbs].map((v) => [v, VERB_DEFS_ES[v] || v])),
+      en: Object.fromEntries([...verbs].map((v) => [v, VERB_DEFS_EN[v] || v])),
+    },
+  };
+}
+
 const KNOWN_ICON_PACKAGES = [
   { name: "Octicons", pkg: "@primer/octicons-react", pattern: /@primer\/octicons-react|@primer\/octicons|octicons/i },
   { name: "Lucide", pkg: "lucide-react", pattern: /lucide-react|lucide-vue|lucide-svelte|lucide/i },
@@ -987,11 +1079,11 @@ function configNode(file) {
 
 /* ---------------- edges ---------------- */
 
-function buildEdges(nodes, fileToNode, fileSet, repoDir) {
+function buildEdges(nodes, fileToNode, fileSet, repoDir, fileContents) {
   const seen = new Set();
   const out = [];
   for (const n of nodes) {
-    const targets = scanImports(n.files, fileSet, repoDir);
+    const targets = scanImports(n.files, fileSet, repoDir, fileContents);
     for (const targetFile of targets) {
       const tgt = fileToNode.get(targetFile);
       if (!tgt || tgt === n) continue;
@@ -1012,18 +1104,25 @@ function buildEdges(nodes, fileToNode, fileSet, repoDir) {
   return out;
 }
 
-function scanImports(files, fileSet, repoDir) {
+function scanImports(files, fileSet, repoDir, fileContents) {
   const out = new Set();
   const READABLE = /\.(tsx?|jsx?|mjs|js|vue|svelte|css|scss|sass)$/;
   for (const f of files) {
     if (!READABLE.test(f)) continue;
     let content;
-    try {
-      const full = path.join(repoDir, f);
-      const stat = fs.statSync(full);
-      if (stat.size > 524288) continue;
-      content = fs.readFileSync(full, "utf8");
-    } catch {
+    if (repoDir) {
+      try {
+        const full = path.join(repoDir, f);
+        const stat = fs.statSync(full);
+        if (stat.size > 524288) continue;
+        content = fs.readFileSync(full, "utf8");
+      } catch {
+        continue;
+      }
+    } else if (fileContents) {
+      content = fileContents[f];
+      if (!content) continue;
+    } else {
       continue;
     }
     const re = /(?:import\s+(?:[^'"]*?\s+from\s+)?|require\(\s*)['"]([^'"]+)['"]/g;
