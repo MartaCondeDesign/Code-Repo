@@ -1509,20 +1509,18 @@ export default function App() {
                 </div>
               </div>
               <div className="wizard-nav" style={{ marginTop: "24px", display: "flex", gap: "10px", justifyContent: "flex-end", width: "100%" }}>
-                {gitToken && (
-                  <button
-                    className="repo-btn"
-                    style={{ background: "#ffffff", color: "#dc2626", border: "1px solid #dc2626", padding: "8px 14px", marginRight: "auto", whiteSpace: "nowrap" }}
-                    onClick={() => {
-                      setGitToken("");
-                      setModalToken("");
-                      window.localStorage.removeItem("git-token");
-                      setTokenModalOpen(false);
-                    }}
-                  >
-                    {lang === "es" ? "Eliminar token" : "Delete token"}
-                  </button>
-                )}
+                <button
+                  className="repo-btn"
+                  style={{ background: "#ffffff", color: "#dc2626", border: "1px solid #dc2626", padding: "8px 14px", marginRight: "auto", whiteSpace: "nowrap" }}
+                  onClick={() => {
+                    setGitToken("");
+                    setModalToken("");
+                    window.localStorage.removeItem("git-token");
+                    setTokenModalOpen(false);
+                  }}
+                >
+                  {lang === "es" ? "Eliminar token" : "Delete token"}
+                </button>
                 <button 
                   className="repo-btn"
                   style={{ padding: "8px 16px" }}
