@@ -491,9 +491,9 @@ button { color: inherit; }
 .app-footer-credit a.linkedin-link { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid #2563eb; border-radius: 3px; background: #2563eb; color: #ffffff; transition: color 0.12s, background-color 0.12s; }
 .app-footer-credit a.linkedin-link svg { width: 14px; height: 14px; fill: currentColor; }
 .app-footer-credit a.linkedin-link:hover { background: #1d4ed8; border-color: #1d4ed8; color: #ffffff; }
-.app-footer-credit a.youtube-link { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid #ff0000; border-radius: 3px; background: #ff0000; color: #ffffff; transition: color 0.12s, background-color 0.12s; }
+.app-footer-credit a.youtube-link { display: inline-flex; align-items: center; justify-content: center; width: 20px; height: 20px; box-sizing: border-box; border: 1px solid #000000; border-radius: 3px; background: #000000; color: #ffffff; transition: color 0.12s, background-color 0.12s; }
 .app-footer-credit a.youtube-link svg { width: 14px; height: 14px; fill: currentColor; }
-.app-footer-credit a.youtube-link:hover { background: #cc0000; border-color: #cc0000; color: #ffffff; }
+.app-footer-credit a.youtube-link:hover { background: #333333; border-color: #333333; color: #ffffff; }
 .app-footer-credit a.cristian-link { color: #6b7280 !important; font-weight: 400; text-decoration: underline; transition: color 0.12s; }
 .app-footer-credit a.cristian-link:hover { color: #374151 !important; }
 .app-footer-credit strong { font-weight: 400; }
