@@ -950,6 +950,7 @@ export default function App() {
     <div className={`app reading-size${readingOptions.font ? " reading-font" : ""}${readingOptions.contrast ? " reading-contrast" : ""}${readingOptions.tint ? " reading-tint" : ""}${readingOptions.focus ? " reading-focus" : ""}`} style={{ "--reading-base-size": `${readingFontSize}px` }}>
       <header className="topbar">
         <div className="brand">
+          <img className="brand-mark" src="/command-mark.svg" alt="" aria-hidden="true" />
           <div>
             <h1>{t.title}</h1>
           </div>
@@ -1594,7 +1595,11 @@ export default function App() {
           </button>
         </div>
         <span className="app-footer-credit">
-          {lang === "es" ? "Hecho por" : "Made by"}: <a href="https://www.martaconde.com" target="_blank" rel="noopener noreferrer" className="marta-link">Marta Conde</a> | {lang === "es" ? "Remix del proyecto de:" : "Remix of a project by:"} <a href="https://agentic-design-system-visualization.vercel.app/" target="_blank" rel="noopener noreferrer" className="cristian-link">Cristian Morales</a>
+          {lang === "es" ? "Hecho por" : "Made by"}: <a href="https://www.martaconde.com" target="_blank" rel="noopener noreferrer" className="marta-link">Marta Conde</a><a href="https://www.linkedin.com/in/martacondedesign" target="_blank" rel="noopener noreferrer" className="linkedin-link" aria-label="LinkedIn de Marta Conde" title="LinkedIn de Marta Conde">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M6.5 8.25H3.25V21H6.5V8.25ZM4.88 3A1.88 1.88 0 1 0 4.88 6.75 1.88 1.88 0 0 0 4.88 3ZM21 13.69C21 9.85 18.96 8.06 16.25 8.06c-2.17 0-3.14 1.19-3.68 2.03V8.25H9.32V21h3.25v-6.31c0-1.66.31-3.27 2.37-3.27 2.03 0 2.06 1.9 2.06 3.38V21H21v-7.31Z" /></svg>
+          </a><a href="https://www.youtube.com/@martacondedesign" target="_blank" rel="noopener noreferrer" className="youtube-link" aria-label="YouTube de Marta Conde" title="YouTube de Marta Conde">
+            <svg viewBox="0 0 24 24" aria-hidden="true" focusable="false"><path d="M23.498 6.186a3.016 3.016 0 0 0-2.122-2.136C19.505 3.545 12 3.545 12 3.545s-7.505 0-9.377.505A3.017 3.017 0 0 0 .502 6.186C0 8.07 0 12 0 12s0 3.93.502 5.814a3.016 3.016 0 0 0 2.122 2.136c1.871.505 9.376.505 9.376.505s7.505 0 9.377-.505a3.015 3.015 0 0 0 2.122-2.136C24 15.93 24 12 24 12s0-3.93-.502-5.814zM9.545 15.568V8.432L15.818 12l-6.273 3.568z"/></svg>
+          </a> | {lang === "es" ? "Remix del proyecto de:" : "Remix of a project by:"} <a href="https://agentic-design-system-visualization.vercel.app/" target="_blank" rel="noopener noreferrer" className="cristian-link">Cristian Morales</a>
         </span>
       </footer>
     </div>
